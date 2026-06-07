@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,7 +34,6 @@ export default function LoginPage() {
       if (redirect) {
         router.push(redirect);
       } else {
-        // Fetch user role and redirect accordingly
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
@@ -56,74 +55,86 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="glass-card">
-          <div className="auth-header">
-            <h1 className="auth-logo">Aza</h1>
-            <p className="auth-subtitle">
-              Welcome back — log in to your account
-            </p>
+    <div className="auth-card">
+      <div className="glass-card">
+        <div className="auth-header">
+          <h1 className="auth-logo">Aza</h1>
+          <p className="auth-subtitle">
+            Welcome back — log in to your account
+          </p>
+        </div>
+
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              id="email"
+              type="email"
+              className="form-input"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
 
-          {error && (
-            <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="auth-form">
-            {/* Email */}
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
-              <input
-                id="password"
-                type="password"
-                className="form-input"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              className="btn btn-primary btn-lg btn-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner"></span>
-                  Logging in...
-                </>
-              ) : (
-                'Log in'
-              )}
-            </button>
-          </form>
-
-          <div className="auth-footer">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup">Sign up</Link>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              id="password"
+              type="password"
+              className="form-input"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg btn-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Logging in...
+              </>
+            ) : (
+              'Log in'
+            )}
+          </button>
+        </form>
+
+        <div className="auth-footer">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup">Sign up</Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="auth-page">
+      <Suspense fallback={
+        <div className="auth-card">
+          <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
+            <span className="spinner" style={{ margin: '0 auto' }}></span>
+            <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Loading Login...</p>
+          </div>
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }
