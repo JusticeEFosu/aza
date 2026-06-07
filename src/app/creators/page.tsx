@@ -1,106 +1,77 @@
-import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 
-export const revalidate = 60; // Refresh data every 60 seconds
-
-export default async function CreatorsDiscoveryPage() {
+export default async function CreatorsPage() {
   const supabase = await createClient();
-  
-  // Fetch verified creators with their profile info
-  const { data: creators, error } = await supabase
+
+  const { data: creators } = await supabase
     .from('creator_profiles')
     .select(`
-      id,
       slug,
       bio,
       subscriber_count,
-      profiles (
-        full_name,
-        avatar_url
-      )
+      profiles ( full_name )
     `)
-    .eq('is_verified', true)
     .order('subscriber_count', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching creators:', error);
-  }
-
   return (
-    <div className="container" style={{ paddingTop: '3rem', paddingBottom: '5rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Discover Creators</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-          Support the best Nigerian talent. Discover creators and get exclusive access to their content.
-        </p>
-      </div>
-
-      {!creators || creators.length === 0 ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)' }}>
-            No verified creators found yet. Be the first!
-          </p>
-          <Link href="/signup" className="btn btn-primary" style={{ marginTop: '1.5rem' }}>
-            Become a Creator
-          </Link>
-        </div>
-      ) : (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          {creators.map((creator: any) => (
-            <Link key={creator.id} href={`/c/${creator.slug}`} style={{ textDecoration: 'none' }}>
-              <div className="glass-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', transition: 'all var(--transition-fast)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ 
-                    width: '60px', 
-                    height: '60px', 
-                    borderRadius: '50%', 
-                    background: 'var(--bg-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.5rem',
-                    color: 'var(--accent-primary)',
-                    border: '1px solid var(--border-color)'
-                  }}>
-                    {(creator.profiles as any)?.full_name?.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.125rem' }}>{(creator.profiles as any)?.full_name}</h3>
-                    <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                      @{creator.slug}
-                    </p>
-                  </div>
-                </div>
-
-                <p style={{ 
-                  color: 'var(--text-secondary)', 
-                  fontSize: '0.938rem', 
-                  flex: 1,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
-                }}>
-                  {creator.bio || 'Creating awesome content for fans.'}
-                </p>
-
-                <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    {creator.subscriber_count} subscribers
-                  </span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--accent-primary)' }}>
-                    View Profile &rarr;
-                  </span>
-                </div>
-              </div>
+    <div style={{ minHeight: '100vh' }}>
+      <section className="landing-section">
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <Link href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+              &larr; Home
             </Link>
-          ))}
+          </div>
+          <h1 style={{ marginBottom: '0.5rem' }}>Discover Creators</h1>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '3rem', maxWidth: '500px' }}>
+            Browse creators on Aza and find someone worth supporting.
+          </p>
+
+          {(!creators || creators.length === 0) ? (
+            <div className="glass-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+              <h3 style={{ marginBottom: '0.5rem' }}>No creators yet</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Be the first to set up your creator page on Aza.
+              </p>
+              <Link href="/signup" className="btn btn-primary">
+                Start Creating
+              </Link>
+            </div>
+          ) : (
+            <div className="creators-grid">
+              {creators.map((creator: any) => {
+                const name = creator.profiles?.full_name || 'Creator';
+                return (
+                  <Link
+                    key={creator.slug}
+                    href={`/c/${creator.slug}`}
+                    className="glass-card creator-card"
+                  >
+                    <div className="creator-avatar">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                    <h4>{name}</h4>
+                    <p>{creator.bio || 'No bio yet.'}</p>
+                    <span className="subscriber-count">
+                      {creator.subscriber_count || 0} subscriber{creator.subscriber_count === 1 ? '' : 's'}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </section>
+
+      <footer className="site-footer">
+        <div className="footer-brand">Aza</div>
+        <div className="footer-links">
+          <Link href="/">Home</Link>
+          <Link href="/login">Sign In</Link>
+          <Link href="/signup">Create Account</Link>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
   // Protected routes: redirect to login if not authenticated
   const protectedPaths = ['/fan', '/creator'];
   const isProtectedRoute = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
+    request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(`${path}/`)
   );
 
   if (isProtectedRoute && !user) {
