@@ -117,6 +117,19 @@ h4 { font-size: 1.25rem; }
   padding: 0 1.5rem;
 }
 
+.grid-split {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .grid-split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+
 /* ─── Simple Card ─────────────────────────────────── */
 .glass-card {
   background: var(--bg-card);

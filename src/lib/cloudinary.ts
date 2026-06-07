@@ -43,7 +43,7 @@ export async function uploadImage(
   formData.append('signature', signature);
 
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
     {
       method: 'POST',
       body: formData,

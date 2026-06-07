@@ -85,7 +85,7 @@ export default function CreatorTiers() {
         <a href="/creator" className="btn btn-secondary btn-sm">Back to Dashboard</a>
       </div>
 
-      <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr', '@media (min-width: 768px)': { gridTemplateColumns: '1fr 1fr' } } as any}>
+      <div className="grid-split">
         
         {/* Create New Tier Form */}
         <div className="glass-card">

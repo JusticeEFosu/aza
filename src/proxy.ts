@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * Middleware that refreshes Supabase auth tokens and protects routes.
  * Runs on every request matched by the config below.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
