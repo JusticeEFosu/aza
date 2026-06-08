@@ -10,7 +10,7 @@ export default async function CreatorDashboard() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, role, avatar_url')
     .eq('id', user.id)
     .single();
 
@@ -39,11 +39,24 @@ export default async function CreatorDashboard() {
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1>Creator Dashboard</h1>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Welcome back, {profile?.full_name}
-          </p>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {profile?.avatar_url ? (
+            <img 
+              src={profile.avatar_url} 
+              alt="" 
+              style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--glass-border)' }} 
+            />
+          ) : (
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+              {profile?.full_name?.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <h1>Creator Dashboard</h1>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+              Welcome back, {profile?.full_name}
+            </p>
+          </div>
         </div>
         <form action="/api/auth/signout" method="POST">
           <button type="submit" className="btn btn-secondary btn-sm">

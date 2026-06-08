@@ -122,9 +122,14 @@ export default async function FanDashboard() {
                       justifyContent: 'center',
                       color: 'var(--accent-primary)',
                       fontWeight: 'bold',
-                      flexShrink: 0
+                      flexShrink: 0,
+                      overflow: 'hidden'
                     }}>
-                      {creatorName.charAt(0).toUpperCase()}
+                      {sub.creator_profiles?.profiles?.avatar_url ? (
+                        <img src={sub.creator_profiles.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        creatorName.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -176,9 +181,14 @@ export default async function FanDashboard() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        overflow: 'hidden'
                       }}>
-                        {creatorName.charAt(0).toUpperCase()}
+                        {post.creator_profiles?.profiles?.avatar_url ? (
+                          <img src={post.creator_profiles.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          creatorName.charAt(0).toUpperCase()
+                        )}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                         <Link href={`/c/${creatorSlug}`} style={{ textDecoration: 'none', color: 'inherit' }}>

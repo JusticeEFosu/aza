@@ -93,9 +93,14 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             fontSize: '2.5rem',
             color: 'white',
             fontWeight: 'bold',
-            boxShadow: 'var(--shadow-md)'
+            boxShadow: 'var(--shadow-md)',
+            overflow: 'hidden'
           }}>
-            {(creator.profiles as any)?.full_name?.charAt(0).toUpperCase()}
+            {(creator.profiles as any)?.avatar_url ? (
+              <img src={(creator.profiles as any).avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              (creator.profiles as any)?.full_name?.charAt(0).toUpperCase()
+            )}
           </div>
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0, fontSize: '2.5rem' }}>

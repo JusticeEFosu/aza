@@ -10,7 +10,7 @@ export default async function CreatorsPage() {
       slug,
       bio,
       subscriber_count,
-      profiles ( full_name )
+      profiles ( full_name, avatar_url )
     `)
     .order('subscriber_count', { ascending: false });
 
@@ -48,8 +48,16 @@ export default async function CreatorsPage() {
                     href={`/c/${creator.slug}`}
                     className="glass-card creator-card"
                   >
-                    <div className="creator-avatar">
-                      {name.charAt(0).toUpperCase()}
+                    <div className="creator-avatar" style={{ overflow: 'hidden' }}>
+                      {creator.profiles?.avatar_url ? (
+                        <img 
+                          src={creator.profiles.avatar_url} 
+                          alt="" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                      ) : (
+                        name.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <h4>{name}</h4>
                     <p>{creator.bio || 'No bio yet.'}</p>

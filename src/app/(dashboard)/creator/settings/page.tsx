@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import AvatarUpload from '@/components/ui/AvatarUpload';
 
 // Some common Nigerian banks for the dropdown
 const BANKS = [
@@ -20,6 +21,8 @@ export default function CreatorSettings() {
   const [loading, setLoading] = useState(false);
   const [initialFetchLoading, setInitialFetchLoading] = useState(true);
   const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [userId, setUserId] = useState('');
   
   const [bankCode, setBankCode] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -40,18 +43,24 @@ export default function CreatorSettings() {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase
-          .from('creator_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+        setUserId(user.id);
         
-        if (data) {
-          setBio(data.bio || '');
-          setIsVerified(data.is_verified);
-          setBankCode(data.bank_code || '');
-          setAccountNumber(data.bank_account_number || '');
-          setPersistedBankName(data.bank_account_name || '');
+        // Fetch both base profile and creator profile
+        const [profileRes, creatorRes] = await Promise.all([
+          supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
+          supabase.from('creator_profiles').select('*').eq('id', user.id).single()
+        ]);
+        
+        if (profileRes.data) {
+          setAvatarUrl(profileRes.data.avatar_url || '');
+        }
+
+        if (creatorRes.data) {
+          setBio(creatorRes.data.bio || '');
+          setIsVerified(creatorRes.data.is_verified);
+          setBankCode(creatorRes.data.bank_code || '');
+          setAccountNumber(creatorRes.data.bank_account_number || '');
+          setPersistedBankName(creatorRes.data.bank_account_name || '');
         }
       }
       setInitialFetchLoading(false);
@@ -149,6 +158,12 @@ export default function CreatorSettings() {
         )}
 
         <form onSubmit={handleSave} className="form-group" style={{ gap: '1.5rem' }}>
+          
+          <AvatarUpload 
+            currentUrl={avatarUrl} 
+            userId={userId} 
+            onUploadComplete={(url) => setAvatarUrl(url)} 
+          />
           
           <div className="form-group">
             <label className="form-label">Bio / Description</label>
