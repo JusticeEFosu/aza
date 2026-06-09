@@ -47,7 +47,9 @@
 }
 
 /* ─── Reset & Base ───────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
@@ -90,17 +92,33 @@ img {
 }
 
 /* ─── Typography ─────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   line-height: 1.2;
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
 
 /* ─── Utility Classes ────────────────────────────── */
 .container {
@@ -145,6 +163,53 @@ h4 { font-size: 1.25rem; }
   box-shadow: var(--shadow-md);
 }
 
+/* ─── Tier Card ────────────────────────────────────── */
+.tier-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s ease;
+}
+
+.tier-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-color-hover);
+}
+
+.tier-card.popular {
+  border: 2px solid var(--accent-primary);
+  transform: scale(1.02);
+}
+
+.tier-card.popular:hover {
+  transform: scale(1.02) translateY(-8px);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.1);
+}
+
+.tier-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-primary);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
 /* ─── Buttons ────────────────────────────────────── */
 .btn {
   display: inline-flex;
@@ -159,11 +224,11 @@ h4 { font-size: 1.25rem; }
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), 
-              background-color 0.2s ease, 
-              border-color 0.2s ease,
-              color 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -339,7 +404,8 @@ h4 { font-size: 1.25rem; }
   border-color: var(--accent-primary);
   background: var(--bg-secondary);
   border-width: 2px;
-  padding: calc(1.5rem - 1px) calc(1rem - 1px); /* Prevent layout shift */
+  padding: calc(1.5rem - 1px) calc(1rem - 1px);
+  /* Prevent layout shift */
 }
 
 .role-option-icon {
@@ -461,7 +527,9 @@ h4 { font-size: 1.25rem; }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ─── Landing Page ───────────────────────────────── */
@@ -502,8 +570,13 @@ h4 { font-size: 1.25rem; }
 }
 
 @keyframes drift {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(40px, -30px); }
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(40px, -30px);
+  }
 }
 
 .landing-hero h1 {
@@ -701,9 +774,17 @@ h4 { font-size: 1.25rem; }
   animation: fadeInUp 0.6s ease forwards;
 }
 
-.fade-in-delay-1 { animation-delay: 0.15s; }
-.fade-in-delay-2 { animation-delay: 0.3s; }
-.fade-in-delay-3 { animation-delay: 0.45s; }
+.fade-in-delay-1 {
+  animation-delay: 0.15s;
+}
+
+.fade-in-delay-2 {
+  animation-delay: 0.3s;
+}
+
+.fade-in-delay-3 {
+  animation-delay: 0.45s;
+}
 
 @keyframes fadeInUp {
   to {
@@ -714,9 +795,17 @@ h4 { font-size: 1.25rem; }
 
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
 
   .glass-card {
     padding: 1.5rem;

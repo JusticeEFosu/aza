@@ -10,6 +10,7 @@ export default async function CreatorsPage() {
       slug,
       bio,
       subscriber_count,
+      display_name,
       profiles ( full_name, avatar_url )
     `)
     .order('subscriber_count', { ascending: false });
@@ -41,7 +42,7 @@ export default async function CreatorsPage() {
           ) : (
             <div className="creators-grid">
               {creators.map((creator: any) => {
-                const name = creator.profiles?.full_name || 'Creator';
+                const name = creator.display_name || creator.profiles?.full_name || 'Creator';
                 return (
                   <Link
                     key={creator.slug}

@@ -32,11 +32,11 @@ export default async function FanDashboard() {
 
   const creatorIds = (subscriptions || []).map(s => s.creator_id);
   const maxTierPerCreator: Record<string, number> = {};
-  
+
   (subscriptions || []).forEach(s => {
     const amount = (s.tiers as any)?.amount || 0;
     if (amount > (maxTierPerCreator[s.creator_id] || 0)) {
-        maxTierPerCreator[s.creator_id] = amount;
+      maxTierPerCreator[s.creator_id] = amount;
     }
   });
 
@@ -101,21 +101,21 @@ export default async function FanDashboard() {
               </a>
             </div>
           ) : (
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-              gap: '1rem' 
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+              gap: '1rem'
             }}>
               {subscriptions.map((sub: any) => {
                 const creatorName = sub.creator_profiles?.profiles?.full_name || 'Creator';
                 const tierName = sub.tiers?.name || 'Tier';
-                
+
                 return (
                   <div key={sub.id} className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem' }}>
-                    <div style={{ 
-                      width: '48px', 
-                      height: '48px', 
-                      borderRadius: '50%', 
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '50%',
                       background: 'var(--bg-secondary)',
                       display: 'flex',
                       alignItems: 'center',
@@ -157,7 +157,7 @@ export default async function FanDashboard() {
         {/* The Feed */}
         <section>
           <h2 style={{ marginBottom: '1.5rem' }}>Your Feed</h2>
-          
+
           {posts.length === 0 ? (
             <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
               <p style={{ color: 'var(--text-muted)' }}>It's quiet here. Your creators haven't posted anything yet.</p>
@@ -168,14 +168,14 @@ export default async function FanDashboard() {
                 const creatorName = post.creator_profiles?.profiles?.full_name || 'Unknown';
                 const creatorSlug = post.creator_profiles?.slug || '';
                 const { hasAccess } = post;
-                
+
                 return (
                   <div key={post.id} className="glass-card" style={{ padding: '2rem' }}>
                     <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-                      <div style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        borderRadius: '50%', 
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
                         background: 'var(--accent-primary)',
                         color: 'white',
                         display: 'flex',
@@ -202,9 +202,9 @@ export default async function FanDashboard() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{post.title}</h3>
-                      <span style={{ 
-                        fontSize: '0.75rem', 
-                        padding: '0.25rem 0.75rem', 
+                      <span style={{
+                        fontSize: '0.75rem',
+                        padding: '0.25rem 0.75rem',
                         borderRadius: '1rem',
                         background: post.is_public ? 'var(--bg-secondary)' : (hasAccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
                         color: post.is_public ? 'var(--text-secondary)' : (hasAccess ? 'var(--success)' : 'var(--danger)'),

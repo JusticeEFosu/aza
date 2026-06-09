@@ -16,6 +16,10 @@ export default function CreatorPostsPage() {
   const [minPrice, setMinPrice] = useState(0); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -60,28 +64,54 @@ export default function CreatorPostsPage() {
     setError('');
 
     try {
-      let imageUrl = null;
+      let imageUrl = currentImageUrl;
 
       // 1. Upload media if present
       if (file) {
+        setUploadProgress(0);
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', 'posts');
 
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
+        const uploadData = await new Promise<any>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', '/api/upload', true);
+          
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress(percentComplete);
+            }
+          };
+          
+          xhr.onload = () => {
+             if (xhr.status >= 200 && xhr.status < 300) {
+               try {
+                 resolve(JSON.parse(xhr.responseText));
+               } catch (e) {
+                 reject(new Error('Invalid response from upload server'));
+               }
+             } else {
+               let msg = 'Media upload failed';
+               try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) {}
+               reject(new Error(msg));
+             }
+          };
+          
+          xhr.onerror = () => reject(new Error('Network error during upload'));
+          xhr.send(formData);
         });
-
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok) throw new Error(uploadData.error || 'Media upload failed');
         
         imageUrl = uploadData.url;
+        setUploadProgress(100);
       }
 
-      // 2. Create post
-      const res = await fetch('/api/posts', {
-        method: 'POST',
+      // 2. Create or Update post
+      const method = editingPostId ? 'PUT' : 'POST';
+      const endpoint = editingPostId ? `/api/posts/${editingPostId}` : '/api/posts';
+      
+      const res = await fetch(endpoint, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
@@ -99,11 +129,8 @@ export default function CreatorPostsPage() {
       await fetchData();
       
       // Reset form
-      setTitle('');
-      setContent('');
-      setFile(null);
-      setIsPublic(true);
-      
+      cancelEdit();
+
       // Reset the file input physically
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -113,6 +140,41 @@ export default function CreatorPostsPage() {
       setError(err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingPostId(null);
+    setTitle('');
+    setContent('');
+    setFile(null);
+    setIsPublic(true);
+    setUploadProgress(0);
+    setCurrentImageUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleEditClick = (post: any) => {
+    setEditingPostId(post.id);
+    setTitle(post.title);
+    setContent(post.content);
+    setIsPublic(post.is_public);
+    setMinPrice(post.minimum_tier_amount || 0);
+    setCurrentImageUrl(post.image_url);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+    try {
+      const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
+      if (!res.ok) {
+         const data = await res.json();
+         throw new Error(data.error || 'Failed to delete post');
+      }
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 
@@ -127,7 +189,15 @@ export default function CreatorPostsPage() {
       </div>
 
       <div className="glass-card" style={{ marginBottom: '3rem' }}>
-        <h3 style={{ marginBottom: '1.5rem' }}>Create New Post</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ margin: 0 }}>{editingPostId ? 'Edit Post' : 'Create New Post'}</h3>
+          {editingPostId && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={cancelEdit}>
+              Cancel Edit
+            </button>
+          )}
+        </div>
+        
         {error && <div className="form-error" style={{ marginBottom: '1rem' }}>{error}</div>}
         
         <form onSubmit={handleCreatePost} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -166,6 +236,14 @@ export default function CreatorPostsPage() {
               onChange={e => setFile(e.target.files?.[0] || null)}
             />
             <span className="form-hint">Upload an image or short video</span>
+            {uploadProgress > 0 && uploadProgress < 100 && (
+               <div style={{ marginTop: '0.5rem', background: 'var(--bg-secondary)', borderRadius: '1rem', overflow: 'hidden', height: '8px' }}>
+                 <div style={{ height: '100%', background: 'var(--accent-primary)', width: `${uploadProgress}%`, transition: 'width 0.2s ease' }} />
+               </div>
+            )}
+            {uploadProgress === 100 && isSubmitting && (
+               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Processing processing uploads, please wait...</p>
+            )}
           </div>
 
           <div className="form-group">
@@ -218,7 +296,7 @@ export default function CreatorPostsPage() {
           )}
 
           <button type="submit" className="btn btn-primary" disabled={isSubmitting || (!title || !content)}>
-            {isSubmitting ? 'Publishing...' : 'Publish Post'}
+            {isSubmitting ? (editingPostId ? 'Updating...' : 'Publishing...') : (editingPostId ? 'Update Post' : 'Publish Post')}
           </button>
         </form>
       </div>
@@ -236,17 +314,28 @@ export default function CreatorPostsPage() {
             return (
               <div key={post.id} className="glass-card" style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                  <h4 style={{ margin: 0, fontSize: '1.125rem' }}>{post.title}</h4>
-                  <span style={{ 
-                    fontSize: '0.75rem', 
-                    padding: '0.25rem 0.75rem', 
-                    borderRadius: '1rem',
-                    background: post.is_public ? 'var(--bg-secondary)' : 'rgba(139, 92, 246, 0.1)',
-                    color: post.is_public ? 'var(--text-secondary)' : 'var(--accent-primary)',
-                    fontWeight: 600
-                  }}>
-                    {post.is_public ? 'Public' : (requiredTier ? `${requiredTier.name} +` : 'Subscribers Only')}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.125rem' }}>{post.title}</h4>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '0.25rem 0.75rem', 
+                      borderRadius: '1rem',
+                      background: post.is_public ? 'var(--bg-secondary)' : 'rgba(139, 92, 246, 0.1)',
+                      color: post.is_public ? 'var(--text-secondary)' : 'var(--accent-primary)',
+                      fontWeight: 600
+                    }}>
+                      {post.is_public ? 'Public' : (requiredTier ? `${requiredTier.name} +` : 'Subscribers Only')}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => handleEditClick(post)} className="btn btn-secondary btn-sm" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
+                      Edit
+                    </button>
+                    <button onClick={() => handleDeletePost(post.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }}>
+                      Delete
+                    </button>
+                  </div>
                 </div>
                 
                 {post.image_url && (

@@ -3,6 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 
 export default async function HomePage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let dashboardUrl = '/login';
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    dashboardUrl = profile?.role === 'creator' ? '/creator' : '/fan';
+  }
 
   // Fetch featured creators for the discovery section
   const { data: creators } = await supabase
@@ -28,12 +39,20 @@ export default async function HomePage() {
           Exclusive content, paid in naira, directly to their bank.
         </p>
         <div className="hero-actions fade-in fade-in-delay-2">
-          <Link href="/signup" className="btn btn-primary btn-lg">
-            Start Creating
-          </Link>
-          <Link href="/signup" className="btn btn-secondary btn-lg">
-            Become a Fan
-          </Link>
+          {user ? (
+            <Link href={dashboardUrl} className="btn btn-primary btn-lg">
+              Go to My Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/signup" className="btn btn-primary btn-lg">
+                Start Creating
+              </Link>
+              <Link href="/signup" className="btn btn-secondary btn-lg">
+                Become a Fan
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
@@ -123,12 +142,20 @@ export default async function HomePage() {
           Aza is built for you.
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/signup" className="btn btn-primary btn-lg">
-            Join Aza Today
-          </Link>
-          <Link href="/login" className="btn btn-secondary btn-lg">
-            Sign In
-          </Link>
+          {user ? (
+            <Link href={dashboardUrl} className="btn btn-primary btn-lg">
+              Back to My Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/signup" className="btn btn-primary btn-lg">
+                Join Aza Today
+              </Link>
+              <Link href="/login" className="btn btn-secondary btn-lg">
+                Sign In
+              </Link>
+            </>
+          )}
         </div>
       </section>
 

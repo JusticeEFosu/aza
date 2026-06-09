@@ -21,6 +21,7 @@ export default function CreatorSettings() {
   const [loading, setLoading] = useState(false);
   const [initialFetchLoading, setInitialFetchLoading] = useState(true);
   const [bio, setBio] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState('');
   
@@ -57,6 +58,7 @@ export default function CreatorSettings() {
 
         if (creatorRes.data) {
           setBio(creatorRes.data.bio || '');
+          setDisplayName(creatorRes.data.display_name || '');
           setIsVerified(creatorRes.data.is_verified);
           setBankCode(creatorRes.data.bank_code || '');
           setAccountNumber(creatorRes.data.bank_account_number || '');
@@ -121,6 +123,7 @@ export default function CreatorSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bio,
+          displayName,
           bankCode: isVerified ? undefined : bankCode, 
           accountNumber: isVerified ? undefined : accountNumber
         })
@@ -165,6 +168,18 @@ export default function CreatorSettings() {
             onUploadComplete={(url) => setAvatarUrl(url)} 
           />
           
+          <div className="form-group">
+            <label className="form-label">Creator / Display Name (Optional)</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="E.g. Chef Boma"
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+            />
+            <span className="form-hint">Fans will see this name instead of your legal name if provided.</span>
+          </div>
+
           <div className="form-group">
             <label className="form-label">Bio / Description</label>
             <textarea

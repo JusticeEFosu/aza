@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { bankCode, accountNumber, bio, socialLinks } = body;
+    const { bankCode, accountNumber, bio, displayName, socialLinks } = body;
 
     // We only create a subaccount if bank details are provided
     let paystackSubaccountCode = null;
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     // 4. Update Creator Profile in database
     const updateData: any = {
       bio: bio || '',
+      display_name: displayName || null,
       social_links: socialLinks || {},
     };
 

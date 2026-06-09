@@ -1,10 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-/**
- * Middleware that refreshes Supabase auth tokens and protects routes.
- * Runs on every request matched by the config below.
- */
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -33,29 +29,37 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh the session — IMPORTANT: do not remove this
+  // Refresh the session
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes: redirect to login if not authenticated
+  const path = request.nextUrl.pathname;
+
+  // 1. Protected routes: redirect to login if not authenticated
   const protectedPaths = ['/fan', '/creator'];
-  const isProtectedRoute = protectedPaths.some((path) =>
-    request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(`${path}/`)
+  const isProtectedRoute = protectedPaths.some((p) =>
+    path === p || path.startsWith(`${p}/`)
   );
 
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    url.searchParams.set('redirect', request.nextUrl.pathname);
+    url.searchParams.set('redirect', path);
     return NextResponse.redirect(url);
   }
 
-  // If logged in and trying to access login/signup, redirect to dashboard
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+  // 2. If logged in and trying to access login/signup, redirect to their dashboard
+  if (user && (path === '/login' || path === '/signup')) {
+    // Fetch user role for smart redirect
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
     const url = request.nextUrl.clone();
-    // We'll determine the correct dashboard based on role later
-    url.pathname = '/';
+    url.pathname = profile?.role === 'creator' ? '/creator' : '/fan';
     return NextResponse.redirect(url);
   }
 
@@ -64,14 +68,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api/webhooks (webhook endpoints don't need auth)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/webhooks).*)',
   ],
 };

@@ -15,6 +15,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
       id,
       slug,
       bio,
+      display_name,
       is_verified,
       subscriber_count,
       profiles (
@@ -104,7 +105,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
           </div>
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0, fontSize: '2.5rem' }}>
-              {(creator.profiles as any)?.full_name}
+              {creator.display_name || (creator.profiles as any)?.full_name}
               {creator.is_verified && <span style={{ color: 'var(--success)', marginLeft: '0.5rem', fontSize: '1.5rem' }}>✓</span>}
             </h1>
             <p style={{ margin: '0.25rem 0', fontSize: '1rem', color: 'var(--text-muted)' }}>
@@ -133,38 +134,44 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
           gap: '1.5rem' 
         }}>
-          {tiers.map((tier: any) => (
-            <div key={tier.id} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{tier.name}</h3>
-                <div style={{ margin: '0.5rem 0', fontSize: '2rem', fontWeight: 800 }}>
+          {tiers.map((tier: any, index: number) => {
+            const isPopular = index === 1 || (tiers.length === 1 && index === 0);
+            return (
+            <div key={tier.id} className={`tier-card ${isPopular ? 'popular' : ''}`}>
+              {isPopular && <div className="tier-badge">Most Popular</div>}
+              
+              <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-secondary)' }}>{tier.name}</h3>
+                <div style={{ margin: '1rem 0', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
                   ₦{(tier.amount / 100).toLocaleString()}
-                  <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 400 }}>/mo</span>
+                  <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>/mo</span>
                 </div>
                 {tier.description && (
-                  <p style={{ fontSize: '0.938rem', color: 'var(--text-secondary)' }}>{tier.description}</p>
+                  <p style={{ fontSize: '0.938rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{tier.description}</p>
                 )}
               </div>
 
               {tier.perks && tier.perks.length > 0 && (
-                <div style={{ flex: 1, marginBottom: '2rem' }}>
-                  <p style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Includes:
+                <div style={{ flex: 1, marginBottom: '2.5rem' }}>
+                  <p style={{ fontWeight: 600, fontSize: '0.813rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-primary)' }}>
+                    What's included:
                   </p>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                     {tier.perks.map((perk: string, i: number) => (
-                      <li key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', fontSize: '0.938rem' }}>
-                        <span style={{ color: 'var(--accent-primary)' }}>✔</span>
-                        <span>{perk}</span>
+                      <li key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', fontSize: '0.938rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>✓</span>
+                        <span style={{ lineHeight: 1.4 }}>{perk}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
+              <div style={{ marginTop: 'auto' }}>
+                <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
+              </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 

@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
-export async function POST(request: Request) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await context.params;
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -11,24 +12,23 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, content, isPublic, minPrice, imageUrl, thumbnailUrl } = body;
+    const { title, content, minPrice, isPublic, imageUrl } = body;
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
     }
 
-    // Insert into posts table
     const { data, error } = await supabase
       .from('posts')
-      .insert({
-        creator_id: user.id, // Ensure only the current creator can create a post for themselves
+      .update({
         title,
         content,
         minimum_tier_amount: isPublic ? 0 : (minPrice || 0),
         is_public: isPublic,
-        image_url: imageUrl,
-        thumbnail_url: thumbnailUrl
+        image_url: imageUrl
       })
+      .eq('id', id)
+      .eq('creator_id', user.id) // Ensure they can only update their own post
       .select()
       .single();
 
@@ -36,33 +36,32 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
-    console.error('Post creation error:', error);
+    console.error('Post update error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function GET(request: Request) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { searchParams } = new URL(request.url);
-    const creatorId = searchParams.get('creatorId');
-
+    const { id } = await context.params;
     const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    let query = supabase
-      .from('posts')
-      .select('*, creator_profiles(slug, display_name, profiles(full_name, avatar_url))')
-      .order('created_at', { ascending: false });
-
-    if (creatorId) {
-      query = query.eq('creator_id', creatorId);
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await query;
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', id)
+      .eq('creator_id', user.id); // Ensure they can only delete their own post
 
     if (error) throw error;
 
-    return NextResponse.json({ data });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error('Post deletion error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
