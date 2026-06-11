@@ -113,7 +113,7 @@ export default async function CreatorDashboard() {
           <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '0.938rem', textAlign: 'center' }}>
             aza.com/c/{creatorProfile?.slug}
           </div>
-          <CopyLinkButton url={`https://aza.com/c/${creatorProfile?.slug}`} />
+          <CopyLinkButton url={`https://aza.chi.vercel.app/c/${creatorProfile?.slug}`} />
         </div>
       </div>
 
