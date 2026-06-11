@@ -67,12 +67,15 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
     }
   }
 
-  // 5. Scrub content server-side for security
+  // 5. Scrub content server-side for security and add tier requirement info
   const posts = (rawPosts || []).map((post: any) => {
     const hasAccess = post.is_public || maxFanTierAmount >= post.minimum_tier_amount;
+    const requiredTier = tiers?.find(t => t.amount === post.minimum_tier_amount);
+    
     return {
       ...post,
       hasAccess,
+      requiredTierName: requiredTier?.name || 'Subscribers',
       content: hasAccess ? post.content : post.content.substring(0, 50) + '...'
     };
   });
@@ -195,11 +198,18 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                     fontSize: '0.75rem', 
                     padding: '0.25rem 0.75rem', 
                     borderRadius: '1rem',
-                    background: post.is_public ? 'var(--bg-secondary)' : (hasAccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
-                    color: post.is_public ? 'var(--text-secondary)' : (hasAccess ? 'var(--success)' : 'var(--danger)'),
-                    fontWeight: 600
+                    background: post.is_public ? 'var(--bg-secondary)' : (hasAccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)'),
+                    color: post.is_public ? 'var(--text-secondary)' : (hasAccess ? 'var(--success)' : '#ca8a04'),
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.375rem'
                   }}>
-                    {post.is_public ? 'Public' : (hasAccess ? 'Unlocked' : 'Locked')}
+                    {post.is_public ? 'Public' : (hasAccess ? (
+                      <><span>💎</span> {post.requiredTierName} Perk (Unlocked)</>
+                    ) : (
+                      <><span>🔒</span> {post.requiredTierName} Required</>
+                    ))}
                   </span>
                 </div>
 
@@ -208,7 +218,14 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                     {post.image_url && (
                       <div style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#000' }}>
                         {post.image_url.includes('/video/') ? (
-                          <video src={post.image_url} controls playsInline style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }} />
+                          <video 
+                            src={post.image_url} 
+                            poster={post.thumbnail_url}
+                            controls 
+                            playsInline 
+                            preload="none"
+                            style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }} 
+                          />
                         ) : (
                           <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
                         )}
@@ -219,16 +236,52 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                     </p>
                   </>
                 ) : (
-                  <div style={{ position: 'relative', marginTop: '1rem' }}>
-                    <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--text-primary)', filter: 'blur(4px)', opacity: 0.5 }}>
-                      {post.content}
-                      <br /><br />This is just a teaser of the full content.
-                    </p>
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', width: '100%', background: 'rgba(255,255,255,0.7)', padding: '1rem', borderRadius: '1rem', backdropFilter: 'blur(4px)' }}>
-                      <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Subscribe to unlock this post</p>
-                      <button className="btn btn-primary btn-sm" onClick={() => window.scrollTo(0, 0)}>
-                        View Tiers
-                      </button>
+                  <div style={{ position: 'relative', marginTop: '1rem', display: 'flex', flexDirection: 'column' }}>
+                    {post.image_url && (
+                      <div style={{ 
+                        marginBottom: '1rem', 
+                        borderRadius: 'var(--radius-md)', 
+                        height: '240px',
+                        background: 'linear-gradient(45deg, #1f2937, #111827)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '1rem',
+                        color: '#fbbf24',
+                        border: '1px solid rgba(251, 191, 36, 0.2)'
+                      }}>
+                        <div style={{ fontSize: '3rem' }}>🔒</div>
+                        <div style={{ textAlign: 'center' }}>
+                           <p style={{ fontWeight: 600, margin: 0, color: 'white' }}>Exclusive {post.image_url.includes('/video/') ? 'Video' : 'Photo'}</p>
+                           <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', opacity: 0.8 }}>Available for {post.requiredTierName}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div style={{ position: 'relative' }}>
+                      <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--text-primary)', filter: 'blur(8px)', opacity: 0.3, userSelect: 'none' }}>
+                        {post.content || "This post contains exclusive content shared only with subscribers. Subscribe today to unlock this and all other member-only posts from this creator."}
+                      </p>
+                      <div style={{ 
+                        position: 'absolute', 
+                        top: '50%', 
+                        left: '50%', 
+                        transform: 'translate(-50%, -50%)', 
+                        textAlign: 'center', 
+                        width: '100%', 
+                        padding: '1.5rem', 
+                        borderRadius: '1rem',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid var(--glass-border)',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                      }}>
+                        <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>Subscribe to unlock this post</p>
+                        <button className="btn btn-primary btn-sm" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                          View Membership Tiers
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -36,6 +36,13 @@ export default async function CreatorDashboard() {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('creator_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -111,10 +118,49 @@ export default async function CreatorDashboard() {
             </p>
           </div>
           <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '0.938rem', textAlign: 'center' }}>
-            aza.com/c/{creatorProfile?.slug}
+            aza-chi.vercel.app/c/{creatorProfile?.slug}
           </div>
-          <CopyLinkButton url={`https://aza.chi.vercel.app/c/${creatorProfile?.slug}`} />
+          <CopyLinkButton url={`https://aza-chi.vercel.app/c/${creatorProfile?.slug}`} />
         </div>
+      </div>
+
+      {/* Recent Posts */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', marginTop: '2rem' }}>
+        <h2 style={{ margin: 0 }}>Recent Posts</h2>
+        <a href="/creator/posts" className="btn btn-secondary btn-sm">Manage All Posts</a>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+        {(!posts || posts.length === 0) ? (
+          <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
+             <p style={{ color: 'var(--text-muted)' }}>You haven't posted anything yet.</p>
+             <a href="/creator/posts" className="btn btn-primary" style={{ marginTop: '1rem' }}>Create Your First Post</a>
+          </div>
+        ) : (
+          posts.map(post => (
+            <div key={post.id} className="glass-card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {post.image_url ? (
+                <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#000' }}>
+                  {post.image_url.includes('/video/') ? (
+                    <video src={post.image_url} poster={post.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  )}
+                </div>
+              ) : (
+                <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border-color)' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Text-only post</span>
+                </div>
+              )}
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.title}</h4>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  {post.is_public ? 'Public' : 'Subscriber Only'} • {new Date(post.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Transaction History */}

@@ -12,10 +12,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     }
 
     const body = await request.json();
-    const { title, content, minPrice, isPublic, imageUrl } = body;
+    const { title, content, minPrice, isPublic, imageUrl, thumbnailUrl } = body;
 
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
     const { data, error } = await supabase
@@ -25,7 +25,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         content,
         minimum_tier_amount: isPublic ? 0 : (minPrice || 0),
         is_public: isPublic,
-        image_url: imageUrl
+        image_url: imageUrl,
+        thumbnail_url: thumbnailUrl
       })
       .eq('id', id)
       .eq('creator_id', user.id) // Ensure they can only update their own post

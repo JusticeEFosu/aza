@@ -56,12 +56,21 @@ export default async function FanDashboard() {
       .order('created_at', { ascending: false })
       .limit(30);
 
+    // Build a map of tier names by amount for the feed requirement display
+    const tierNamesByAmount: Record<string, string> = {};
+    (subscriptions || []).forEach(s => {
+      if (s.tiers) {
+        tierNamesByAmount[(s.tiers as any).amount] = (s.tiers as any).name;
+      }
+    });
+
     posts = (rawPosts || []).map((post: any) => {
       const maxFanTierAmount = maxTierPerCreator[post.creator_id] || 0;
       const hasAccess = post.is_public || maxFanTierAmount >= post.minimum_tier_amount;
       return {
         ...post,
         hasAccess,
+        requiredTierName: tierNamesByAmount[post.minimum_tier_amount] || 'Higher Tier',
         content: hasAccess ? post.content : post.content.substring(0, 50) + '...'
       };
     });
@@ -69,17 +78,41 @@ export default async function FanDashboard() {
 
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1>My Subscriptions</h1>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'row',
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start', 
+        marginBottom: '2.5rem',
+        flexWrap: 'wrap',
+        gap: '1.5rem'
+      }}>
+        <div style={{ flex: '1 1 300px' }}>
+          <h1 style={{ margin: 0 }}>My Subscriptions</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Welcome back, {profile?.full_name}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <a href="/creators" className="btn btn-primary btn-sm">Discover Creators</a>
-          <form action="/api/auth/signout" method="POST">
-            <button type="submit" className="btn btn-secondary btn-sm">
+        
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          alignItems: 'center',
+          background: 'var(--bg-secondary)',
+          padding: '0.75rem 1.25rem',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-color)',
+          boxShadow: 'var(--shadow-sm)'
+        }}>
+          <a href="/creators" className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }}>Discover Creators</a>
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-color)' }} />
+          <form action="/api/auth/signout" method="POST" style={{ margin: 0 }}>
+            <button type="submit" className="btn btn-secondary btn-sm" style={{ 
+              whiteSpace: 'nowrap',
+              color: 'var(--danger)',
+              borderColor: 'rgba(239, 68, 68, 0.2)',
+              background: 'rgba(239, 68, 68, 0.05)'
+            }}>
               Sign Out
             </button>
           </form>
@@ -206,11 +239,18 @@ export default async function FanDashboard() {
                         fontSize: '0.75rem',
                         padding: '0.25rem 0.75rem',
                         borderRadius: '1rem',
-                        background: post.is_public ? 'var(--bg-secondary)' : (hasAccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
-                        color: post.is_public ? 'var(--text-secondary)' : (hasAccess ? 'var(--success)' : 'var(--danger)'),
-                        fontWeight: 600
+                        background: post.is_public ? 'var(--bg-secondary)' : (hasAccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)'),
+                        color: post.is_public ? 'var(--text-secondary)' : (hasAccess ? 'var(--success)' : '#ca8a04'),
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.375rem'
                       }}>
-                        {post.is_public ? 'Public' : (hasAccess ? 'Unlocked' : 'Locked')}
+                        {post.is_public ? 'Public' : (hasAccess ? (
+                           <><span>💎</span> {post.requiredTierName} Perk (Unlocked)</>
+                        ) : (
+                           <><span>🔒</span> {post.requiredTierName} Required</>
+                        ))}
                       </span>
                     </div>
 
@@ -219,7 +259,14 @@ export default async function FanDashboard() {
                         {post.image_url && (
                           <div style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#000' }}>
                             {post.image_url.includes('/video/') ? (
-                              <video src={post.image_url} controls playsInline style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }} />
+                              <video 
+                                src={post.image_url} 
+                                poster={post.thumbnail_url}
+                                controls 
+                                playsInline 
+                                preload="none"
+                                style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }} 
+                              />
                             ) : (
                               <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
                             )}
@@ -230,16 +277,52 @@ export default async function FanDashboard() {
                         </p>
                       </>
                     ) : (
-                      <div style={{ position: 'relative', marginTop: '1rem' }}>
-                        <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--text-primary)', filter: 'blur(4px)', opacity: 0.5 }}>
-                          {post.content}
-                          <br /><br />This is just a teaser of the full content.
-                        </p>
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', width: '100%', background: 'rgba(255,255,255,0.7)', padding: '1rem', borderRadius: '1rem', backdropFilter: 'blur(4px)' }}>
-                          <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Upgrade subscription to unlock</p>
-                          <Link href={`/c/${creatorSlug}`} className="btn btn-primary btn-sm">
-                            View Tiers
-                          </Link>
+                      <div style={{ position: 'relative', marginTop: '1rem', display: 'flex', flexDirection: 'column' }}>
+                        {post.image_url && (
+                          <div style={{ 
+                            marginBottom: '1rem', 
+                            borderRadius: 'var(--radius-md)', 
+                            height: '240px',
+                            background: 'linear-gradient(45deg, #1f2937, #111827)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '1rem',
+                            color: '#fbbf24',
+                            border: '1px solid rgba(251, 191, 36, 0.2)'
+                          }}>
+                            <div style={{ fontSize: '3rem' }}>🔒</div>
+                            <div style={{ textAlign: 'center' }}>
+                               <p style={{ fontWeight: 600, margin: 0, color: 'white' }}>Exclusive {post.image_url.includes('/video/') ? 'Video' : 'Photo'}</p>
+                               <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', opacity: 0.8 }}>Upgrade to {post.requiredTierName} to view</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div style={{ position: 'relative' }}>
+                          <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--text-primary)', filter: 'blur(8px)', opacity: 0.3, userSelect: 'none' }}>
+                            {post.content || "This post is exclusive to members of the " + post.requiredTierName + ". Upgrade your membership to access this content and all other benefits for this creator."}
+                          </p>
+                          <div style={{ 
+                            position: 'absolute', 
+                            top: '50%', 
+                            left: '50%', 
+                            transform: 'translate(-50%, -50%)', 
+                            textAlign: 'center', 
+                            width: '100%', 
+                            padding: '1.5rem', 
+                            borderRadius: '1rem',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid var(--glass-border)',
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+                          }}>
+                            <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>Upgrade subscription to unlock</p>
+                            <Link href={`/c/${creatorSlug}`} className="btn btn-primary btn-sm">
+                              Upgrade Membership
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     )}

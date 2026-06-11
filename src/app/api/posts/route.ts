@@ -13,8 +13,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, content, isPublic, minPrice, imageUrl, thumbnailUrl } = body;
 
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
     // Insert into posts table
