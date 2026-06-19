@@ -45,29 +45,34 @@ export async function POST(request: Request) {
       const creator_share = amount - platform_fee;
 
       // 2. Fetch or create subscription record
+      // Look up by fan_id + creator_id (not tier_id) to find ANY existing subscription
+      // This prevents duplicate entries when a fan upgrades tiers
       let subscriptionId;
+      let isNewSubscriber = false;
       const { data: existingSub } = await supabase
         .from('subscriptions')
-        .select('id')
+        .select('id, tier_id')
         .eq('fan_id', metadata.fan_id)
-        .eq('tier_id', metadata.tier_id)
+        .eq('creator_id', metadata.creator_id)
         .eq('status', 'active')
         .single();
 
+      const newEndDate = new Date();
+      newEndDate.setMonth(newEndDate.getMonth() + 1);
+
       if (existingSub) {
         subscriptionId = existingSub.id;
-        // Also update sub if we got a new subscription code etc 
-        // (For simplicity in v1, we assume charge success just extends current_period_end)
-        const newEndDate = new Date();
-        newEndDate.setMonth(newEndDate.getMonth() + 1);
+        // Upgrade: update the tier and extend the period
         await supabase
           .from('subscriptions')
-          .update({ current_period_end: newEndDate.toISOString() })
+          .update({ 
+            tier_id: metadata.tier_id,
+            current_period_end: newEndDate.toISOString() 
+          })
           .eq('id', subscriptionId);
       } else {
-        // Create new active subscription
-        const newEndDate = new Date();
-        newEndDate.setMonth(newEndDate.getMonth() + 1);
+        // Brand new subscriber for this creator
+        isNewSubscriber = true;
         
         const { data: newSub } = await supabase
           .from('subscriptions')
@@ -75,8 +80,8 @@ export async function POST(request: Request) {
             fan_id: metadata.fan_id,
             creator_id: metadata.creator_id,
             tier_id: metadata.tier_id,
-            paystack_subscription_code: 'PAYSTACK_SUB_' + Date.now(), // Real sub code might be in event.data.subscription.subscription_code
-            paystack_email_token: 'TOKEN', // Extract from event if available
+            paystack_subscription_code: event.data.subscription?.subscription_code || ('PAYSTACK_SUB_' + Date.now()),
+            paystack_email_token: event.data.subscription?.email_token || 'TOKEN',
             status: 'active',
             current_period_start: new Date().toISOString(),
             current_period_end: newEndDate.toISOString()
@@ -102,7 +107,7 @@ export async function POST(request: Request) {
           paid_at: new Date().toISOString()
         });
 
-      // 4. Update Creator's total earnings & subscriber count
+      // 4. Update Creator's total earnings & subscriber count (only increment for new subscribers)
       const { data: creator } = await supabase
         .from('creator_profiles')
         .select('total_earnings, subscriber_count')
@@ -110,12 +115,16 @@ export async function POST(request: Request) {
         .single();
 
       if (creator) {
+        const updates: any = {
+          total_earnings: (creator.total_earnings || 0) + creator_share,
+        };
+        // Only bump subscriber count for genuinely new subscribers, not tier upgrades
+        if (isNewSubscriber) {
+          updates.subscriber_count = (creator.subscriber_count || 0) + 1;
+        }
         await supabase
           .from('creator_profiles')
-          .update({
-            total_earnings: (creator.total_earnings || 0) + creator_share,
-            subscriber_count: (creator.subscriber_count || 0) + 1
-          })
+          .update(updates)
           .eq('id', metadata.creator_id);
       }
     }

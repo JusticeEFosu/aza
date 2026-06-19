@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
 
 export default async function FanDashboard() {
@@ -30,19 +31,24 @@ export default async function FanDashboard() {
     .eq('fan_id', user.id)
     .eq('status', 'active');
 
-  const creatorIds = (subscriptions || []).map(s => s.creator_id);
-  const maxTierPerCreator: Record<string, number> = {};
-
+  // Deduplicate subscriptions: keep only the highest-tier subscription per creator
+  const subsByCreator: Record<string, any> = {};
   (subscriptions || []).forEach(s => {
     const tierData = s.tiers;
-    // Handle both object and array response from Supabase joins
     const amount = Array.isArray(tierData) 
       ? (tierData[0]?.amount || 0) 
       : (tierData as any)?.amount || 0;
       
-    if (amount > (maxTierPerCreator[s.creator_id] || 0)) {
-      maxTierPerCreator[s.creator_id] = amount;
+    if (!subsByCreator[s.creator_id] || amount > subsByCreator[s.creator_id]._amount) {
+      subsByCreator[s.creator_id] = { ...s, _amount: amount };
     }
+  });
+  
+  const uniqueSubscriptions = Object.values(subsByCreator);
+  const creatorIds = uniqueSubscriptions.map((s: any) => s.creator_id);
+  const maxTierPerCreator: Record<string, number> = {};
+  uniqueSubscriptions.forEach((s: any) => {
+    maxTierPerCreator[s.creator_id] = s._amount;
   });
 
   // Fetch the feed
@@ -127,7 +133,7 @@ export default async function FanDashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
         {/* Subscriptions List */}
         <section>
-          {(!subscriptions || subscriptions.length === 0) ? (
+          {(uniqueSubscriptions.length === 0) ? (
             <div className="glass-card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
               <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎧</p>
               <h3 style={{ marginBottom: '0.5rem' }}>No subscriptions yet</h3>
@@ -144,7 +150,7 @@ export default async function FanDashboard() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
               gap: '1rem'
             }}>
-              {subscriptions.map((sub: any) => {
+              {uniqueSubscriptions.map((sub: any) => {
                 const creatorName = sub.creator_profiles?.profiles?.full_name || 'Creator';
                 const tierName = sub.tiers?.name || 'Tier';
 
@@ -264,13 +270,9 @@ export default async function FanDashboard() {
                         {post.image_url && (
                           <div style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#000' }}>
                             {post.image_url.includes('/video/') ? (
-                              <video 
+                              <VideoPlayer 
                                 src={post.image_url} 
                                 poster={post.thumbnail_url}
-                                controls 
-                                playsInline 
-                                preload="none"
-                                style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }} 
                               />
                             ) : (
                               <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />

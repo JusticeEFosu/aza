@@ -4,10 +4,12 @@ import { useState } from 'react';
 
 export default function SubscribeButton({ 
   tierId, 
-  planCode 
+  planCode,
+  isSubscribed = false
 }: { 
   tierId: string; 
-  planCode: string | null; 
+  planCode: string | null;
+  isSubscribed?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -49,6 +51,18 @@ export default function SubscribeButton({
     return (
       <button className="btn btn-primary btn-full" disabled style={{ opacity: 0.5 }}>
         Unavailable
+      </button>
+    );
+  }
+
+  if (isSubscribed) {
+    return (
+      <button 
+        className="btn btn-secondary btn-full" 
+        disabled
+        style={{ cursor: 'default', opacity: 0.8 }}
+      >
+        Current Tier
       </button>
     );
   }

@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import SubscribeButton from '@/components/SubscribeButton';
+import ManageSubscription from '@/components/ManageSubscription';
+import VideoPlayer from '@/components/VideoPlayer';
 
 export const revalidate = 60;
 
@@ -48,6 +50,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
   // 4. Check access
   const { data: { user } } = await supabase.auth.getUser();
   let maxFanTierAmount = 0;
+  let activeSub: any = null;
   
   if (user) {
     if (user.id === creator.id) {
@@ -55,24 +58,31 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
     } else {
         const { data: subs } = await supabase
           .from('subscriptions')
-          .select('tiers ( amount )')
+          .select('id, current_period_end, tier_id, tiers ( name, amount )')
           .eq('fan_id', user.id)
           .eq('creator_id', creator.id)
           .eq('status', 'active');
           
         if (subs && subs.length > 0) {
-            // Take the maximum amount from all active subscriptions
-            maxFanTierAmount = subs.reduce((max, sub) => {
+            // Take the subscription with the maximum tier amount
+            subs.forEach(sub => {
                 const tierData = sub.tiers;
-                // Handle both object and array response from Supabase joins
                 const amount = Array.isArray(tierData) 
                     ? (tierData[0]?.amount || 0) 
                     : (tierData as any)?.amount || 0;
-                return Math.max(max, amount);
-            }, 0);
+                if (amount > maxFanTierAmount) {
+                    maxFanTierAmount = amount;
+                    activeSub = sub;
+                }
+            });
         }
     }
   }
+
+  // Get current tier info for the ManageSubscription component
+  const currentTierName = activeSub ? 
+    (Array.isArray(activeSub.tiers) ? activeSub.tiers[0]?.name : (activeSub.tiers as any)?.name) || 'Tier' 
+    : '';
 
   // 5. Scrub content server-side for security and add tier requirement info
   const posts = (rawPosts || []).map((post: any) => {
@@ -131,58 +141,78 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
         )}
       </div>
 
-      {/* Tiers Section */}
-      <h2 style={{ marginBottom: '1.5rem', marginTop: '4rem' }}>Select a Membership Tier</h2>
-      
-      {!tiers || tiers.length === 0 ? (
-        <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <p style={{ color: 'var(--text-muted)' }}>This creator hasn't set up any membership tiers yet.</p>
-        </div>
+      {/* Tiers / Subscription Section */}
+      {activeSub && maxFanTierAmount > 0 && maxFanTierAmount !== Infinity ? (
+        <>
+          <h2 style={{ marginBottom: '1.5rem', marginTop: '4rem' }}>Your Subscription</h2>
+          <ManageSubscription
+            subscriptionId={activeSub.id}
+            currentTierName={currentTierName}
+            currentTierAmount={maxFanTierAmount}
+            renewalDate={activeSub.current_period_end}
+            tiers={tiers || []}
+            maxFanTierAmount={maxFanTierAmount}
+          />
+        </>
       ) : (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: '1.5rem' 
-        }}>
-          {tiers.map((tier: any, index: number) => {
-            const isPopular = index === 1 || (tiers.length === 1 && index === 0);
-            return (
-            <div key={tier.id} className={`tier-card ${isPopular ? 'popular' : ''}`}>
-              {isPopular && <div className="tier-badge">Most Popular</div>}
-              
-              <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-secondary)' }}>{tier.name}</h3>
-                <div style={{ margin: '1rem 0', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-                  ₦{(tier.amount / 100).toLocaleString()}
-                  <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>/mo</span>
-                </div>
-                {tier.description && (
-                  <p style={{ fontSize: '0.938rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{tier.description}</p>
-                )}
-              </div>
-
-              {tier.perks && tier.perks.length > 0 && (
-                <div style={{ flex: 1, marginBottom: '2.5rem' }}>
-                  <p style={{ fontWeight: 600, fontSize: '0.813rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-primary)' }}>
-                    What's included:
-                  </p>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                    {tier.perks.map((perk: string, i: number) => (
-                      <li key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', fontSize: '0.938rem', color: 'var(--text-secondary)' }}>
-                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>✓</span>
-                        <span style={{ lineHeight: 1.4 }}>{perk}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div style={{ marginTop: 'auto' }}>
-                <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
-              </div>
+        <>
+          <h2 style={{ marginBottom: '1.5rem', marginTop: '4rem' }}>Select a Membership Tier</h2>
+          
+          {!tiers || tiers.length === 0 ? (
+            <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
+              <p style={{ color: 'var(--text-muted)' }}>This creator hasn't set up any membership tiers yet.</p>
             </div>
-          )})}
-        </div>
+          ) : (
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+              gap: '1.5rem' 
+            }}>
+              {tiers.map((tier: any, index: number) => {
+                const isPopular = index === 1 || (tiers.length === 1 && index === 0);
+                return (
+                <div key={tier.id} className={`tier-card ${isPopular ? 'popular' : ''}`}>
+                  {isPopular && <div className="tier-badge">Most Popular</div>}
+                  
+                  <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-secondary)' }}>{tier.name}</h3>
+                    <div style={{ margin: '1rem 0', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+                      ₦{(tier.amount / 100).toLocaleString()}
+                      <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>/mo</span>
+                    </div>
+                    {tier.description && (
+                      <p style={{ fontSize: '0.938rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{tier.description}</p>
+                    )}
+                  </div>
+
+                  {tier.perks && tier.perks.length > 0 && (
+                    <div style={{ flex: 1, marginBottom: '2.5rem' }}>
+                      <p style={{ fontWeight: 600, fontSize: '0.813rem', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-primary)' }}>
+                        What's included:
+                      </p>
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                        {tier.perks.map((perk: string, i: number) => (
+                          <li key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', fontSize: '0.938rem', color: 'var(--text-secondary)' }}>
+                            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>✓</span>
+                            <span style={{ lineHeight: 1.4 }}>{perk}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 'auto' }}>
+                    <SubscribeButton 
+                      tierId={tier.id} 
+                      planCode={tier.paystack_plan_code} 
+                      isSubscribed={maxFanTierAmount >= tier.amount}
+                    />
+                  </div>
+                </div>
+              )})}
+            </div>
+          )}
+        </>
       )}
 
       {/* Posts Section */}
@@ -224,14 +254,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                   <>
                     {post.image_url && (
                       <div style={{ marginBottom: '1.5rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#000' }}>
-                        {post.image_url.includes('/video/') ? (
-                          <video 
-                            src={post.image_url} 
+                        {post.image_url?.includes('/video/') ? (
+                          <VideoPlayer
+                            src={post.image_url}
                             poster={post.thumbnail_url}
-                            controls 
-                            playsInline 
-                            preload="none"
-                            style={{ width: '100%', maxHeight: '500px', objectFit: 'contain' }} 
                           />
                         ) : (
                           <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
@@ -260,7 +286,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                       }}>
                         <div style={{ fontSize: '3rem' }}>🔒</div>
                         <div style={{ textAlign: 'center' }}>
-                           <p style={{ fontWeight: 600, margin: 0, color: 'white' }}>Exclusive {post.image_url.includes('/video/') ? 'Video' : 'Photo'}</p>
+                           <p style={{ fontWeight: 600, margin: 0, color: 'white' }}>Exclusive {post.image_url?.includes('/video/') ? 'Video' : 'Photo'}</p>
                            <p style={{ fontSize: '0.875rem', margin: '0.25rem 0 0', opacity: 0.8 }}>Available for {post.requiredTierName}</p>
                         </div>
                       </div>
