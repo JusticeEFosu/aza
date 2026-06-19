@@ -24,6 +24,14 @@ export default function CreatorTiers() {
       const data = await res.json();
       if (data.data) {
         setTiers(data.data);
+        
+        // Auto-fill perks from the highest current tier to speed up creation of the next level
+        if (data.data.length > 0) {
+            const highestTier = [...data.data].sort((a, b) => b.amount - a.amount)[0];
+            if (highestTier.perks && highestTier.perks.length > 0) {
+                setPerksText(highestTier.perks.join('\n'));
+            }
+        }
       }
     } catch (err) {
       console.error(err);

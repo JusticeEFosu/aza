@@ -34,7 +34,12 @@ export default async function FanDashboard() {
   const maxTierPerCreator: Record<string, number> = {};
 
   (subscriptions || []).forEach(s => {
-    const amount = (s.tiers as any)?.amount || 0;
+    const tierData = s.tiers;
+    // Handle both object and array response from Supabase joins
+    const amount = Array.isArray(tierData) 
+      ? (tierData[0]?.amount || 0) 
+      : (tierData as any)?.amount || 0;
+      
     if (amount > (maxTierPerCreator[s.creator_id] || 0)) {
       maxTierPerCreator[s.creator_id] = amount;
     }

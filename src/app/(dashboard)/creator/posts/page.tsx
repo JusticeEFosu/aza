@@ -494,20 +494,22 @@ export default function CreatorPostsPage() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '1rem', borderRadius: 'var(--radius-sm)', overflow: 'hidden', maxHeight: '300px', background: '#000' }}>
-                  {post.image_url.includes('/video/') ? (
-                    <video
-                      src={post.image_url}
-                      poster={post.thumbnail_url}
-                      controls
-                      playsInline
-                      preload="none"
-                      style={{ width: '100%', maxHeight: '300px', objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }} />
-                  )}
-                </div>
+                {post.image_url && (
+                  <div style={{ marginBottom: '1rem', borderRadius: 'var(--radius-sm)', overflow: 'hidden', maxHeight: '300px', background: '#000' }}>
+                    {post.image_url.includes('/video/') ? (
+                      <video
+                        src={post.image_url}
+                        poster={post.thumbnail_url}
+                        controls
+                        playsInline
+                        preload="none"
+                        style={{ width: '100%', maxHeight: '300px', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }} />
+                    )}
+                  </div>
+                )}
 
                 <p style={{
                   color: 'var(--text-secondary)',

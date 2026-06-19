@@ -53,16 +53,23 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
     if (user.id === creator.id) {
         maxFanTierAmount = Infinity;
     } else {
-        const { data: sub } = await supabase
+        const { data: subs } = await supabase
           .from('subscriptions')
           .select('tiers ( amount )')
           .eq('fan_id', user.id)
           .eq('creator_id', creator.id)
-          .eq('status', 'active')
-          .limit(1);
+          .eq('status', 'active');
           
-        if (sub && sub.length > 0 && sub[0].tiers) {
-            maxFanTierAmount = (sub[0].tiers as any).amount;
+        if (subs && subs.length > 0) {
+            // Take the maximum amount from all active subscriptions
+            maxFanTierAmount = subs.reduce((max, sub) => {
+                const tierData = sub.tiers;
+                // Handle both object and array response from Supabase joins
+                const amount = Array.isArray(tierData) 
+                    ? (tierData[0]?.amount || 0) 
+                    : (tierData as any)?.amount || 0;
+                return Math.max(max, amount);
+            }, 0);
         }
     }
   }
