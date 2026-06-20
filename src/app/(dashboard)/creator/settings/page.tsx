@@ -4,18 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 
-// Some common Nigerian banks for the dropdown
-const BANKS = [
-  { name: 'Access Bank', code: '044' },
-  { name: 'Guaranty Trust Bank (GTB)', code: '058' },
-  { name: 'First Bank of Nigeria', code: '011' },
-  { name: 'United Bank for Africa (UBA)', code: '033' },
-  { name: 'Zenith Bank', code: '057' },
-  { name: 'Fidelity Bank', code: '070' },
-  { name: 'Opay / Paycom', code: '999992' },
-  { name: 'Moniepoint', code: '50515' },
-  { name: 'Kuda Bank', code: '50211' }
-];
+// Banks will be fetched dynamically from Paystack
 
 export default function CreatorSettings() {
   const [loading, setLoading] = useState(false);
@@ -27,6 +16,8 @@ export default function CreatorSettings() {
   
   const [bankCode, setBankCode] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
+  const [availableBanks, setAvailableBanks] = useState<any[]>([]);
+  const [banksLoading, setBanksLoading] = useState(true);
   
   // Real-time verification state
   const [resolvingBank, setResolvingBank] = useState(false);
@@ -41,33 +32,47 @@ export default function CreatorSettings() {
   const supabase = createClient();
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadInitialData() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        
-        // Fetch both base profile and creator profile
-        const [profileRes, creatorRes] = await Promise.all([
-          supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
-          supabase.from('creator_profiles').select('*').eq('id', user.id).single()
+      
+      // Fetch banks and profile in parallel
+      const banksPromise = fetch('/api/banks').then(res => res.json());
+      const profilePromise = user ? Promise.all([
+        supabase.from('profiles').select('avatar_url').eq('id', user.id).single(),
+        supabase.from('creator_profiles').select('*').eq('id', user.id).single()
+      ]) : Promise.resolve([null, null]);
+
+      try {
+        const [banksData, [profileRes, creatorRes]] = await Promise.all([
+          banksPromise,
+          profilePromise
         ]);
-        
-        if (profileRes.data) {
+
+        if (Array.isArray(banksData)) {
+          setAvailableBanks(banksData);
+        }
+
+        if (user && profileRes?.data) {
           setAvatarUrl(profileRes.data.avatar_url || '');
         }
 
-        if (creatorRes.data) {
+        if (user && creatorRes?.data) {
           setBio(creatorRes.data.bio || '');
           setDisplayName(creatorRes.data.display_name || '');
           setIsVerified(creatorRes.data.is_verified);
           setBankCode(creatorRes.data.bank_code || '');
           setAccountNumber(creatorRes.data.bank_account_number || '');
           setPersistedBankName(creatorRes.data.bank_account_name || '');
+          setUserId(user.id);
         }
+      } catch (err) {
+        console.error('Error loading settings data:', err);
+      } finally {
+        setInitialFetchLoading(false);
+        setBanksLoading(false);
       }
-      setInitialFetchLoading(false);
     }
-    loadProfile();
+    loadInitialData();
   }, []);
 
   // Real-time resolution effect
@@ -206,7 +211,7 @@ export default function CreatorSettings() {
                 ✅ Verified as: {persistedBankName.toUpperCase() || 'YOUR ACCOUNT'}
               </div>
               <div style={{ color: '#065f46', fontSize: '0.875rem' }}>
-                Account: {accountNumber.substring(0, 4)}•••••• ({BANKS.find(b => b.code === bankCode)?.name || bankCode})
+                Account: {accountNumber.substring(0, 4)}•••••• ({availableBanks.find(b => b.code === bankCode)?.name || bankCode})
               </div>
               <div style={{ marginTop: '0.75rem', fontSize: '0.813rem', color: '#047857' }}>
                 <em>To update your payout account, please contact support.</em>
@@ -220,10 +225,11 @@ export default function CreatorSettings() {
                   className="form-select"
                   value={bankCode}
                   onChange={e => setBankCode(e.target.value)}
+                  disabled={banksLoading}
                   required
                 >
-                  <option value="" disabled>Select your bank...</option>
-                  {BANKS.map(b => (
+                  <option value="" disabled>{banksLoading ? 'Loading banks...' : 'Select your bank...'}</option>
+                  {availableBanks.map(b => (
                     <option key={b.code} value={b.code}>{b.name}</option>
                   ))}
                 </select>

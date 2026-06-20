@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import CopyLinkButton from '@/components/CopyLinkButton';
+import CreatorSetupChecklist from '@/components/CreatorSetupChecklist';
+import Link from 'next/link';
 
 export default async function CreatorDashboard() {
   const supabase = await createClient();
@@ -10,7 +12,7 @@ export default async function CreatorDashboard() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role, avatar_url')
+    .select('full_name, display_name, role, avatar_url')
     .eq('id', user.id)
     .single();
 
@@ -21,6 +23,49 @@ export default async function CreatorDashboard() {
     .select('*')
     .eq('id', user.id)
     .single();
+
+  // Onboarding checks
+  const [tiersRes, postsRes] = await Promise.all([
+    supabase.from('tiers').select('id', { count: 'exact', head: true }).eq('creator_id', user.id),
+    supabase.from('posts').select('id', { count: 'exact', head: true }).eq('creator_id', user.id)
+  ]);
+
+  const hasTiers = (tiersRes.count || 0) > 0;
+  const hasPosts = (postsRes.count || 0) > 0;
+  const hasAvatar = !!profile?.avatar_url;
+  const hasBio = !!creatorProfile?.bio;
+  const isVerified = creatorProfile?.is_verified || false;
+
+  const onboardingSteps = [
+    {
+      id: 'verify-bank',
+      title: 'Verify Bank Account',
+      description: 'Enter your bank details to receive Naira payouts through Paystack.',
+      href: '/creator/settings',
+      completed: isVerified
+    },
+    {
+      id: 'membership-tiers',
+      title: 'Create Membership Tiers',
+      description: 'Define different levels of support and exclusive perks for your fans.',
+      href: '/creator/tiers',
+      completed: hasTiers
+    },
+    {
+      id: 'complete-profile',
+      title: 'Complete Your Profile',
+      description: 'Upload a professional avatar and write a compelling bio for your fans.',
+      href: '/creator/settings',
+      completed: hasAvatar && hasBio
+    },
+    {
+      id: 'first-post',
+      title: 'Share Your First Post',
+      description: 'Welcome your new fans with an image, video, or a text update.',
+      href: '/creator/posts',
+      completed: hasPosts
+    }
+  ];
 
   const { data: transactions } = await supabase
     .from('transactions')
@@ -36,7 +81,7 @@ export default async function CreatorDashboard() {
     .order('created_at', { ascending: false })
     .limit(10);
 
-  const { data: posts } = await supabase
+  const { data: recentPosts } = await supabase
     .from('posts')
     .select('*')
     .eq('creator_id', user.id)
@@ -54,14 +99,14 @@ export default async function CreatorDashboard() {
               style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--glass-border)' }} 
             />
           ) : (
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
               {profile?.full_name?.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <h1>Creator Dashboard</h1>
+            <h1 style={{ margin: 0, fontSize: '1.75rem' }}>Creator Dashboard</h1>
             <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-              Welcome back, {profile?.full_name}
+              Welcome back, {profile?.display_name || profile?.full_name}
             </p>
           </div>
         </div>
@@ -71,6 +116,8 @@ export default async function CreatorDashboard() {
           </button>
         </form>
       </div>
+
+      <CreatorSetupChecklist steps={onboardingSteps} />
 
       {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
@@ -131,13 +178,15 @@ export default async function CreatorDashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        {(!posts || posts.length === 0) ? (
-          <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
-             <p style={{ color: 'var(--text-muted)' }}>You haven't posted anything yet.</p>
-             <a href="/creator/posts" className="btn btn-primary" style={{ marginTop: '1rem' }}>Create Your First Post</a>
+        {(!recentPosts || recentPosts.length === 0) ? (
+          <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', border: '1px dashed var(--border-color)', background: 'transparent' }}>
+             <p style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.5 }}>📝</p>
+             <h3 style={{ marginBottom: '0.5rem' }}>No posts yet</h3>
+             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Share your first update, image, or video with your future fans!</p>
+             <a href="/creator/posts" className="btn btn-primary" style={{ display: 'inline-flex', margin: '0 auto' }}>Create Your First Post</a>
           </div>
         ) : (
-          posts.map(post => (
+          recentPosts.map((post: any) => (
             <div key={post.id} className="glass-card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {post.image_url ? (
                 <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#000' }}>
@@ -167,8 +216,14 @@ export default async function CreatorDashboard() {
       <h2 style={{ marginBottom: '1.5rem', marginTop: '3rem' }}>Recent Fan Transactions</h2>
       <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
         {(!transactions || transactions.length === 0) ? (
-          <div style={{ padding: '3rem', textAlign: 'center' }}>
-             <p style={{ color: 'var(--text-muted)' }}>No transactions yet. Share your profile to get your first subscriber!</p>
+          <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+             <p style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.5 }}>💰</p>
+             <h3 style={{ marginBottom: '0.5rem' }}>No earnings yet</h3>
+             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Once fans subscribe to your tiers, your transactions will appear here.</p>
+             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+               <a href="/creator/tiers" className="btn btn-secondary btn-sm">Setup Tiers</a>
+               <Link href={`/c/${creatorProfile?.slug}`} className="btn btn-primary btn-sm">Preview Your Page</Link>
+             </div>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -189,7 +244,7 @@ export default async function CreatorDashboard() {
                       {new Date(tx.created_at).toLocaleDateString()}
                     </td>
                     <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>
-                      {tx.profiles?.full_name || 'Anonymous Fan'}
+                      {tx.profiles?.display_name || tx.profiles?.full_name || 'Anonymous Fan'}
                     </td>
                     <td style={{ padding: '1rem 1.5rem' }}>
                       ₦{(tx.amount / 100).toLocaleString()}

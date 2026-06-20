@@ -11,7 +11,7 @@ export default async function FanDashboard() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, display_name, role')
     .eq('id', user.id)
     .single();
 
@@ -53,6 +53,8 @@ export default async function FanDashboard() {
 
   // Fetch the feed
   let posts: any[] = [];
+  let featuredCreators: any[] = [];
+
   if (creatorIds.length > 0) {
     const { data: rawPosts } = await supabase
       .from('posts')
@@ -85,6 +87,19 @@ export default async function FanDashboard() {
         content: hasAccess ? post.content : post.content.substring(0, 50) + '...'
       };
     });
+  } else {
+    // If no subscriptions, fetch featured creators to show in the feed
+    const { data: creators } = await supabase
+      .from('creator_profiles')
+      .select(`
+        slug,
+        bio,
+        subscriber_count,
+        profiles ( full_name, avatar_url )
+      `)
+      .order('subscriber_count', { ascending: false })
+      .limit(3);
+    featuredCreators = creators || [];
   }
 
   return (
@@ -101,7 +116,7 @@ export default async function FanDashboard() {
         <div style={{ flex: '1 1 300px' }}>
           <h1 style={{ margin: 0 }}>My Subscriptions</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Welcome back, {profile?.full_name}
+            Welcome back, {profile?.display_name || profile?.full_name}
           </p>
         </div>
         
@@ -115,7 +130,9 @@ export default async function FanDashboard() {
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-sm)'
         }}>
-          <a href="/creators" className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }}>Discover Creators</a>
+          <Link href="/creators" className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }}>Discover Creators</Link>
+          <div style={{ width: '1px', height: '24px', background: 'var(--border-color)' }} />
+          <Link href="/fan/settings" className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>Settings</Link>
           <div style={{ width: '1px', height: '24px', background: 'var(--border-color)' }} />
           <form action="/api/auth/signout" method="POST" style={{ margin: 0 }}>
             <button type="submit" className="btn btn-secondary btn-sm" style={{ 
@@ -200,11 +217,44 @@ export default async function FanDashboard() {
 
         {/* The Feed */}
         <section>
-          <h2 style={{ marginBottom: '1.5rem' }}>Your Feed</h2>
+          <h2 style={{ marginBottom: '1.5rem' }}>{posts.length === 0 ? 'Start Following Creators' : 'Your Feed'}</h2>
 
           {posts.length === 0 ? (
-            <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
-              <p style={{ color: 'var(--text-muted)' }}>It's quiet here. Your creators haven't posted anything yet.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="glass-card" style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border-color)', background: 'transparent' }}>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Your home feed will show posts from creators you support.</p>
+                <p style={{ fontWeight: 600 }}>Explore these featured creators to get started:</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {featuredCreators.map((creator: any) => (
+                  <Link 
+                    key={creator.slug} 
+                    href={`/c/${creator.slug}`}
+                    className="glass-card creator-card"
+                    style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '2rem' }}
+                  >
+                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-secondary)', marginBottom: '1rem', overflow: 'hidden', border: '2px solid var(--accent-primary)' }}>
+                      {creator.profiles?.avatar_url ? (
+                        <img src={creator.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                          {creator.profiles?.full_name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <h3 style={{ margin: '0 0 0.5rem 0' }}>{creator.profiles?.full_name}</h3>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '2.5rem' }}>
+                      {creator.bio || "Sharing exclusive content with fans."}
+                    </p>
+                    <div className="btn btn-primary btn-sm btn-full" style={{ marginTop: 'auto' }}>View Profile</div>
+                  </Link>
+                ))}
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <Link href="/creators" className="btn btn-secondary">Discover More Creators</Link>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '800px' }}>

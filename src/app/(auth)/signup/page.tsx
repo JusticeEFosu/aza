@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,7 @@ export default function SignupPage() {
         options: {
           data: {
             full_name: fullName,
+            display_name: displayName || fullName,
             role: role,
           },
         },
@@ -101,16 +103,31 @@ export default function SignupPage() {
 
             {/* Full Name */}
             <div className="form-group">
-              <label htmlFor="fullName" className="form-label">Full Name</label>
+              <label htmlFor="fullName" className="form-label">Full Name (Legal)</label>
               <input
                 id="fullName"
                 type="text"
                 className="form-input"
-                placeholder="Enter your full name"
+                placeholder="Enter your legal full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
               />
+              <span className="form-hint">Used for banking and payouts.</span>
+            </div>
+
+            {/* Display Name */}
+            <div className="form-group">
+              <label htmlFor="displayName" className="form-label">Display Name / Username</label>
+              <input
+                id="displayName"
+                type="text"
+                className="form-input"
+                placeholder="e.g. SuperFan99"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+              <span className="form-hint">How you'll appear to creators and others.</span>
             </div>
 
             {/* Email */}
