@@ -28,9 +28,9 @@ export default function SubscribeButton({
 
       const data = await res.json();
       
-      // If unauthorized, redirect to login
+      // If unauthorized, redirect to login with a return URL
       if (res.status === 401) {
-        window.location.href = `/login?redirect=${window.location.pathname}`;
+        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
         return;
       }
 
@@ -49,7 +49,7 @@ export default function SubscribeButton({
 
   if (!planCode) {
     return (
-      <button className="btn btn-primary btn-full" disabled style={{ opacity: 0.5 }}>
+      <button className="v2-sub-btn v2-sub-btn-secondary" style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }} disabled>
         Unavailable
       </button>
     );
@@ -58,11 +58,12 @@ export default function SubscribeButton({
   if (isSubscribed) {
     return (
       <button 
-        className="btn btn-secondary btn-full" 
+        className="v2-sub-btn v2-sub-btn-secondary" 
+        style={{ width: '100%', cursor: 'default', background: 'var(--v2-surface-low)', color: 'var(--v2-text-variant)' }}
         disabled
-        style={{ cursor: 'default', opacity: 0.8 }}
       >
-        Current Tier
+        <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '4px' }}>check_circle</span>
+        Active
       </button>
     );
   }
@@ -70,13 +71,18 @@ export default function SubscribeButton({
   return (
     <>
       <button 
-        className="btn btn-primary btn-full" 
+        className="v2-sub-btn v2-sub-btn-primary" 
+        style={{ width: '100%' }}
         onClick={handleSubscribe} 
         disabled={loading}
       >
-        {loading ? <span className="spinner" /> : 'Subscribe'}
+        {loading ? (
+          <span className="spinner" style={{ width: '20px', height: '20px', border: '2px solid white', borderTopColor: 'transparent' }} />
+        ) : (
+          'Join'
+        )}
       </button>
-      {error && <p className="form-error" style={{ textAlign: 'center', marginTop: '0.5rem' }}>{error}</p>}
+      {error && <p style={{ color: 'var(--v2-error, #ba1a1a)', fontSize: '12px', textAlign: 'center', marginTop: '8px', fontWeight: 500 }}>{error}</p>}
     </>
   );
 }

@@ -1,8 +1,20 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import CopyLinkButton from '@/components/CopyLinkButton';
-import CreatorSetupChecklist from '@/components/CreatorSetupChecklist';
 import Link from 'next/link';
+import HeaderShareButton from '@/components/HeaderShareButton';
+
+// Utility for relative time formatting
+function formatTimeAgo(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return `${diffInSeconds} secs ago`;
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} mins ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 172800) return 'Yesterday';
+  return `${Math.floor(diffInSeconds / 86400)} days ago`;
+}
 
 export default async function CreatorDashboard() {
   const supabase = await createClient();
@@ -24,253 +36,248 @@ export default async function CreatorDashboard() {
     .eq('id', user.id)
     .single();
 
-  // Onboarding checks
-  const [tiersRes, postsRes] = await Promise.all([
-    supabase.from('tiers').select('id', { count: 'exact', head: true }).eq('creator_id', user.id),
-    supabase.from('posts').select('id', { count: 'exact', head: true }).eq('creator_id', user.id)
-  ]);
+  // Fetch Subscriptions for MRR and 7d new
+  const { data: subscriptions } = await supabase
+    .from('subscriptions')
+    .select('id, created_at, status, tiers(amount)')
+    .eq('creator_id', user.id);
 
-  const hasTiers = (tiersRes.count || 0) > 0;
-  const hasPosts = (postsRes.count || 0) > 0;
-  const hasAvatar = !!profile?.avatar_url;
-  const hasBio = !!creatorProfile?.bio;
-  const isVerified = creatorProfile?.is_verified || false;
+  let mrr = 0;
+  let newSubs7d = 0;
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const onboardingSteps = [
-    {
-      id: 'verify-bank',
-      title: 'Verify Bank Account',
-      description: 'Enter your bank details to receive Naira payouts through Paystack.',
-      href: '/creator/settings',
-      completed: isVerified
-    },
-    {
-      id: 'membership-tiers',
-      title: 'Create Membership Tiers',
-      description: 'Define different levels of support and exclusive perks for your fans.',
-      href: '/creator/tiers',
-      completed: hasTiers
-    },
-    {
-      id: 'complete-profile',
-      title: 'Complete Your Profile',
-      description: 'Upload a professional avatar and write a compelling bio for your fans.',
-      href: '/creator/settings',
-      completed: hasAvatar && hasBio
-    },
-    {
-      id: 'first-post',
-      title: 'Share Your First Post',
-      description: 'Welcome your new fans with an image, video, or a text update.',
-      href: '/creator/posts',
-      completed: hasPosts
-    }
-  ];
+  if (subscriptions) {
+    subscriptions.forEach(sub => {
+      if (sub.status === 'active') {
+        const tierData = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
+        mrr += (tierData?.amount || 0);
+        
+        if (new Date(sub.created_at) >= sevenDaysAgo) {
+          newSubs7d++;
+        }
+      }
+    });
+  }
 
+  // Format MRR (e.g. 4.2M, 50k, etc.)
+  const formatMRR = (amountKobo: number) => {
+    const amountNaira = amountKobo / 100;
+    if (amountNaira >= 1000000) return `₦ ${(amountNaira / 1000000).toFixed(1)}M`;
+    if (amountNaira >= 1000) return `₦ ${(amountNaira / 1000).toFixed(1)}k`;
+    return `₦ ${amountNaira.toLocaleString()}`;
+  };
+
+  // Fetch transactions for recent activity explicitly matching mockup style
   const { data: transactions } = await supabase
     .from('transactions')
     .select(`
       id,
       amount,
-      creator_share,
       status,
       created_at,
-      profiles ( full_name )
+      profiles ( full_name, display_name, avatar_url ),
+      subscriptions (
+        tiers ( name )
+      )
     `)
     .eq('creator_id', user.id)
     .order('created_at', { ascending: false })
     .limit(10);
 
-  const { data: recentPosts } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('creator_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
+  const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
+  const avatarUrl = profile?.avatar_url;
+  const shareUrl = `https://aza-chi.vercel.app/c/${creatorProfile?.slug}`; // Should use NEXT_PUBLIC variables later
 
   return (
-    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {profile?.avatar_url ? (
-            <img 
-              src={profile.avatar_url} 
-              alt="" 
-              style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--glass-border)' }} 
-            />
+    <div className="v2-dashboard-layout">
+      {/* Sidebar (Desktop) */}
+      <nav className="v2-sidebar">
+        <div className="v2-sidebar-header">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="v2-sidebar-avatar" />
           ) : (
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.25rem' }}>
-              {profile?.full_name?.charAt(0).toUpperCase()}
+            <div className="v2-sidebar-avatar">
+              {displayName.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.75rem' }}>Creator Dashboard</h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-              Welcome back, {profile?.display_name || profile?.full_name}
-            </p>
-          </div>
-        </div>
-        <form action="/api/auth/signout" method="POST">
-          <button type="submit" className="btn btn-secondary btn-sm">
-            Sign Out
-          </button>
-        </form>
-      </div>
-
-      <CreatorSetupChecklist steps={onboardingSteps} />
-
-      {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Earnings</p>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--success)' }}>
-            ₦{((creatorProfile?.total_earnings || 0) / 100).toLocaleString()}
-          </p>
-        </div>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Subscribers</p>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
-            {creatorProfile?.subscriber_count || 0}
-          </p>
-        </div>
-        <div className="glass-card" style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Profile Status</p>
-          <p style={{ fontSize: '1.75rem', fontWeight: 700 }}>
-            {creatorProfile?.is_verified ? '✅' : '⚠️'}
-          </p>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            {creatorProfile?.is_verified ? 'Verified & Active' : 'Bank verification needed'}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid-split" style={{ marginBottom: '2rem' }}>
-        {/* Quick Actions */}
-        <div className="glass-card">
-          <h3 style={{ marginBottom: '1rem' }}>Quick Actions</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <a href="/creator/posts" className="btn btn-primary" style={{ justifyContent: 'center' }}>Create New Post</a>
-            <a href="/creator/payouts" className="btn btn-secondary" style={{ justifyContent: 'center' }}>Payouts & Earnings</a>
-            <a href="/creator/tiers" className="btn btn-secondary" style={{ justifyContent: 'center' }}>Manage Membership Tiers</a>
-            <a href="/creator/settings" className="btn btn-secondary" style={{ justifyContent: 'center' }}>Account Settings & Bank</a>
+            <h2 className="v2-sidebar-title">{displayName}</h2>
+            <p className="v2-sidebar-subtitle">Verified Account</p>
           </div>
         </div>
 
-        {/* Share Profile Link */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <Link href="/creator/posts" className="v2-sidebar-btn">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
+          Post Update
+        </Link>
+
+        <div className="v2-nav-list">
+          <Link href="/creator" className="v2-nav-item active">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
+            Home
+          </Link>
+          <Link href="/creator/tiers" className="v2-nav-item">
+            <span className="material-symbols-outlined">group</span>
+            Subscriptions
+          </Link>
+          <Link href="#" className="v2-nav-item">
+            <span className="material-symbols-outlined">mail</span>
+            Messages
+          </Link>
+          <Link href="/creator/payouts" className="v2-nav-item">
+            <span className="material-symbols-outlined">payments</span>
+            Earnings
+          </Link>
+          <Link href="/creator/settings" className="v2-nav-item">
+            <span className="material-symbols-outlined">settings</span>
+            Settings
+          </Link>
+        </div>
+
+        <div className="v2-sidebar-footer">
+          <Link href="#" className="v2-nav-item">
+            <span className="material-symbols-outlined">help</span>
+            Help
+          </Link>
+          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
+            <button 
+              type="submit" 
+              className="v2-nav-item" 
+              style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}
+            >
+              <span className="material-symbols-outlined">logout</span>
+              Sign Out
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="v2-main-content">
+        <header className="v2-dash-header">
           <div>
-            <h3 style={{ marginBottom: '0.25rem' }}>Share Your Page</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Paste this link in your TikTok bio, Instagram or YouTube descriptions
-            </p>
+            <h1 className="v2-dash-title">Overview</h1>
+            <p className="v2-dash-desc">Here's what's happening with your community today.</p>
           </div>
-          <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '0.938rem', textAlign: 'center' }}>
-            aza-chi.vercel.app/c/{creatorProfile?.slug}
+          <div className="hidden md:flex">
+             <HeaderShareButton url={shareUrl} />
           </div>
-          <CopyLinkButton url={`https://aza-chi.vercel.app/c/${creatorProfile?.slug}`} />
-        </div>
-      </div>
+          <button className="v2-mobile-toggle">
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+        </header>
 
-      {/* Recent Posts */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', marginTop: '2rem' }}>
-        <h2 style={{ margin: 0 }}>Recent Posts</h2>
-        <a href="/creator/posts" className="btn btn-secondary btn-sm">Manage All Posts</a>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        {(!recentPosts || recentPosts.length === 0) ? (
-          <div className="glass-card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', border: '1px dashed var(--border-color)', background: 'transparent' }}>
-             <p style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.5 }}>📝</p>
-             <h3 style={{ marginBottom: '0.5rem' }}>No posts yet</h3>
-             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Share your first update, image, or video with your future fans!</p>
-             <a href="/creator/posts" className="btn btn-primary" style={{ display: 'inline-flex', margin: '0 auto' }}>Create Your First Post</a>
-          </div>
-        ) : (
-          recentPosts.map((post: any) => (
-            <div key={post.id} className="glass-card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {post.image_url ? (
-                <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: '#000' }}>
-                  {post.image_url.includes('/video/') ? (
-                    <video src={post.image_url} poster={post.thumbnail_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <img src={post.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  )}
-                </div>
-              ) : (
-                <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: 'var(--radius-sm)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed var(--border-color)' }}>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Text-only post</span>
-                </div>
-              )}
-              <div>
-                <h4 style={{ margin: 0, fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.title}</h4>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  {post.is_public ? 'Public' : 'Subscriber Only'} • {new Date(post.created_at).toLocaleDateString()}
-                </p>
-              </div>
+        {/* Stats Grid */}
+        <div className="v2-stats-grid">
+          {/* Stat Card 1 */}
+          <div className="v2-stat-card">
+            <div className="v2-stat-line"></div>
+            <div>
+              <p className="v2-stat-label">Total Subscribers</p>
+              <h3 className="v2-stat-value">{creatorProfile?.subscriber_count?.toLocaleString() || 0}</h3>
             </div>
-          ))
-        )}
-      </div>
+            {/* Real stats deliberately omitted from sub-text as requested */}
+            <div style={{ height: '24px' }}></div>
+          </div>
 
-      {/* Transaction History */}
-      <h2 style={{ marginBottom: '1.5rem', marginTop: '3rem' }}>Recent Fan Transactions</h2>
-      <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
-        {(!transactions || transactions.length === 0) ? (
-          <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
-             <p style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.5 }}>💰</p>
-             <h3 style={{ marginBottom: '0.5rem' }}>No earnings yet</h3>
-             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Once fans subscribe to your tiers, your transactions will appear here.</p>
-             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-               <a href="/creator/tiers" className="btn btn-secondary btn-sm">Setup Tiers</a>
-               <Link href={`/c/${creatorProfile?.slug}`} className="btn btn-primary btn-sm">Preview Your Page</Link>
-             </div>
+          {/* Stat Card 2 */}
+          <div className="v2-stat-card">
+            <div>
+              <p className="v2-stat-label">Monthly Recurring Revenue</p>
+              <h3 className="v2-stat-value">{formatMRR(mrr)}</h3>
+            </div>
+            {/* Simple Line Chart (SVG) */}
+            <div style={{ marginTop: '24px', height: '48px', width: '100%' }}>
+              <svg style={{ width: '100%', height: '100%', stroke: 'var(--v2-green)', fill: 'none', strokeWidth: 2 }} preserveAspectRatio="none" viewBox="0 0 100 30">
+                <path d="M0,30 L10,25 L20,28 L30,15 L40,20 L50,10 L60,18 L70,5 L80,12 L90,2 L100,0" vectorEffect="non-scaling-stroke"></path>
+              </svg>
+            </div>
           </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.938rem' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '1rem 1.5rem', fontWeight: 500, borderBottom: '1px solid var(--border-color)' }}>Date</th>
-                  <th style={{ padding: '1rem 1.5rem', fontWeight: 500, borderBottom: '1px solid var(--border-color)' }}>Fan</th>
-                  <th style={{ padding: '1rem 1.5rem', fontWeight: 500, borderBottom: '1px solid var(--border-color)' }}>Amount</th>
-                  <th style={{ padding: '1rem 1.5rem', fontWeight: 500, borderBottom: '1px solid var(--border-color)' }}>Your Share</th>
-                  <th style={{ padding: '1rem 1.5rem', fontWeight: 500, borderBottom: '1px solid var(--border-color)' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx: any) => (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                    <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>
-                      {new Date(tx.created_at).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>
-                      {tx.profiles?.display_name || tx.profiles?.full_name || 'Anonymous Fan'}
-                    </td>
-                    <td style={{ padding: '1rem 1.5rem' }}>
-                      ₦{(tx.amount / 100).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '1rem 1.5rem', color: 'var(--success)', fontWeight: 600 }}>
-                      +₦{(tx.creator_share / 100).toLocaleString()}
-                    </td>
-                    <td style={{ padding: '1rem 1.5rem' }}>
-                      <span style={{ 
-                        padding: '0.25rem 0.5rem', 
-                        borderRadius: '1rem', 
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        background: tx.status === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        color: tx.status === 'success' ? 'var(--success)' : 'var(--danger)'
-                      }}>
-                        {tx.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          {/* Stat Card 3 */}
+          <div className="v2-stat-card">
+            <div>
+              <p className="v2-stat-label">New Subscribers (7d)</p>
+              <h3 className="v2-stat-value">{newSubs7d.toLocaleString()}</h3>
+            </div>
+            <div style={{ height: '24px' }}></div>
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* Recent Subscriber Activity */}
+        <section className="v2-activity-section">
+          <div className="v2-activity-header">
+            <h2 className="v2-activity-title">Recent Subscriber Activity</h2>
+            <Link href="/creator/payouts" className="v2-activity-view-all">View All</Link>
+          </div>
+          
+          <div className="v2-activity-list">
+            {(!transactions || transactions.length === 0) ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
+                No recent activity yet. Share your page to get your first subscriber!
+              </div>
+            ) : (
+              transactions.map((tx: any) => {
+                const fanName = tx.profiles?.display_name || tx.profiles?.full_name || 'Anonymous Fan';
+                const fanAvatar = tx.profiles?.avatar_url;
+                
+                // Extract tier name from nested join
+                const tierInfo = tx.subscriptions?.tiers;
+                const tierName = Array.isArray(tierInfo) ? tierInfo[0]?.name : tierInfo?.name;
+                const activitySubtext = tierName ? `Subscribed to ${tierName}` : `Payment Received (${tx.status})`;
+                
+                return (
+                  <div key={tx.id} className="v2-activity-item">
+                    <div className="v2-activity-user">
+                      <div className="v2-activity-avatar">
+                        {fanAvatar ? (
+                          <img src={fanAvatar} alt="" />
+                        ) : (
+                          <span className="material-symbols-outlined">person</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="v2-activity-name" style={{ fontWeight: 600 }}>{fanName}</p>
+                        <p className="v2-activity-desc">{activitySubtext}</p>
+                      </div>
+                    </div>
+                    <div className="v2-activity-right">
+                      <p className="v2-activity-amount">₦ {(tx.amount / 100).toLocaleString()}</p>
+                      <p className="v2-activity-time">{formatTimeAgo(tx.created_at)}</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
+      </main>
+
+      {/* Bottom Nav (Mobile) */}
+      <nav className="v2-bottom-nav">
+        <Link href="/creator" className="v2-bottom-nav-item active">
+          <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
+          <span className="v2-bottom-nav-label">Home</span>
+        </Link>
+        <Link href="/creator/tiers" className="v2-bottom-nav-item">
+          <span className="material-symbols-outlined v2-bottom-nav-icon">group</span>
+          <span className="v2-bottom-nav-label">Subs</span>
+        </Link>
+        
+        <Link href="/creator/posts" className="v2-bottom-fab">
+          <span className="material-symbols-outlined">add</span>
+        </Link>
+        
+        <Link href="/creator/payouts" className="v2-bottom-nav-item">
+          <span className="material-symbols-outlined v2-bottom-nav-icon">payments</span>
+          <span className="v2-bottom-nav-label">Earnings</span>
+        </Link>
+        <Link href="/creator/settings" className="v2-bottom-nav-item">
+          <span className="material-symbols-outlined v2-bottom-nav-icon">settings</span>
+          <span className="v2-bottom-nav-label">Settings</span>
+        </Link>
+      </nav>
     </div>
   );
 }

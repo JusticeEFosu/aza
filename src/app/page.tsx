@@ -15,162 +15,188 @@ export default async function HomePage() {
     dashboardUrl = profile?.role === 'creator' ? '/creator' : '/fan';
   }
 
-  // Fetch featured creators for the discovery section
+  // Fetch actual real creators from the database
   const { data: creators } = await supabase
     .from('creator_profiles')
     .select(`
       slug,
       bio,
+      display_name,
       subscriber_count,
-      profiles ( full_name, avatar_url )
+      profiles ( full_name, display_name, avatar_url ),
+      tiers ( amount )
     `)
     .order('subscriber_count', { ascending: false })
-    .limit(6);
+    .limit(4);
+
+  const displayCreators = creators || [];
 
   return (
-    <>
-      {/* ─── Hero ─────────────────────────────────── */}
-      <section className="landing-hero">
-        <h1 className="fade-in">
-          Support the creators<br />who inspire you.
-        </h1>
-        <p className="hero-tagline fade-in fade-in-delay-1">
-          Support Nigerian creators you love with monthly subscriptions.
-          Exclusive content, paid in naira, directly to their bank.
-        </p>
-        <div className="hero-actions fade-in fade-in-delay-2">
-          {user ? (
-            <Link href={dashboardUrl} className="btn btn-primary btn-lg">
-              Go to My Dashboard
+    <div className="landing-v2">
+      {/* TopNavBar Component */}
+      <nav className="v2-nav">
+        <div className="v2-nav-inner">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Link href="/" className="v2-brand">Aza</Link>
+            <div className="v2-nav-links">
+              <Link href="/creators" className="v2-nav-link active">Discover</Link>
+              <Link href="/how-it-works" className="v2-nav-link">How it Works</Link>
+            </div>
+          </div>
+          <div className="v2-nav-actions">
+            {user ? (
+              <Link href={dashboardUrl} className="v2-btn-outline v2-hidden-mobile">My Dashboard</Link>
+            ) : (
+              <Link href="/login" className="v2-btn-outline v2-hidden-mobile">Log In</Link>
+            )}
+            <Link href="/signup" className="v2-btn-primary">Start Creating</Link>
+            <button className="v2-mobile-menu">
+              <span className="material-symbols-outlined">menu</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="v2-main">
+        {/* Hero Section */}
+        <section className="v2-section v2-border-b v2-hero">
+          <div className="v2-hero-content">
+            <h1 className="v2-hero-title">
+              The home for Nigerian creators to earn from their biggest fans.
+            </h1>
+            <p className="v2-hero-desc">
+              Turn your audience into a sustainable business. Build your community, offer exclusive content, and get paid directly—all in one place designed for local creators.
+            </p>
+          </div>
+          <div className="v2-hero-actions">
+            <Link href="/signup" className="v2-btn-primary lg">
+              Start Creating <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
             </Link>
-          ) : (
-            <>
-              <Link href="/signup" className="btn btn-primary btn-lg">
-                Start Creating
-              </Link>
-              <Link href="/signup" className="btn btn-secondary btn-lg">
-                Become a Fan
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* ─── How It Works ─────────────────────────── */}
-      <section className="landing-section landing-section-alt">
-        <h2>How It Works</h2>
-        <p className="section-subtitle">
-          Three simple steps to start earning or supporting.
-        </p>
-        <div className="steps-grid">
-          <div className="glass-card step-card fade-in">
-            <span className="step-number">1</span>
-            <h3>Create Your Page</h3>
-            <p>
-              Sign up as a creator, set your subscription tiers, and 
-              connect your Nigerian bank account for direct payouts.
-            </p>
-          </div>
-          <div className="glass-card step-card fade-in fade-in-delay-1">
-            <span className="step-number">2</span>
-            <h3>Share Exclusive Content</h3>
-            <p>
-              Publish posts, images, and videos. Choose what is public 
-              and what is reserved for your paying supporters.
-            </p>
-          </div>
-          <div className="glass-card step-card fade-in fade-in-delay-2">
-            <span className="step-number">3</span>
-            <h3>Get Paid in Naira</h3>
-            <p>
-              Fans subscribe via Paystack. You receive 90% of every 
-              payment, settled directly to your bank account.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Featured Creators ────────────────────── */}
-      {creators && creators.length > 0 && (
-        <section className="landing-section">
-          <h2>Discover Creators</h2>
-          <p className="section-subtitle">
-            Find creators worth supporting on Aza.
-          </p>
-          <div className="creators-grid">
-            {creators.map((creator: any) => {
-              const name = creator.profiles?.full_name || 'Creator';
-              return (
-                <Link
-                  key={creator.slug}
-                  href={`/c/${creator.slug}`}
-                  className="glass-card creator-card"
-                >
-                  <div className="creator-avatar" style={{ overflow: 'hidden' }}>
-                    {creator.profiles?.avatar_url ? (
-                      <img 
-                        src={creator.profiles.avatar_url} 
-                        alt="" 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                      />
-                    ) : (
-                      name.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <h4>{name}</h4>
-                  <p>{creator.bio || 'No bio yet.'}</p>
-                  <span className="subscriber-count">
-                    {creator.subscriber_count || 0} subscriber{creator.subscriber_count === 1 ? '' : 's'}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-          <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
-            <Link href="/creators" className="btn btn-secondary">
-              View All Creators
+            <Link href="/creators" className="v2-btn-outline lg">
+              Explore Creators
             </Link>
           </div>
         </section>
-      )}
 
-      {/* ─── CTA Banner ───────────────────────────── */}
-      <section className="landing-section landing-section-alt" style={{ textAlign: 'center' }}>
-        <h2>Ready to start?</h2>
-        <p className="section-subtitle">
-          Whether you create content or love supporting those who do, 
-          Aza is built for you.
-        </p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          {user ? (
-            <Link href={dashboardUrl} className="btn btn-primary btn-lg">
-              Back to My Dashboard
+        {/* Featured Creators */}
+        {displayCreators.length > 0 && (
+          <section className="v2-section v2-border-b">
+            <div className="v2-section-header">
+              <div>
+                <h2 className="v2-section-title">Trending Creators</h2>
+                <p className="v2-section-desc">Discover top talent building their communities on Aza.</p>
+              </div>
+              <Link href="/creators" className="v2-view-all">View all creators</Link>
+            </div>
+            
+            <div className="v2-creators-grid">
+              {displayCreators.map((creator: any) => {
+                const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name || 'Creator';
+                
+                // Calculate dynamic price strictly based on DB minimum tier
+                let displayPrice = 'Free';
+                if (creator.tiers && creator.tiers.length > 0) {
+                  const minAmount = Math.min(...creator.tiers.map((t: any) => t.amount));
+                  displayPrice = `₦${minAmount.toLocaleString()}/mo`;
+                }
+
+                // Format subscribers (e.g. 1.2k)
+                const subCount = creator.subscriber_count || 0;
+                const displaySubscribers = subCount > 999 
+                  ? (subCount/1000).toFixed(1) + 'k' 
+                  : subCount;
+
+                return (
+                  <Link key={creator.slug} href={`/c/${creator.slug}`} className="v2-creator-card">
+                    <div className="v2-card-line"></div>
+                    <div className="v2-creator-header">
+                      {creator.profiles?.avatar_url ? (
+                        <img src={creator.profiles.avatar_url} alt={name} className="v2-creator-avatar" />
+                      ) : (
+                        <div className="v2-creator-avatar">{name.charAt(0).toUpperCase()}</div>
+                      )}
+                      <div>
+                        <h3 className="v2-creator-name">{name}</h3>
+                        <p className="v2-creator-category">{creator.category || 'Creator'}</p>
+                      </div>
+                    </div>
+                    <p className="v2-creator-bio">{creator.bio}</p>
+                    <div className="v2-creator-footer">
+                      <span className="v2-creator-stats">
+                        <span className="material-symbols-outlined">group</span> {displaySubscribers}
+                      </span>
+                      <span className="v2-creator-price">{displayPrice}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <Link href="/creators" className="v2-mobile-all-btn">View all creators</Link>
+          </section>
+        )}
+
+        {/* How It Works Section */}
+        <section className="v2-section v2-bg-lowest">
+          <div className="v2-center-content">
+            <h2 className="v2-section-title">How it Works</h2>
+            <p className="v2-subtitle-center">
+              Three simple steps to start monetizing your passion and connecting with your truest fans.
+            </p>
+          </div>
+
+          <div className="v2-steps-grid">
+            <div className="v2-step-line"></div>
+            
+            <div className="v2-step">
+              <div className="v2-step-icon">
+                <span className="material-symbols-outlined">add_circle</span>
+              </div>
+              <h3 className="v2-step-title">Create</h3>
+              <p className="v2-step-desc">Set up your page in minutes. Define your subscription tiers and what exclusive value you offer.</p>
+            </div>
+            
+            <div className="v2-step">
+              <div className="v2-step-icon">
+                <span className="material-symbols-outlined">share</span>
+              </div>
+              <h3 className="v2-step-title">Share</h3>
+              <p className="v2-step-desc">Promote your Aza link across your social platforms. Invite your audience to join your inner circle.</p>
+            </div>
+            
+            <div className="v2-step">
+              <div className="v2-step-icon">
+                <span className="material-symbols-outlined">payments</span>
+              </div>
+              <h3 className="v2-step-title">Earn</h3>
+              <p className="v2-step-desc">Get paid directly to your local bank account. Fast payouts, transparent fees, built for Nigeria.</p>
+            </div>
+          </div>
+          
+          <div className="v2-cta-wrapper">
+            <Link href="/signup" className="v2-btn-primary lg" style={{ display: 'inline-flex' }}>
+              Create Your Page Now
             </Link>
-          ) : (
-            <>
-              <Link href="/signup" className="btn btn-primary btn-lg">
-                Join Aza Today
-              </Link>
-              <Link href="/login" className="btn btn-secondary btn-lg">
-                Sign In
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      </main>
 
-      {/* ─── Footer ───────────────────────────────── */}
-      <footer className="site-footer">
-        <div className="footer-brand">Aza</div>
-        <div className="footer-links">
-          <Link href="/login">Sign In</Link>
-          <Link href="/signup">Create Account</Link>
-          <Link href="/creators">Discover</Link>
+      {/* Footer Component */}
+      <footer className="v2-footer">
+        <div className="v2-footer-inner">
+          <div className="v2-footer-left">
+            <Link href="/" className="v2-footer-brand">Aza</Link>
+            <p className="v2-footer-copy">© {new Date().getFullYear()} Aza. Built for Nigerian Creators.</p>
+          </div>
+          <div className="v2-footer-links">
+            <Link href="#" className="v2-footer-link">Privacy</Link>
+            <Link href="#" className="v2-footer-link">Terms</Link>
+            <Link href="#" className="v2-footer-link">Support</Link>
+            <span className="v2-secure">
+              <span className="material-symbols-outlined">lock</span> Secured by Paystack
+            </span>
+          </div>
         </div>
-        <p className="footer-copy">
-          Aza. Support creators, pay in naira.
-        </p>
       </footer>
-    </>
+    </div>
   );
 }

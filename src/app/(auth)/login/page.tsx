@@ -137,7 +137,9 @@ function LoginForm() {
 
         <div className="auth-footer">
           Don&apos;t have an account?{' '}
-          <Link href="/signup">Sign up</Link>
+          <Link href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}>
+            Sign up
+          </Link>
         </div>
       </div>
     </div>

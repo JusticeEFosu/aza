@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function SignupPage() {
+function SignupForm() {
   const [fullName, setFullName] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,6 +15,8 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const supabase = createClient();
 
   async function handleSignup(e: React.FormEvent) {
@@ -40,12 +42,17 @@ export default function SignupPage() {
         return;
       }
 
-      // Redirect based on role
-      if (role === 'creator') {
+      // 1. If redirect param exists, use it
+      if (redirect) {
+        router.push(redirect);
+      } 
+      // 2. Otherwise default to role-based dashboard
+      else if (role === 'creator') {
         router.push('/creator');
       } else {
         router.push('/fan');
       }
+      
       router.refresh();
     } catch {
       setError('Something went wrong. Please try again.');
@@ -55,154 +62,171 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="glass-card">
-          <div className="auth-header">
-            <h1 className="auth-logo">Aza</h1>
-            <p className="auth-subtitle">
-              Join the community of Nigerian creators and fans
-            </p>
+    <div className="auth-card">
+      <div className="glass-card">
+        <div className="auth-header">
+          <h1 className="auth-logo">Aza</h1>
+          <p className="auth-subtitle">
+            Join the community of Nigerian creators and fans
+          </p>
+        </div>
+
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSignup} className="auth-form">
+          {/* Role Selection */}
+          <div className="form-group">
+            <label className="form-label">I am a...</label>
+            <div className="role-selector">
+              <button
+                type="button"
+                className={`role-option ${role === 'fan' ? 'active' : ''}`}
+                onClick={() => setRole('fan')}
+              >
+                <span className="role-option-icon">🎧</span>
+                <span className="role-option-title">Fan</span>
+                <span className="role-option-desc">
+                  Support creators I love
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`role-option ${role === 'creator' ? 'active' : ''}`}
+                onClick={() => setRole('creator')}
+              >
+                <span className="role-option-icon">🎨</span>
+                <span className="role-option-title">Creator</span>
+                <span className="role-option-desc">
+                  Earn from my audience
+                </span>
+              </button>
+            </div>
           </div>
 
-          {error && (
-            <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSignup} className="auth-form">
-            {/* Role Selection */}
-            <div className="form-group">
-              <label className="form-label">I am a...</label>
-              <div className="role-selector">
-                <button
-                  type="button"
-                  className={`role-option ${role === 'fan' ? 'active' : ''}`}
-                  onClick={() => setRole('fan')}
-                >
-                  <span className="role-option-icon">🎧</span>
-                  <span className="role-option-title">Fan</span>
-                  <span className="role-option-desc">
-                    Support creators I love
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={`role-option ${role === 'creator' ? 'active' : ''}`}
-                  onClick={() => setRole('creator')}
-                >
-                  <span className="role-option-icon">🎨</span>
-                  <span className="role-option-title">Creator</span>
-                  <span className="role-option-desc">
-                    Earn from my audience
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Full Name */}
-            <div className="form-group">
-              <label htmlFor="fullName" className="form-label">Full Name (Legal)</label>
-              <input
-                id="fullName"
-                type="text"
-                className="form-input"
-                placeholder="Enter your legal full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-              />
-              <span className="form-hint">Used for banking and payouts.</span>
-            </div>
-
-            {/* Display Name */}
-            <div className="form-group">
-              <label htmlFor="displayName" className="form-label">Display Name / Username</label>
-              <input
-                id="displayName"
-                type="text"
-                className="form-input"
-                placeholder="e.g. SuperFan99"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-              <span className="form-hint">How you'll appear to creators and others.</span>
-            </div>
-
-            {/* Email */}
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={6}
-                  style={{ paddingRight: '4rem' }}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '0.75rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: 500
-                  }}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              className="btn btn-primary btn-lg btn-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner"></span>
-                  Creating account...
-                </>
-              ) : (
-                `Sign up as ${role === 'creator' ? 'a Creator' : 'a Fan'}`
-              )}
-            </button>
-          </form>
-
-          <div className="auth-footer">
-            Already have an account?{' '}
-            <Link href="/login">Log in</Link>
+          {/* Full Name */}
+          <div className="form-group">
+            <label htmlFor="fullName" className="form-label">Full Name (Legal)</label>
+            <input
+              id="fullName"
+              type="text"
+              className="form-input"
+              placeholder="Enter your legal full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
+            <span className="form-hint">Used for banking and payouts.</span>
           </div>
+
+          {/* Display Name */}
+          <div className="form-group">
+            <label htmlFor="displayName" className="form-label">Display Name / Username</label>
+            <input
+              id="displayName"
+              type="text"
+              className="form-input"
+              placeholder="e.g. SuperFan99"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
+            <span className="form-hint">How you'll appear to creators and others.</span>
+          </div>
+
+          {/* Email */}
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              id="email"
+              type="email"
+              className="form-input"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={6}
+                style={{ paddingRight: '4rem' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: 500
+                }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg btn-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                Creating account...
+              </>
+            ) : (
+              `Sign up as ${role === 'creator' ? 'a Creator' : 'a Fan'}`
+            )}
+          </button>
+        </form>
+
+        <div className="auth-footer">
+          Already have an account?{' '}
+          <Link href={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}>
+            Log in
+          </Link>
         </div>
       </div>
+    </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <div className="auth-page">
+      <Suspense fallback={
+        <div className="auth-card">
+          <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
+            <span className="spinner" style={{ margin: '0 auto' }}></span>
+            <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Loading Signup...</p>
+          </div>
+        </div>
+      }>
+        <SignupForm />
+      </Suspense>
     </div>
   );
 }
