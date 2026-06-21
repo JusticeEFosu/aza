@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createSubaccount, resolveAccountNumber } from '@/lib/paystack';
 import { NextResponse } from 'next/server';
+import { slugify } from '@/lib/utils';
 
 export async function POST(request: Request) {
   try {
@@ -62,6 +63,11 @@ export async function POST(request: Request) {
       display_name: displayName || null,
       social_links: socialLinks || {},
     };
+
+    // Update slug if display name is provided
+    if (displayName) {
+      updateData.slug = slugify(displayName);
+    }
 
     if (isVerified) {
       updateData.bank_account_number = accountNumber;

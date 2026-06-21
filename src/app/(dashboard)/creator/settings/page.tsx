@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { slugify } from '@/lib/utils';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 
 // Banks will be fetched dynamically from Paystack
@@ -11,6 +12,7 @@ export default function CreatorSettings() {
   const [initialFetchLoading, setInitialFetchLoading] = useState(true);
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [slug, setSlug] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState('');
   
@@ -59,6 +61,7 @@ export default function CreatorSettings() {
         if (user && creatorRes?.data) {
           setBio(creatorRes.data.bio || '');
           setDisplayName(creatorRes.data.display_name || '');
+          setSlug(creatorRes.data.slug || '');
           setIsVerified(creatorRes.data.is_verified);
           setBankCode(creatorRes.data.bank_code || '');
           setAccountNumber(creatorRes.data.bank_account_number || '');
@@ -182,6 +185,19 @@ export default function CreatorSettings() {
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
             />
+            {displayName && (
+              <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Your Profile URL</div>
+                <div style={{ fontSize: '0.938rem', color: 'var(--accent-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  aza-chi.vercel.app/c/<span style={{ textDecoration: 'underline' }}>{slugify(displayName)}</span>
+                </div>
+                {slugify(displayName) !== slug && slug && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    ⚠️ Changing this will break your current link!
+                  </div>
+                )}
+              </div>
+            )}
             <span className="form-hint">Fans will see this name instead of your legal name if provided.</span>
           </div>
 
