@@ -141,6 +141,7 @@ export default function CreatorSettings() {
       if (!res.ok) throw new Error(data.error);
 
       setMsg({ text: 'Settings saved successfully!', type: 'success' });
+      if (data.slug) setSlug(data.slug);
       if (bankCode && accountNumber) {
         setIsVerified(true);
         setPersistedBankName(resolvedName);

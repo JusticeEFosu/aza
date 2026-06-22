@@ -5,7 +5,7 @@ import ManageSubscription from '@/components/ManageSubscription';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export default async function CreatorPublicProfile({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -26,10 +26,11 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
         avatar_url
       )
     `)
-    .eq('slug', slug)
+    .eq('slug', slug.toLowerCase())
     .single();
 
   if (creatorError || !creator) {
+    console.log(`Creator NOT found for slug: ${slug}`);
     notFound();
   }
 

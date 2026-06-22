@@ -57,16 +57,23 @@ export async function POST(request: Request) {
       }
     }
 
-    // 4. Update Creator Profile in database
+    // 4. Fetch profile for fallback slug and name info
+    const { data: profile } = await supabase.from('profiles').select('full_name, email').eq('id', user.id).single();
+
     const updateData: any = {
+      id: user.id, // Required for upsert
       bio: bio || '',
       display_name: displayName || null,
       social_links: socialLinks || {},
     };
 
-    // Update slug if display name is provided
+    // Update slug if display name is provided, otherwise ensure it exists if inserting
     if (displayName) {
       updateData.slug = slugify(displayName);
+    } else {
+      // If we are upserting and don't have a display name, 
+      // we need a fallback slug in case the row doesn't exist yet
+      updateData.slug = slugify(profile?.full_name || `creator-${user.id.slice(0, 8)}`);
     }
 
     if (isVerified) {
@@ -77,14 +84,26 @@ export async function POST(request: Request) {
       updateData.is_verified = true;
     }
 
-    const { error: updateError } = await supabase
+    console.log('Updating creator profile with data:', updateData);
+
+    const { data: updatedResult, error: updateError, count } = await supabase
       .from('creator_profiles')
-      .update(updateData)
-      .eq('id', user.id);
+      .upsert(updateData, { onConflict: 'id' })
+      .select('id, slug')
+      .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('Database update error:', updateError);
+      throw updateError;
+    }
 
-    return NextResponse.json({ success: true, message: 'Settings updated successfully' });
+    console.log(`Successfully upserted profile for User ID: ${user.id}. New slug: ${updatedResult?.slug}`);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Settings updated successfully',
+      slug: updatedResult?.slug
+    });
 
   } catch (error: any) {
     console.error('Creator settings error:', error);
