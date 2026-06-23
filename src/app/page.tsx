@@ -62,10 +62,10 @@ export default async function HomePage() {
         <section className="v2-section v2-border-b v2-hero">
           <div className="v2-hero-content">
             <h1 className="v2-hero-title">
-              The home for Nigerian creators to earn from their biggest fans.
+              Fund the creators who inspire you.
             </h1>
             <p className="v2-hero-desc">
-              Turn your audience into a sustainable business. Build your community, offer exclusive content, and get paid directly—all in one place designed for local creators.
+              Join the community behind your favorite voices. Empowering Nigerian creativity and the voices that matter most to you.
             </p>
           </div>
           <div className="v2-hero-actions">

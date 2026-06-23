@@ -3,11 +3,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import VideoPlayer from '@/components/VideoPlayer';
+import Link from 'next/link';
 
 export default function CreatorPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [tiers, setTiers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [displayName, setDisplayName] = useState('Creator');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -24,18 +27,17 @@ export default function CreatorPostsPage() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string | null>(null);
-
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null);
+
+  const supabase = createClient();
 
   useEffect(() => {
     if (file) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
-    } else {
-      setPreviewUrl(null);
-    }
+    } else { setPreviewUrl(null); }
   }, [file]);
 
   useEffect(() => {
@@ -43,491 +45,319 @@ export default function CreatorPostsPage() {
       const url = URL.createObjectURL(thumbnailFile);
       setThumbnailPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
-    } else {
-      setThumbnailPreviewUrl(null);
-    }
+    } else { setThumbnailPreviewUrl(null); }
   }, [thumbnailFile]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch tiers to build gating dropdown
-      const { data: tierData } = await supabase
-        .from('tiers')
-        .select('*')
-        .eq('creator_id', user.id)
-        .eq('is_active', true)
-        .order('amount', { ascending: true });
+      const [profileRes, creatorRes] = await Promise.all([
+        supabase.from('profiles').select('avatar_url, display_name, full_name').eq('id', user.id).single(),
+        supabase.from('creator_profiles').select('display_name').eq('id', user.id).single()
+      ]);
 
-      setTiers(tierData || []);
-
-      // If they have tiers, default to the lowest tier price when selecting "gated"
-      if (tierData && tierData.length > 0) {
-        setMinPrice(tierData[0].amount);
+      if (profileRes?.data) {
+        setAvatarUrl(profileRes.data.avatar_url || '');
+        setDisplayName(creatorRes?.data?.display_name || profileRes.data.display_name || profileRes.data.full_name || 'Creator');
       }
 
-      // Fetch existing posts
+      const { data: tierData } = await supabase.from('tiers').select('*').eq('creator_id', user.id).eq('is_active', true).order('amount', { ascending: true });
+      setTiers(tierData || []);
+      if (tierData && tierData.length > 0) setMinPrice(tierData[0].amount);
+
       const res = await fetch(`/api/posts?creatorId=${user.id}`);
       const json = await res.json();
       if (json.data) setPosts(json.data);
+    } catch (err: any) { console.error(err); }
+    finally { setLoading(false); }
+  };
 
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const uploadWithProgress = (fileToUpload: File, folder: string) => {
+    return new Promise<any>((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', fileToUpload);
+      formData.append('folder', folder);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload', true);
+      xhr.upload.onprogress = (event) => { if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100)); };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) { try { resolve(JSON.parse(xhr.responseText)); } catch (e) { reject(new Error('Invalid response')); } }
+        else { let msg = 'Upload failed'; try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) { } reject(new Error(msg)); }
+      };
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send(formData);
+    });
   };
 
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
-
     try {
       let imageUrl = currentImageUrl;
       let thumbnailUrl = currentThumbnailUrl;
+      if (file) { setUploadProgress(0); const d = await uploadWithProgress(file, 'posts'); imageUrl = d.url; setUploadProgress(100); }
+      if (thumbnailFile) { setUploadProgress(0); const d = await uploadWithProgress(thumbnailFile, 'thumbnails'); thumbnailUrl = d.url; setUploadProgress(100); }
 
-      // Helper to upload to Cloudinary with progress
-      const uploadWithProgress = (fileToUpload: File, folder: string) => {
-        return new Promise<any>((resolve, reject) => {
-          const formData = new FormData();
-          formData.append('file', fileToUpload);
-          formData.append('folder', folder);
-
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', '/api/upload', true);
-
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const percentComplete = Math.round((event.loaded / event.total) * 100);
-              setUploadProgress(percentComplete);
-            }
-          };
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                resolve(JSON.parse(xhr.responseText));
-              } catch (e) {
-                reject(new Error('Invalid response from upload server'));
-              }
-            } else {
-              let msg = 'Media upload failed';
-              try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) { }
-              reject(new Error(msg));
-            }
-          };
-
-          xhr.onerror = () => reject(new Error('Network error during upload'));
-          xhr.send(formData);
-        });
-      };
-
-      // 1. Upload main media if present
-      if (file) {
-        setUploadProgress(0);
-        const uploadData = await uploadWithProgress(file, 'posts');
-        imageUrl = uploadData.url;
-        setUploadProgress(100);
-      }
-
-      // 2. Upload thumbnail if present
-      if (thumbnailFile) {
-        setUploadProgress(0);
-        const uploadData = await uploadWithProgress(thumbnailFile, 'thumbnails');
-        thumbnailUrl = uploadData.url;
-        setUploadProgress(100);
-      }
-
-      // 2. Create or Update post
       const method = editingPostId ? 'PUT' : 'POST';
       const endpoint = editingPostId ? `/api/posts/${editingPostId}` : '/api/posts';
-
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          content,
-          isPublic,
-          minPrice: isPublic ? 0 : minPrice,
-          imageUrl,
-          thumbnailUrl
-        })
-      });
-
+      const res = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, content, isPublic, minPrice: isPublic ? 0 : minPrice, imageUrl, thumbnailUrl }) });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
-
-      // Refresh posts
       await fetchData();
-
-      // Reset form
       cancelEdit();
-
-      // Reset the file input physically
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
-      setUploadProgress(0);
-    }
+    } catch (err: any) { setError(err.message); }
+    finally { setIsSubmitting(false); setUploadProgress(0); }
   };
 
-  const cancelEdit = () => {
-    setEditingPostId(null);
-    setTitle('');
-    setContent('');
-    setFile(null);
-    setThumbnailFile(null);
-    setIsPublic(true);
-    setUploadProgress(0);
-    setCurrentImageUrl(null);
-    setCurrentThumbnailUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
-  };
+  const cancelEdit = () => { setEditingPostId(null); setTitle(''); setContent(''); setFile(null); setThumbnailFile(null); setIsPublic(true); setUploadProgress(0); setCurrentImageUrl(null); setCurrentThumbnailUrl(null); if (fileInputRef.current) fileInputRef.current.value = ''; if (thumbnailInputRef.current) thumbnailInputRef.current.value = ''; };
 
-  const handleEditClick = (post: any) => {
-    setEditingPostId(post.id);
-    setTitle(post.title);
-    setContent(post.content);
-    setIsPublic(post.is_public);
-    setMinPrice(post.minimum_tier_amount || 0);
-    setCurrentImageUrl(post.image_url);
-    setCurrentThumbnailUrl(post.thumbnail_url);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const handleEditClick = (post: any) => { setEditingPostId(post.id); setTitle(post.title); setContent(post.content); setIsPublic(post.is_public); setMinPrice(post.minimum_tier_amount || 0); setCurrentImageUrl(post.image_url); setCurrentThumbnailUrl(post.thumbnail_url); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   const handleDeletePost = async (postId: string) => {
     if (!confirm('Are you sure you want to delete this post?')) return;
-    try {
-      const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to delete post');
-      }
-      await fetchData();
-    } catch (err: any) {
-      alert(err.message);
-    }
+    try { const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' }); if (!res.ok) { const data = await res.json(); throw new Error(data.error || 'Failed'); } await fetchData(); }
+    catch (err: any) { alert(err.message); }
+  };
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' };
+
+  const dropZoneStyle = {
+    border: '2px dashed var(--v2-outline)',
+    borderRadius: '12px',
+    padding: '24px',
+    textAlign: 'center' as const,
+    cursor: 'pointer',
+    background: 'var(--v2-surface-low)',
+    transition: 'all 0.2s',
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+    minHeight: '180px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'center',
+    alignItems: 'center'
   };
 
   if (loading) {
-    return <div className="container" style={{ paddingTop: '3rem' }}>Loading posts...</div>;
+    return (
+      <div className="v2-dashboard-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <span className="spinner" style={{ width: '32px', height: '32px', borderColor: 'rgba(0,0,0,0.1)', borderTopColor: 'var(--v2-primary)' }} />
+      </div>
+    );
   }
 
   return (
-    <div className="container" style={{ maxWidth: '800px', paddingTop: '3rem', paddingBottom: '4rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2>Manage Content</h2>
-      </div>
-
-      <div className="glass-card" style={{ marginBottom: '3rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ margin: 0 }}>{editingPostId ? 'Edit Post' : 'Create New Post'}</h3>
-          {editingPostId && (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={cancelEdit}>
-              Cancel Edit
-            </button>
-          )}
+    <div className="v2-dashboard-layout">
+      {/* Sidebar */}
+      <nav className="v2-sidebar">
+        <div className="v2-sidebar-header">
+          {avatarUrl ? <img src={avatarUrl} alt="" className="v2-sidebar-avatar" /> : <div className="v2-sidebar-avatar">{displayName.charAt(0).toUpperCase()}</div>}
+          <div>
+            <h2 className="v2-sidebar-title">{displayName}</h2>
+            <p className="v2-sidebar-subtitle">Verified Account</p>
+          </div>
         </div>
+        <Link href="/creator/posts" className="v2-sidebar-btn">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
+          Post Update
+        </Link>
+        <div className="v2-nav-list">
+          <Link href="/creator" className="v2-nav-item"><span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>Home</Link>
+          <Link href="/creator/tiers" className="v2-nav-item"><span className="material-symbols-outlined">group</span>Subscriptions</Link>
+          <Link href="#" className="v2-nav-item"><span className="material-symbols-outlined">mail</span>Messages</Link>
+          <Link href="/creator/payouts" className="v2-nav-item"><span className="material-symbols-outlined">payments</span>Earnings</Link>
+          <Link href="/creator/settings" className="v2-nav-item"><span className="material-symbols-outlined">settings</span>Settings</Link>
+        </div>
+        <div className="v2-sidebar-footer">
+          <Link href="#" className="v2-nav-item"><span className="material-symbols-outlined">help</span>Help</Link>
+          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
+            <button type="submit" className="v2-nav-item" style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}>
+              <span className="material-symbols-outlined">logout</span>Sign Out
+            </button>
+          </form>
+        </div>
+      </nav>
 
-        {error && <div className="form-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+      {/* Main Content */}
+      <main className="v2-main-content" style={{ maxWidth: '900px' }}>
+        <header style={{ marginBottom: '32px' }}>
+          <h1 className="v2-dash-title">{editingPostId ? 'Edit Post' : 'New Post'}</h1>
+          <p className="v2-dash-desc">Create content for your fans. Choose who gets to see it.</p>
+        </header>
 
-        <form onSubmit={handleCreatePost} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="form-group">
-            <label className="form-label">Post Title</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="E.g. Behind the scenes: Episode 4"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              required
-            />
-          </div>
+        {/* Post Editor Card */}
+        <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '24px', marginBottom: '48px' }}>
+          {editingPostId && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+              <button type="button" onClick={cancelEdit} style={{ padding: '6px 16px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: 'var(--v2-text-variant)' }}>Cancel Edit</button>
+            </div>
+          )}
 
-          <div className="form-group">
-            <label className="form-label">Description (Optional)</label>
-            <textarea
-              className="form-input"
-              placeholder="What do you want to share with your fans?"
-              style={{ minHeight: '150px', resize: 'vertical' }}
-              value={content}
-              onChange={e => setContent(e.target.value)}
-            />
-          </div>
+          {error && <div style={{ padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }}>{error}</div>}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ marginBottom: '0.75rem' }}>Primary Media (Optional)</label>
-              
-              <div 
+          <form onSubmit={handleCreatePost} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Title */}
+            <input type="text" placeholder="Post title..." value={title} onChange={e => setTitle(e.target.value)} required style={{ ...inputStyle, fontSize: '20px', fontWeight: 600, border: 'none', padding: '8px 0', background: 'transparent' }} />
+
+            {/* Content */}
+            <textarea placeholder="What do you want to share with your fans?" value={content} onChange={e => setContent(e.target.value)} style={{ ...inputStyle, minHeight: '120px', resize: 'vertical' }} />
+
+            {/* Media Upload Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              {/* Primary Media */}
+              <div
                 onClick={() => fileInputRef.current?.click()}
-                style={{
-                  border: '2px dashed var(--border-color)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '1.5rem',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  background: 'var(--bg-secondary)',
-                  transition: 'all 0.2s',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  minHeight: '200px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.background = 'rgba(139, 92, 246, 0.05)'; }}
-                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.background = 'var(--bg-secondary)';
-                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    setFile(e.dataTransfer.files[0]);
-                  }
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                style={dropZoneStyle}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--v2-primary)'; }}
+                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--v2-outline)'; }}
+                onDrop={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--v2-outline)'; if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]); }}
               >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*,video/*"
-                  style={{ display: 'none' }}
-                  onChange={e => setFile(e.target.files?.[0] || null)}
-                />
-                
+                <input type="file" ref={fileInputRef} accept="image/*,video/*" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
                 {(previewUrl || currentImageUrl) ? (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {((file && file.type.startsWith('video/')) || (!file && currentImageUrl?.includes('/video/'))) ? (
-                      <video src={previewUrl || currentImageUrl || ''} style={{ maxHeight: '120px', borderRadius: '4px', maxWidth: '100%' }} />
+                      <video src={previewUrl || currentImageUrl || ''} style={{ maxHeight: '100px', borderRadius: '8px', maxWidth: '100%' }} />
                     ) : (
-                      <img src={previewUrl || currentImageUrl || ''} alt="Preview" style={{ maxHeight: '120px', borderRadius: '4px', maxWidth: '100%', objectFit: 'contain' }} />
+                      <img src={previewUrl || currentImageUrl || ''} alt="Preview" style={{ maxHeight: '100px', borderRadius: '8px', maxWidth: '100%', objectFit: 'contain' }} />
                     )}
-                    <span style={{ fontSize: '0.75rem', marginTop: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Click to change media</span>
+                    <span style={{ fontSize: '12px', marginTop: '8px', color: 'var(--v2-primary)', fontWeight: 600 }}>Click to change</span>
                   </div>
                 ) : (
                   <>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Upload Media</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Drag & drop or click to browse</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--v2-text-variant)', marginBottom: '8px' }}>upload_file</span>
+                    <span style={{ fontWeight: 600, fontSize: '14px' }}>Upload Media</span>
+                    <span style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>Drag & drop or click</span>
                   </>
                 )}
-
-                {/* Integrated Progress Overlay */}
                 {uploadProgress > 0 && uploadProgress < 100 && (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 10 }}>
-                    <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Uploading... {uploadProgress}%</div>
-                    <div style={{ width: '80%', height: '6px', background: 'rgba(255,255,255,0.2)', borderRadius: '1rem', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${uploadProgress}%`, background: 'var(--accent-primary)', transition: 'width 0.2s' }} />
+                    <div style={{ fontWeight: 600, marginBottom: '8px' }}>Uploading... {uploadProgress}%</div>
+                    <div style={{ width: '80%', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${uploadProgress}%`, background: 'white', transition: 'width 0.2s' }} />
                     </div>
                   </div>
                 )}
-                {uploadProgress === 100 && isSubmitting && (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 10 }}>
-                    <div style={{ fontWeight: 600 }}>Processing...</div>
-                  </div>
-                )}
               </div>
-            </div>
 
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ marginBottom: '0.75rem' }}>Video Thumbnail</label>
-              
-              <div 
+              {/* Thumbnail */}
+              <div
                 onClick={() => thumbnailInputRef.current?.click()}
-                style={{
-                  border: '2px dashed var(--border-color)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '1.5rem',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  background: 'var(--bg-secondary)',
-                  transition: 'all 0.2s',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  minHeight: '200px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.background = 'rgba(139, 92, 246, 0.05)'; }}
-                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.currentTarget.style.borderColor = 'var(--border-color)';
-                  e.currentTarget.style.background = 'var(--bg-secondary)';
-                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    setThumbnailFile(e.dataTransfer.files[0]);
-                  }
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+                style={dropZoneStyle}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--v2-primary)'; }}
+                onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--v2-outline)'; }}
+                onDrop={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--v2-outline)'; if (e.dataTransfer.files?.[0]) setThumbnailFile(e.dataTransfer.files[0]); }}
               >
-                <input
-                  type="file"
-                  ref={thumbnailInputRef}
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  onChange={e => setThumbnailFile(e.target.files?.[0] || null)}
-                />
-
+                <input type="file" ref={thumbnailInputRef} accept="image/*" style={{ display: 'none' }} onChange={e => setThumbnailFile(e.target.files?.[0] || null)} />
                 {(thumbnailPreviewUrl || currentThumbnailUrl) ? (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <img src={thumbnailPreviewUrl || currentThumbnailUrl || ''} alt="Thumbnail preview" style={{ maxHeight: '120px', borderRadius: '4px', maxWidth: '100%', objectFit: 'contain' }} />
-                    <span style={{ fontSize: '0.75rem', marginTop: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Click to change poster</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <img src={thumbnailPreviewUrl || currentThumbnailUrl || ''} alt="Thumbnail" style={{ maxHeight: '100px', borderRadius: '8px', maxWidth: '100%', objectFit: 'contain' }} />
+                    <span style={{ fontSize: '12px', marginTop: '8px', color: 'var(--v2-primary)', fontWeight: 600 }}>Click to change</span>
                   </div>
                 ) : (
                   <>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Upload Poster</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Required for clean video display</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--v2-text-variant)', marginBottom: '8px' }}>image</span>
+                    <span style={{ fontWeight: 600, fontSize: '14px' }}>Video Thumbnail</span>
+                    <span style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>Optional poster image</span>
                   </>
                 )}
               </div>
             </div>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label">Visibility Options</label>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  checked={isPublic}
-                  onChange={() => setIsPublic(true)}
-                />
-                Public (Visible to everyone)
-              </label>
-
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  checked={!isPublic}
-                  onChange={() => setIsPublic(false)}
-                  disabled={tiers.length === 0}
-                />
-                Subscribers Only
-              </label>
-            </div>
-            {tiers.length === 0 && !isPublic && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                You must create a tier before you can restrict posts.
-              </p>
-            )}
-          </div>
-
-          {!isPublic && tiers.length > 0 && (
-            <div className="form-group" style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
-              <label className="form-label">Minimum Tier Access</label>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                Fans must be subscribed to this tier (or higher) to view this post.
-              </p>
-              <select
-                className="form-input"
-                value={minPrice}
-                onChange={e => setMinPrice(Number(e.target.value))}
-              >
-                {tiers.map(t => (
-                  <option key={t.id} value={t.amount}>
-                    {t.name} — ₦{(t.amount / 100).toLocaleString()}/month
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting || !title}>
-            {isSubmitting ? (editingPostId ? 'Updating...' : 'Publishing...') : (editingPostId ? 'Update Post' : 'Publish Post')}
-          </button>
-        </form>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <h3 style={{ margin: 0 }}>Your Published Posts</h3>
-
-        {posts.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)' }}>You haven't published anything yet.</p>
-        ) : (
-          posts.map(post => {
-            // Find tier name if gated
-            const requiredTier = !post.is_public && tiers.find(t => t.amount === post.minimum_tier_amount);
-
-            return (
-              <div key={post.id} className="glass-card" style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.125rem' }}>{post.title}</h4>
-                    <span style={{
-                      fontSize: '0.75rem',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '1rem',
-                      background: post.is_public ? 'var(--bg-secondary)' : 'rgba(139, 92, 246, 0.1)',
-                      color: post.is_public ? 'var(--text-secondary)' : 'var(--accent-primary)',
-                      fontWeight: 600
-                    }}>
-                      {post.is_public ? 'Public' : (requiredTier ? `${requiredTier.name} +` : 'Subscribers Only')}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => handleEditClick(post)} className="btn btn-secondary btn-sm" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-                      Edit
-                    </button>
-                    <button onClick={() => handleDeletePost(post.id)} className="btn btn-secondary btn-sm" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)', backgroundColor: 'rgba(239, 68, 68, 0.05)' }}>
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {post.image_url && (
-                  <div style={{ marginBottom: '1rem', borderRadius: 'var(--radius-sm)', overflow: 'hidden', maxHeight: '300px', background: '#000' }}>
-                    {post.image_url.includes('/video/') ? (
-                      <VideoPlayer 
-                        src={post.image_url} 
-                        poster={post.thumbnail_url} 
-                        style={{ maxHeight: '300px' }}
-                      />
-                    ) : (
-                      <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover' }} />
-                    )}
-                  </div>
-                )}
-
-                <p style={{
-                  color: 'var(--text-secondary)',
-                  whiteSpace: 'pre-wrap',
-                  fontSize: '0.938rem',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
-                }}>
-                  {post.content}
-                </p>
-                <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  Published {new Date(post.created_at).toLocaleDateString()}
-                </div>
+            {/* Visibility */}
+            <div style={{ background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>Visibility</label>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+                  <input type="radio" checked={isPublic} onChange={() => setIsPublic(true)} style={{ accentColor: 'var(--v2-primary)' }} />
+                  Public
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', opacity: tiers.length === 0 ? 0.4 : 1 }}>
+                  <input type="radio" checked={!isPublic} onChange={() => setIsPublic(false)} disabled={tiers.length === 0} style={{ accentColor: 'var(--v2-primary)' }} />
+                  Subscribers Only
+                </label>
               </div>
-            );
-          })
+              {!isPublic && tiers.length > 0 && (
+                <div style={{ marginTop: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--v2-text-variant)', marginBottom: '6px' }}>Minimum Tier</label>
+                  <select value={minPrice} onChange={e => setMinPrice(Number(e.target.value))} style={{ ...inputStyle, fontSize: '14px' }}>
+                    {tiers.map((t: any) => <option key={t.id} value={t.amount}>{t.name} — ₦{(t.amount / 100).toLocaleString()}/mo</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid var(--v2-outline)', paddingTop: '20px' }}>
+              <button type="submit" disabled={isSubmitting || !title} style={{ padding: '10px 28px', background: 'var(--v2-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: (isSubmitting || !title) ? 0.5 : 1 }}>
+                {isSubmitting ? (editingPostId ? 'Updating...' : 'Publishing...') : (editingPostId ? 'Update Post' : 'Publish')}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Published Posts */}
+        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Published Posts</h2>
+        {posts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '64px', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '16px', display: 'block' }}>article</span>
+            <p style={{ fontSize: '16px', fontWeight: 500 }}>No posts yet</p>
+            <p style={{ fontSize: '14px', marginTop: '4px' }}>Create your first post above to get started.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {posts.map(post => {
+              const requiredTier = !post.is_public && tiers.find((t: any) => t.amount === post.minimum_tier_amount);
+              return (
+                <div key={post.id} style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '20px', transition: 'all 0.2s' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>{post.title}</h3>
+                      <span style={{ fontSize: '12px', padding: '3px 10px', borderRadius: '999px', background: post.is_public ? 'var(--v2-surface-low)' : 'rgba(0,0,0,0.06)', color: post.is_public ? 'var(--v2-text-variant)' : 'var(--v2-primary)', fontWeight: 600 }}>
+                        {post.is_public ? 'Public' : (requiredTier ? `${requiredTier.name} +` : 'Subscribers')}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => handleEditClick(post)} style={{ padding: '6px 14px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDeletePost(post.id)} style={{ padding: '6px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#dc2626' }}>Delete</button>
+                    </div>
+                  </div>
+
+                  {post.image_url && (
+                    <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', maxHeight: '240px', background: '#000' }}>
+                      {post.image_url.includes('/video/') ? (
+                        <VideoPlayer src={post.image_url} poster={post.thumbnail_url} style={{ maxHeight: '240px' }} />
+                      ) : (
+                        <img src={post.image_url} alt="" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover' }} />
+                      )}
+                    </div>
+                  )}
+
+                  <p style={{ color: 'var(--v2-text-variant)', whiteSpace: 'pre-wrap', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {post.content}
+                  </p>
+                  <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>
+                    Published {new Date(post.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
-      </div>
+      </main>
+
+      {/* Bottom Nav (Mobile) */}
+      <nav className="v2-bottom-nav">
+        <Link href="/creator" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>home</span><span className="v2-bottom-nav-label">Home</span></Link>
+        <Link href="/creator/tiers" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">group</span><span className="v2-bottom-nav-label">Subs</span></Link>
+        <Link href="/creator/posts" className="v2-bottom-fab"><span className="material-symbols-outlined">add</span></Link>
+        <Link href="/creator/payouts" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">payments</span><span className="v2-bottom-nav-label">Earnings</span></Link>
+        <Link href="/creator/settings" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">settings</span><span className="v2-bottom-nav-label">Settings</span></Link>
+      </nav>
     </div>
   );
 }

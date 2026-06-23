@@ -18,6 +18,12 @@ export default function CreatorSettings() {
   const [slug, setSlug] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState('');
+
+  // Account State
+  const [accountEmail, setAccountEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountMsg, setAccountMsg] = useState({ text: '', type: '' });
   
   // Payout State
   const [bankCode, setBankCode] = useState('');
@@ -61,6 +67,9 @@ export default function CreatorSettings() {
         if (user && profileRes?.data) {
           setAvatarUrl(profileRes.data.avatar_url || '');
           fallbackName = profileRes.data.display_name || profileRes.data.full_name || 'Creator';
+        }
+        if (user) {
+          setAccountEmail(user.email || '');
         }
 
         if (user && creatorRes?.data) {
@@ -148,6 +157,55 @@ export default function CreatorSettings() {
       setMsg({ text: err.message, type: 'error' });
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleUpdateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setAccountLoading(true);
+    setAccountMsg({ text: '', type: '' });
+
+    try {
+      const updates: any = {};
+      if (accountEmail) updates.email = accountEmail;
+      if (newPassword) updates.password = newPassword;
+      
+      if (Object.keys(updates).length === 0) {
+        setAccountLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.updateUser(updates);
+      if (error) throw error;
+      
+      if (updates.email) {
+        setAccountMsg({ text: 'Check your new email inbox to confirm the change!', type: 'success' });
+      } else {
+        setAccountMsg({ text: 'Password updated successfully!', type: 'success' });
+        setNewPassword('');
+      }
+    } catch (err: any) {
+      setAccountMsg({ text: err.message, type: 'error' });
+    } finally {
+      setAccountLoading(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (!confirm('Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all data, posts, and subscriptions.')) {
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/auth/delete-account', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      window.location.href = '/login';
+    } catch (err: any) {
+      alert('Failed to delete account: ' + err.message);
     }
   }
 
@@ -476,8 +534,71 @@ export default function CreatorSettings() {
             </div>
           )}
 
+          {/* ACCOUNT TAB */}
+          {activeTab === 'account' && (
+            <div className="v2-sub-card" style={{ maxWidth: '800px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Account Settings</h2>
+              
+              {accountMsg.text && (
+                <div style={{ padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', background: accountMsg.type === 'error' ? '#fef2f2' : '#ecfdf5', color: accountMsg.type === 'error' ? '#991b1b' : '#065f46', border: `1px solid ${accountMsg.type === 'error' ? '#fecaca' : '#a7f3d0'}` }}>
+                  {accountMsg.text}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Email Address</label>
+                  <input
+                    type="email"
+                    value={accountEmail}
+                    onChange={e => setAccountEmail(e.target.value)}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>We will send a confirmation link to your new email if you change this.</span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Leave blank to keep current password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px', marginTop: '24px' }}>
+                <button 
+                  type="button" 
+                  onClick={handleUpdateAccount}
+                  disabled={accountLoading}
+                  className="v2-sub-btn v2-sub-btn-primary" 
+                  style={{ padding: '12px 32px', width: 'auto' }}
+                >
+                  {accountLoading ? 'Saving...' : 'Update Account'}
+                </button>
+              </div>
+
+              {/* Danger Zone */}
+              <div style={{ marginTop: '48px', borderTop: '1px solid #fecaca', paddingTop: '24px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#dc2626', marginBottom: '8px' }}>Danger Zone</h3>
+                <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>Permanently delete your account and all associated data. This action cannot be undone.</p>
+                <button 
+                  type="button" 
+                  onClick={handleDeleteAccount} 
+                  className="v2-sub-btn" 
+                  style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '12px 24px', fontWeight: 600 }}
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* OTHER TABS */}
-          {['tiers', 'account'].includes(activeTab) && (
+          {['tiers'].includes(activeTab) && (
             <div style={{ textAlign: 'center', padding: '64px', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
               This section is coming soon.
             </div>
