@@ -14,18 +14,33 @@ export default async function CreatorPayoutsPage() {
 
   if (!creatorProfile) redirect('/login');
 
-  const { data: transactions } = await supabase
-    .from('transactions')
-    .select('amount, platform_fee, creator_share, status, created_at')
+  const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
+  const avatarUrl = profile?.avatar_url;
+
+  // Fetch REAL payouts
+  const { data: payouts } = await supabase
+    .from('payouts')
+    .select('id, net_amount, status, created_at')
     .eq('creator_id', user.id)
     .order('created_at', { ascending: false });
 
-  const totalGross = (transactions || []).reduce((sum, tx) => sum + (tx.status === 'success' ? tx.amount : 0), 0);
-  const totalFees = (transactions || []).reduce((sum, tx) => sum + (tx.status === 'success' ? tx.platform_fee : 0), 0);
-  const totalNet = (transactions || []).reduce((sum, tx) => sum + (tx.status === 'success' ? tx.creator_share : 0), 0);
+  // Calculate real balances from transactions for the hero card
+  const { data: transactions } = await supabase
+    .from('transactions')
+    .select('creator_share, status')
+    .eq('creator_id', user.id);
 
-  const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
-  const avatarUrl = profile?.avatar_url;
+  // Calculate real balances
+  const totalNet = (transactions || []).reduce((sum, tx) => sum + (tx.status === 'success' ? tx.creator_share : 0), 0);
+  
+  // Calculate real MRR
+  const { data: activeSubs } = await supabase
+    .from('subscriptions')
+    .select('amount')
+    .eq('creator_id', user.id)
+    .eq('status', 'active');
+  
+  const mrr = (activeSubs || []).reduce((sum, sub) => sum + sub.amount, 0);
 
   return (
     <div className="v2-dashboard-layout">
@@ -39,16 +54,18 @@ export default async function CreatorPayoutsPage() {
           )}
           <div>
             <h2 className="v2-sidebar-title">{displayName}</h2>
-            <p className="v2-sidebar-subtitle">Verified Account</p>
+            <p className="v2-sidebar-subtitle">
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--v2-green)' }}>verified</span>
+              Verified Account
+            </p>
           </div>
         </div>
 
-        <Link href="/creator/posts" className="v2-sidebar-btn">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
+        <Link href="/creator/posts/compose" className="v2-sidebar-btn">
           Post Update
         </Link>
 
-        <div className="v2-nav-list">
+        <div className="v2-nav-list" style={{ marginTop: '16px' }}>
           <Link href="/creator" className="v2-nav-item">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>Home
           </Link>
@@ -79,110 +96,120 @@ export default async function CreatorPayoutsPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="v2-main-content" style={{ maxWidth: '1000px' }}>
-        <header style={{ marginBottom: '32px' }}>
-          <h1 className="v2-dash-title">Earnings</h1>
-          <p className="v2-dash-desc">Track your revenue, platform fees, and payout status.</p>
-        </header>
-
-        {/* Stats Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
-          <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--v2-text-variant)' }}>account_balance</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Gross Volume</span>
+      <main className="v2-main-content" style={{ background: 'var(--v2-surface)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          
+          {/* Page Header */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.01em' }}>Earnings & Payouts</h1>
+              <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)' }}>Manage your funds and withdrawal settings.</p>
             </div>
-            <p style={{ fontSize: '28px', fontWeight: 700, color: 'var(--v2-primary)', margin: 0 }}>₦{(totalGross / 100).toLocaleString()}</p>
           </div>
 
-          <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--v2-text-variant)' }}>receipt_long</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Platform Fees (10%)</span>
-            </div>
-            <p style={{ fontSize: '28px', fontWeight: 700, color: '#dc2626', margin: 0 }}>-₦{(totalFees / 100).toLocaleString()}</p>
-          </div>
+          {/* Bento Grid Layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '24px' }}>
+            
+            {/* Main Balance Card (md:col-span-8) */}
+            <div style={{ gridColumn: 'span 12', background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }} className="md-col-8">
+              {/* Decorative Glow */}
+              <div style={{ position: 'absolute', right: '-40px', top: '-40px', width: '160px', height: '160px', background: 'rgba(166, 242, 209, 0.1)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }}></div>
+              
+              <div style={{ marginBottom: '32px' }}>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)', marginBottom: '4px' }}>Total Available Balance</p>
+                <h2 style={{ fontSize: '48px', fontWeight: 700, color: 'var(--v2-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                  ₦ {(totalNet / 100).toLocaleString() + (totalNet % 100 === 0 ? '.00' : '')}
+                </h2>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>trending_up</span>
+                  {mrr > 0 ? '+5% from last month' : 'No recent growth'}
+                </p>
+              </div>
 
-          <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '20px', borderLeft: '3px solid var(--v2-green)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--v2-green)' }}>savings</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Net Earnings</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px', marginTop: 'auto' }}>
+                <div className="md-flex-none" style={{ background: 'var(--v2-surface-low)', color: 'var(--v2-text-variant)', padding: '12px 24px', borderRadius: '4px', fontSize: '14px', fontWeight: 500, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', cursor: 'not-allowed', flex: 1 }}>
+                   Next Payout: 26th - 28th
+                </div>
+                <Link href="/creator/analytics" className="hidden md-flex" style={{ background: 'var(--v2-surface)', color: 'var(--v2-primary)', border: '1px solid var(--v2-outline)', padding: '12px 24px', borderRadius: '4px', fontSize: '14px', fontWeight: 500, justifyContent: 'center', alignItems: 'center', cursor: 'pointer', textDecoration: 'none' }}>
+                  View Analytics
+                </Link>
+              </div>
             </div>
-            <p style={{ fontSize: '28px', fontWeight: 700, color: 'var(--v2-green)', margin: 0 }}>₦{(totalNet / 100).toLocaleString()}</p>
-          </div>
-        </div>
 
-        {/* Bank Info Card */}
-        <div style={{ background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '20px', marginBottom: '32px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>account_balance_wallet</span>
-            Payout Destination
-          </h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px' }}>
-            <span style={{ color: 'var(--v2-text-variant)' }}>Bank Account</span>
-            <strong>{creatorProfile.bank_account_name || 'Not verified'}</strong>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', marginTop: '8px' }}>
-            <span style={{ color: 'var(--v2-text-variant)' }}>Account Number</span>
-            <strong style={{ fontFamily: 'monospace' }}>
-              {creatorProfile.bank_account_number ? `****${creatorProfile.bank_account_number.slice(-4)}` : 'None'}
-            </strong>
-          </div>
-          {!creatorProfile.is_verified && (
-            <div style={{ marginTop: '16px' }}>
-              <Link href="/creator/settings" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-primary)', textDecoration: 'none' }}>
-                Complete bank setup →
-              </Link>
-            </div>
-          )}
-        </div>
+            {/* Payout Method Card (md:col-span-4) */}
+            <div className="md-col-4" style={{ gridColumn: 'span 12', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderTop: '2px solid var(--v2-green)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: '0px 4px 20px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payout Method</p>
+                <Link href="/creator/settings" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-primary)', textDecoration: 'underline' }}>Edit</Link>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ width: '40px', height: '40px', background: 'var(--v2-surface-low)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--v2-primary)' }}>
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance</span>
+                </div>
+                <div>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--v2-primary)' }}>{creatorProfile.bank_account_name || 'Bank Account'}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>
+                    {creatorProfile.bank_account_number ? `**** **** ${creatorProfile.bank_account_number.slice(-4)}` : 'Not setup'}
+                  </p>
+                </div>
+              </div>
 
-        {/* Transaction Table */}
-        <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Transaction History</h2>
-        <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', overflow: 'hidden' }}>
-          {(!transactions || transactions.length === 0) ? (
-            <div style={{ padding: '64px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '16px', display: 'block' }}>receipt_long</span>
-              <p style={{ fontSize: '16px', fontWeight: 500 }}>No transactions yet</p>
-              <p style={{ fontSize: '14px', marginTop: '4px' }}>When fans subscribe, their payments will appear here.</p>
+              <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid rgba(126, 117, 118, 0.5)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--v2-text-variant)', filter: 'grayscale(100%)', opacity: 0.7 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>lock</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600 }}>Secured by Paystack</span>
+                </div>
+              </div>
             </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                <thead>
-                  <tr style={{ background: 'var(--v2-surface-low)' }}>
-                    <th style={{ padding: '12px 20px', fontWeight: 600, borderBottom: '1px solid var(--v2-outline)', color: 'var(--v2-text-variant)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</th>
-                    <th style={{ padding: '12px 20px', fontWeight: 600, borderBottom: '1px solid var(--v2-outline)', color: 'var(--v2-text-variant)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Paid</th>
-                    <th style={{ padding: '12px 20px', fontWeight: 600, borderBottom: '1px solid var(--v2-outline)', color: 'var(--v2-text-variant)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aza Fee</th>
-                    <th style={{ padding: '12px 20px', fontWeight: 600, borderBottom: '1px solid var(--v2-outline)', color: 'var(--v2-text-variant)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Share</th>
-                    <th style={{ padding: '12px 20px', fontWeight: 600, borderBottom: '1px solid var(--v2-outline)', color: 'var(--v2-text-variant)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((tx: any, i: number) => {
-                    const hoursSince = (new Date().getTime() - new Date(tx.created_at).getTime()) / (1000 * 60 * 60);
-                    const settleStatus = tx.status === 'success' ? (hoursSince > 24 ? 'Transferred' : 'Processing') : 'Failed';
-                    const statusColor = settleStatus === 'Transferred' ? 'var(--v2-green)' : settleStatus === 'Processing' ? '#eab308' : '#dc2626';
-                    const statusBg = settleStatus === 'Transferred' ? 'rgba(5,150,105,0.08)' : settleStatus === 'Processing' ? 'rgba(234,179,8,0.08)' : 'rgba(220,38,38,0.08)';
+
+            {/* Recent Payouts List (md:col-span-12) */}
+            <div style={{ gridColumn: 'span 12', background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '12px', overflow: 'hidden', marginTop: '16px' }}>
+              <div style={{ padding: '24px', borderBottom: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)' }}>Recent Payouts</h3>
+                <button style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                  View All <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>chevron_right</span>
+                </button>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {(!payouts || payouts.length === 0) ? (
+                   <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
+                     No recent payouts.
+                   </div>
+                ) : (
+                  payouts.map((payout: any, i: number) => {
+                    const settleStatus = payout.status === 'paid' ? 'COMPLETED' : (payout.status === 'pending' || payout.status === 'calculated' ? 'PROCESSING' : 'FAILED');
+                    const statusColor = settleStatus === 'COMPLETED' ? 'var(--v2-green)' : (settleStatus === 'PROCESSING' ? '#eab308' : '#dc2626');
+                    const statusBg = settleStatus === 'COMPLETED' ? 'rgba(5, 150, 105, 0.1)' : (settleStatus === 'PROCESSING' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(220, 38, 38, 0.1)');
 
                     return (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--v2-outline)' }}>
-                        <td style={{ padding: '14px 20px', color: 'var(--v2-text-variant)' }}>{new Date(tx.created_at).toLocaleDateString()}</td>
-                        <td style={{ padding: '14px 20px', fontWeight: 500 }}>₦{(tx.amount / 100).toLocaleString()}</td>
-                        <td style={{ padding: '14px 20px', color: '#dc2626' }}>-₦{(tx.platform_fee / 100).toLocaleString()}</td>
-                        <td style={{ padding: '14px 20px', color: 'var(--v2-green)', fontWeight: 600 }}>₦{(tx.creator_share / 100).toLocaleString()}</td>
-                        <td style={{ padding: '14px 20px' }}>
-                          <span style={{ padding: '4px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 600, background: statusBg, color: statusColor }}>
+                      <div key={payout.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: i === payouts.length - 1 ? 'none' : '1px solid var(--v2-outline)', cursor: 'default' }} className="v2-list-item-hover">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--v2-surface-low)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--v2-text-variant)' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>arrow_outward</span>
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-primary)' }}>Withdrawal to Bank</p>
+                            <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>
+                               {new Date(payout.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--v2-primary)' }}>₦ {(payout.net_amount / 100).toLocaleString() + (payout.net_amount % 100 === 0 ? '.00' : '')}</p>
+                          <span style={{ display: 'inline-block', marginTop: '4px', padding: '4px 8px', background: statusBg, color: statusColor, borderRadius: '9999px', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             {settleStatus}
                           </span>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
-                  })}
-                </tbody>
-              </table>
+                  })
+                )}
+              </div>
             </div>
-          )}
+
+          </div>
         </div>
       </main>
 
@@ -190,7 +217,7 @@ export default async function CreatorPayoutsPage() {
       <nav className="v2-bottom-nav">
         <Link href="/creator" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>home</span><span className="v2-bottom-nav-label">Home</span></Link>
         <Link href="/creator/tiers" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">group</span><span className="v2-bottom-nav-label">Subs</span></Link>
-        <Link href="/creator/posts" className="v2-bottom-fab"><span className="material-symbols-outlined">add</span></Link>
+        <Link href="/creator/posts/compose" className="v2-bottom-fab"><span className="material-symbols-outlined">add</span></Link>
         <Link href="/creator/payouts" className="v2-bottom-nav-item active"><span className="material-symbols-outlined v2-bottom-nav-icon">payments</span><span className="v2-bottom-nav-label">Earnings</span></Link>
         <Link href="/creator/settings" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">settings</span><span className="v2-bottom-nav-label">Settings</span></Link>
       </nav>

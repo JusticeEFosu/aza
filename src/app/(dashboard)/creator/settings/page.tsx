@@ -40,8 +40,85 @@ export default function CreatorSettings() {
   const [isVerified, setIsVerified] = useState(false);
   const [persistedBankName, setPersistedBankName] = useState('');
   
+  // Tier State
+  const [tiersList, setTiersList] = useState<any[]>([]);
+  const [tierName, setTierName] = useState('');
+  const [tierAmountNaira, setTierAmountNaira] = useState('');
+  const [tierDescription, setTierDescription] = useState('');
+  const [tierPerksText, setTierPerksText] = useState('');
+  const [tierSaving, setTierSaving] = useState(false);
+  const [tierMsg, setTierMsg] = useState({ text: '', type: '' });
+  const [showTierForm, setShowTierForm] = useState(false);
+  const [editingTierId, setEditingTierId] = useState<string | null>(null);
+
   const [msg, setMsg] = useState({ text: '', type: '' });
   const supabase = createClient();
+
+  async function fetchTiers() {
+    const res = await fetch('/api/tiers');
+    const data = await res.json();
+    if (data.data) setTiersList(data.data);
+  }
+
+  const openEditModal = (tier: any) => {
+    setEditingTierId(tier.id);
+    setTierName(tier.name);
+    setTierAmountNaira((tier.amount / 100).toString());
+    setTierDescription(tier.description || '');
+    setTierPerksText(tier.perks ? tier.perks.join('\n') : '');
+    setTierMsg({ text: '', type: '' });
+    setShowTierForm(true);
+  };
+
+  const closeTierModal = () => {
+    setShowTierForm(false);
+    setEditingTierId(null);
+    setTierName('');
+    setTierAmountNaira('');
+    setTierDescription('');
+    setTierPerksText('');
+    setTierMsg({ text: '', type: '' });
+  };
+
+  async function handleSaveTier(e: React.FormEvent) {
+    e.preventDefault();
+    setTierSaving(true);
+    setTierMsg({ text: '', type: '' });
+    try {
+      const amountKobo = Math.round(parseFloat(tierAmountNaira) * 100);
+      if (amountKobo < 100) throw new Error('Minimum tier amount is ₦1');
+      const perksArray = tierPerksText.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+      
+      const endpoint = editingTierId ? `/api/tiers/${editingTierId}` : '/api/tiers';
+      const method = editingTierId ? 'PUT' : 'POST';
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tierName, amount: amountKobo, description: tierDescription, perks: perksArray })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      closeTierModal();
+      fetchTiers();
+    } catch (err: any) {
+      setTierMsg({ text: err.message, type: 'error' });
+    } finally {
+      setTierSaving(false);
+    }
+  }
+
+  async function handleArchiveTier(id: string) {
+    if (!confirm('Are you sure you want to archive this tier? It will no longer be available for new subscribers, but existing subscribers will continue to be billed.')) return;
+    try {
+      const res = await fetch(`/api/tiers/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to archive tier');
+      fetchTiers();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
 
   useEffect(() => {
     async function loadInitialData() {
@@ -90,6 +167,7 @@ export default function CreatorSettings() {
       }
     }
     loadInitialData();
+    fetchTiers();
   }, [supabase]);
 
   useEffect(() => {
@@ -235,7 +313,7 @@ export default function CreatorSettings() {
           </div>
         </div>
 
-        <Link href="/creator/posts" className="v2-sidebar-btn">
+        <Link href="/creator/posts/compose" className="v2-sidebar-btn">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
           Post Update
         </Link>
@@ -247,7 +325,7 @@ export default function CreatorSettings() {
           </Link>
           <Link href="/creator/tiers" className="v2-nav-item">
             <span className="material-symbols-outlined">group</span>
-            Subscriptions
+            Subscribers
           </Link>
           <Link href="#" className="v2-nav-item">
             <span className="material-symbols-outlined">mail</span>
@@ -597,10 +675,150 @@ export default function CreatorSettings() {
             </div>
           )}
 
-          {/* OTHER TABS */}
-          {['tiers'].includes(activeTab) && (
-            <div style={{ textAlign: 'center', padding: '64px', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
-              This section is coming soon.
+          {/* TIERS TAB */}
+          {activeTab === 'tiers' && (
+            <div style={{ maxWidth: '1000px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div>
+                  <h2 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>Subscription Tiers</h2>
+                  <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginTop: '4px' }}>Create and manage the membership levels your fans can subscribe to.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { closeTierModal(); setShowTierForm(true); }}
+                  style={{ padding: '10px 20px', background: 'var(--v2-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add</span>
+                  New Tier
+                </button>
+              </div>
+
+              {/* Tiers Grid */}
+              {tiersList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '64px', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '16px', display: 'block' }}>loyalty</span>
+                  <p style={{ fontSize: '16px', fontWeight: 500 }}>No tiers yet</p>
+                  <p style={{ fontSize: '14px', marginTop: '4px' }}>Create your first tier to start earning from your fans.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                  {tiersList.map(tier => {
+                    const isHighest = tiersList.length > 1 && tier.amount === Math.max(...tiersList.map(t => t.amount));
+                    return (
+                      <div key={tier.id} style={{
+                        background: 'var(--v2-surface-lowest)',
+                        border: isHighest ? '2px solid var(--v2-primary)' : '1px solid var(--v2-outline)',
+                        borderRadius: '16px',
+                        padding: '24px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        {isHighest && (
+                          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'var(--v2-primary)', color: 'white', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', padding: '4px' }}>
+                            VIP Tier
+                          </div>
+                        )}
+                        <div style={{ marginTop: isHighest ? '16px' : '0' }}>
+                          <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--v2-primary)' }}>{tier.name}</h3>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '16px' }}>
+                            <span style={{ fontSize: '32px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.02em' }}>₦{(tier.amount / 100).toLocaleString()}</span>
+                            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)' }}>/month</span>
+                          </div>
+                          {tier.description && (
+                            <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '24px', lineHeight: 1.5 }}>{tier.description}</p>
+                          )}
+                          <div style={{ borderTop: '1px solid var(--v2-outline)', paddingTop: '20px', marginBottom: '24px', flexGrow: 1 }}>
+                            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Includes</p>
+                            {tier.perks && tier.perks.length > 0 ? (
+                              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {tier.perks.map((p: string, i: number) => (
+                                  <li key={i} style={{ fontSize: '14px', color: 'var(--v2-primary)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--v2-green)', marginTop: '-1px' }}>check_circle</span>
+                                    {p}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>No specific perks listed.</span>
+                            )}
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <button type="button" onClick={() => openEditModal(tier)} style={{ padding: '10px', background: 'var(--v2-surface-low)', color: 'var(--v2-primary)', border: '1px solid var(--v2-outline)', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                              Edit
+                            </button>
+                            <button type="button" onClick={() => handleArchiveTier(tier.id)} style={{ padding: '10px', background: 'transparent', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                              Archive
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Modal Overlay for Tier Form */}
+          {showTierForm && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+              <div style={{ background: 'var(--v2-surface-lowest)', borderRadius: '16px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderBottom: '1px solid var(--v2-outline)' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{editingTierId ? 'Edit Tier' : 'Create New Tier'}</h3>
+                  <button type="button" onClick={closeTierModal} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--v2-text-variant)', display: 'flex' }}>
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                
+                <div style={{ padding: '24px' }}>
+                  {tierMsg.text && (
+                    <div style={{ padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', background: tierMsg.type === 'error' ? '#fef2f2' : '#ecfdf5', color: tierMsg.type === 'error' ? '#991b1b' : '#065f46', border: `1px solid ${tierMsg.type === 'error' ? '#fecaca' : '#a7f3d0'}` }}>
+                      {tierMsg.text}
+                    </div>
+                  )}
+
+                  {editingTierId && (
+                    <div style={{ padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', background: 'var(--v2-surface-low)', color: 'var(--v2-text-variant)', fontSize: '13px', lineHeight: 1.5, display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--v2-primary)' }}>info</span>
+                      <div>
+                        <strong>Note:</strong> Changing the price will not affect existing subscribers; they are grandfathered in at their original price.
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Tier Name</label>
+                        <input type="text" placeholder="e.g. VIP Supporter" value={tierName} onChange={e => setTierName(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Monthly Price (₦)</label>
+                        <input type="number" placeholder="1000" min="100" step="100" value={tierAmountNaira} onChange={e => setTierAmountNaira(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Description</label>
+                      <textarea rows={2} placeholder="Short description for your fans" value={tierDescription} onChange={e => setTierDescription(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Perks (One per line)</label>
+                      <textarea rows={4} placeholder={"Exclusive videos\nPrivate Discord invite\nMonthly Q&A"} value={tierPerksText} onChange={e => setTierPerksText(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px', lineHeight: 1.5 }} />
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ padding: '24px', borderTop: '1px solid var(--v2-outline)', display: 'flex', justifyContent: 'flex-end', gap: '12px', background: 'var(--v2-surface)' }}>
+                  <button type="button" onClick={closeTierModal} style={{ padding: '10px 20px', background: 'transparent', color: 'var(--v2-text-variant)', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                  <button type="button" onClick={handleSaveTier} disabled={tierSaving} style={{ padding: '10px 24px', background: 'var(--v2-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: tierSaving ? 0.5 : 1 }}>
+                    {tierSaving ? 'Saving...' : 'Save Tier'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -618,7 +836,7 @@ export default function CreatorSettings() {
           <span className="v2-bottom-nav-label">Subs</span>
         </Link>
         
-        <Link href="/creator/posts" className="v2-bottom-fab">
+        <Link href="/creator/posts/compose" className="v2-bottom-fab">
           <span className="material-symbols-outlined">add</span>
         </Link>
         

@@ -107,7 +107,7 @@ export default async function CreatorDashboard() {
           </div>
         </div>
 
-        <Link href="/creator/posts" className="v2-sidebar-btn">
+        <Link href="/creator/posts/compose" className="v2-sidebar-btn">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
           Post Update
         </Link>
@@ -119,7 +119,7 @@ export default async function CreatorDashboard() {
           </Link>
           <Link href="/creator/tiers" className="v2-nav-item">
             <span className="material-symbols-outlined">group</span>
-            Subscriptions
+            Subscribers
           </Link>
           <Link href="#" className="v2-nav-item">
             <span className="material-symbols-outlined">mail</span>
@@ -265,7 +265,7 @@ export default async function CreatorDashboard() {
           <span className="v2-bottom-nav-label">Subs</span>
         </Link>
         
-        <Link href="/creator/posts" className="v2-bottom-fab">
+        <Link href="/creator/posts/compose" className="v2-bottom-fab">
           <span className="material-symbols-outlined">add</span>
         </Link>
         

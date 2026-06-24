@@ -2334,3 +2334,54 @@ h4 {
     padding: 32px 40px;
   }
 }
+/* Earnings Hero Bento Wallet */
+.v2-wallet-hero {
+  background: var(--v2-surface);
+  border: 1px solid var(--v2-outline);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.v2-wallet-glow {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 160px;
+  height: 160px;
+  background: rgba(166, 242, 209, 0.1);
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.v2-wallet-hero:hover .v2-wallet-glow {
+  background: rgba(166, 242, 209, 0.15);
+}
+
+.v2-list-item-hover {
+  transition: background-color 0.15s ease;
+}
+
+.v2-list-item-hover:hover {
+  background-color: var(--v2-surface-low);
+}
+
+@media (min-width: 768px) {
+  .md-col-8 {
+    grid-column: span 8 / span 8 !important;
+  }
+  .md-col-4 {
+    grid-column: span 4 / span 4 !important;
+  }
+  .md-flex-none {
+    flex: none !important;
+  }
+  .hidden.md-flex {
+    display: flex !important;
+  }
+}
