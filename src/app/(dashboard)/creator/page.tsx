@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import MobileNav from '@/components/MobileNav';
 import HeaderShareButton from '@/components/HeaderShareButton';
 
 // Utility for relative time formatting
@@ -47,9 +48,12 @@ export default async function CreatorDashboard() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+  let activeSubsCount = 0;
+
   if (subscriptions) {
     subscriptions.forEach(sub => {
       if (sub.status === 'active') {
+        activeSubsCount++;
         const tierData = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
         mrr += (tierData?.amount || 0);
         
@@ -152,6 +156,7 @@ export default async function CreatorDashboard() {
           </form>
         </div>
       </nav>
+      <MobileNav role="creator" />
 
       {/* Main Content Area */}
       <main className="v2-main-content">
@@ -163,19 +168,15 @@ export default async function CreatorDashboard() {
           <div className="hidden md:flex">
              <HeaderShareButton url={shareUrl} />
           </div>
-          <button className="v2-mobile-toggle">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
         </header>
 
         {/* Stats Grid */}
         <div className="v2-stats-grid">
           {/* Stat Card 1 */}
           <div className="v2-stat-card">
-            <div className="v2-stat-line"></div>
             <div>
               <p className="v2-stat-label">Total Subscribers</p>
-              <h3 className="v2-stat-value">{creatorProfile?.subscriber_count?.toLocaleString() || 0}</h3>
+              <h3 className="v2-stat-value">{activeSubsCount.toLocaleString()}</h3>
             </div>
             {/* Real stats deliberately omitted from sub-text as requested */}
             <div style={{ height: '24px' }}></div>

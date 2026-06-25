@@ -1,13 +1,22 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import AvatarUpload from '@/components/ui/AvatarUpload';
 import Link from 'next/link';
+import MobileNav from '@/components/MobileNav';
 
 export default function FanSettings() {
+  const [activeTab, setActiveTab] = useState<'profile' | 'account'>('profile');
+  
+  const [userId, setUserId] = useState('');
   const [fullName, setFullName] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  
+  const [accountEmail, setAccountEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -16,29 +25,32 @@ export default function FanSettings() {
   const supabase = createClient();
 
   useEffect(() => {
-    async function loadProfile() {
+    async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
         return;
       }
+      setUserId(user.id);
+      setAccountEmail(user.email || '');
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, display_name')
+        .select('full_name, display_name, avatar_url')
         .eq('id', user.id)
         .single();
 
       if (data && !error) {
         setFullName(data.full_name || '');
         setDisplayName(data.display_name || '');
+        setAvatarUrl(data.avatar_url || '');
       }
       setLoading(false);
     }
-    loadProfile();
+    loadData();
   }, [router, supabase]);
 
-  async function handleSave(e: React.FormEvent) {
+  async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
@@ -47,20 +59,13 @@ export default function FanSettings() {
       const res = await fetch('/api/fan/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          displayName
-        })
+        body: JSON.stringify({ fullName, displayName })
       });
 
       const data = await res.json();
-      
       if (!res.ok) throw new Error(data.error);
 
       setMessage({ type: 'success', text: 'Profile updated successfully.' });
-      router.refresh();
-      
-      // Auto-hide success message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'An error occurred' });
@@ -69,83 +74,262 @@ export default function FanSettings() {
     }
   }
 
+  async function handleUpdateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      const updates: any = {};
+      if (accountEmail) updates.email = accountEmail;
+      if (newPassword) updates.password = newPassword;
+      
+      if (Object.keys(updates).length === 0) {
+        setSaving(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.updateUser(updates);
+      if (error) throw error;
+      
+      if (updates.email) {
+        setMessage({ type: 'success', text: 'Check your new email inbox to confirm the change!' });
+      } else {
+        setMessage({ type: 'success', text: 'Password updated successfully!' });
+        setNewPassword('');
+      }
+      setTimeout(() => setMessage(null), 4000);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (!confirm('Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all subscriptions.')) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/auth/delete-account', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.location.href = '/login';
+    } catch (err: any) {
+      alert('Failed to delete account: ' + err.message);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="container" style={{ paddingTop: '2rem' }}>
-        <p>Loading profile...</p>
+      <div className="v2-fan-dashboard" style={{ justifyContent: 'center', alignItems: 'center' }}>
+         <span className="spinner" style={{ width: '32px', height: '32px', color: 'var(--v2-primary)', borderColor: 'rgba(0,0,0,0.1)', borderTopColor: 'currentColor' }} />
       </div>
     );
   }
 
   return (
-    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '4rem', maxWidth: '600px' }}>
-      
-      <div style={{ marginBottom: '2rem' }}>
-        <Link href="/fan" style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
-          ← Back to Dashboard
-        </Link>
-        <h1 style={{ margin: 0 }}>Profile Settings</h1>
-        <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-          Update your personal details below.
-        </p>
-      </div>
+    <div className="v2-fan-dashboard">
+      <nav className="v2-sidebar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px', marginBottom: '16px' }}>
+          <span className="v2-dash-title" style={{ fontSize: '24px' }}>Aza</span>
+        </div>
+        
+        <div className="v2-nav-list" style={{ marginTop: 0 }}>
+          <Link href="/fan" className="v2-nav-item">
+            <span className="material-symbols-outlined">home</span>
+            Dashboard
+          </Link>
+          <Link href="/fan/discover" className="v2-nav-item">
+            <span className="material-symbols-outlined">group</span>
+            Discover Creators
+          </Link>
+          <Link href="/fan#feed" className="v2-nav-item">
+            <span className="material-symbols-outlined">dynamic_feed</span>
+            Feed
+          </Link>
+          <Link href="/fan/settings" className="v2-nav-item active">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
+            Settings
+          </Link>
+        </div>
 
-      <div className="glass-card">
-        {message && (
-          <div style={{ 
-            padding: '1rem', 
-            borderRadius: 'var(--radius-md)', 
-            marginBottom: '1.5rem',
-            background: message.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            color: message.type === 'success' ? 'var(--success)' : 'var(--danger)',
-            border: `1px solid ${message.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
-          }}>
-            {message.text}
-          </div>
-        )}
-
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          <div className="form-group">
-            <label htmlFor="displayName" className="form-label">Display Name / Username</label>
-            <input
-              id="displayName"
-              type="text"
-              className="form-input"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g. SuperFan99"
-            />
-            <span className="form-hint">This is how creators and other fans will see you on Aza.</span>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="fullName" className="form-label">Full Name (Legal)</label>
-            <input
-              id="fullName"
-              type="text"
-              className="form-input"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Your legal name"
-              required
-            />
-            <span className="form-hint">Used for billing and platform records. Kept private.</span>
-          </div>
-
-          <div style={{ paddingTop: '1rem', marginTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="v2-sidebar-footer">
+          <Link href="#" className="v2-nav-item">
+            <span className="material-symbols-outlined">help</span>
+            Help
+          </Link>
+          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
             <button 
               type="submit" 
-              className="btn btn-primary" 
-              disabled={saving}
-              style={{ minWidth: '120px', justifyContent: 'center' }}
+              className="v2-nav-item" 
+              style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}
             >
-              {saving ? 'Saving...' : 'Save Settings'}
+              <span className="material-symbols-outlined">logout</span>
+              Sign Out
             </button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      </nav>
 
+      {/* Mobile Top Bar & Drawer */}
+      <MobileNav role="fan" />
+
+      <main className="v2-fan-main">
+        <div className="v2-fan-container">
+          <header style={{ marginBottom: '32px' }}>
+            <h1 className="v2-dash-title">Settings</h1>
+            <p className="v2-dash-desc">Manage your fan profile and account details.</p>
+          </header>
+
+          <div style={{ borderBottom: '1px solid var(--v2-outline)', marginBottom: '32px' }}>
+            <nav style={{ display: 'flex', gap: '24px' }}>
+              {['profile', 'account'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  style={{
+                    padding: '16px 4px',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: activeTab === tab ? '2px solid var(--v2-primary)' : '2px solid transparent',
+                    color: activeTab === tab ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
+                    fontWeight: activeTab === tab ? 700 : 500,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {message && (
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginBottom: '24px',
+              background: message.type === 'error' ? '#fef2f2' : '#ecfdf5',
+              color: message.type === 'error' ? '#991b1b' : '#065f46',
+              border: `1px solid ${message.type === 'error' ? '#fecaca' : '#a7f3d0'}`,
+              maxWidth: '800px'
+            }}>
+              {message.text}
+            </div>
+          )}
+
+          {activeTab === 'profile' && (
+            <div className="v2-sub-card" style={{ maxWidth: '800px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Public Profile</h2>
+              
+              <div style={{ marginBottom: '24px' }}>
+                <AvatarUpload 
+                  currentUrl={avatarUrl} 
+                  userId={userId} 
+                  onUploadComplete={(url) => setAvatarUrl(url)} 
+                />
+              </div>
+
+              <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Display Name / Username</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    placeholder="e.g. SuperFan99"
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>This is how creators and other fans will see you on Aza.</span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Full Name (Legal)</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    placeholder="Your legal name"
+                    required
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Used for billing and platform records. Kept private.</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
+                  <button 
+                    type="submit" 
+                    disabled={saving}
+                    className="v2-sub-btn v2-sub-btn-primary" 
+                    style={{ padding: '12px 32px', width: 'auto' }}
+                  >
+                    {saving ? 'Saving...' : 'Save Profile'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'account' && (
+            <div className="v2-sub-card" style={{ maxWidth: '800px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Account Settings</h2>
+
+              <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Email Address</label>
+                  <input
+                    type="email"
+                    value={accountEmail}
+                    onChange={e => setAccountEmail(e.target.value)}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>We will send a confirmation link to your new email if you change this.</span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>New Password</label>
+                  <input
+                    type="password"
+                    placeholder="Leave blank to keep current password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
+                  <button 
+                    type="submit" 
+                    disabled={saving}
+                    className="v2-sub-btn v2-sub-btn-primary" 
+                    style={{ padding: '12px 32px', width: 'auto' }}
+                  >
+                    {saving ? 'Saving...' : 'Update Account'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Danger Zone */}
+              <div style={{ marginTop: '48px', borderTop: '1px solid #fecaca', paddingTop: '24px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#dc2626', marginBottom: '8px' }}>Danger Zone</h3>
+                <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>Permanently delete your account and all associated data. This action cannot be undone.</p>
+                <button 
+                  type="button" 
+                  onClick={handleDeleteAccount} 
+                  className="v2-sub-btn" 
+                  style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '12px 24px', fontWeight: 600 }}
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </main>
     </div>
   );
 }

@@ -97,7 +97,7 @@ export default async function HomePage() {
                 let displayPrice = 'Free';
                 if (creator.tiers && creator.tiers.length > 0) {
                   const minAmount = Math.min(...creator.tiers.map((t: any) => t.amount));
-                  displayPrice = `₦${minAmount.toLocaleString()}/mo`;
+                  displayPrice = `₦${(minAmount / 100).toLocaleString()}/mo`;
                 }
 
                 // Format subscribers (e.g. 1.2k)

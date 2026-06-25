@@ -1696,12 +1696,25 @@ h4 {
 /* Stats Grid */
 .v2-stats-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
   margin-bottom: 40px;
 }
+/* MRR Card (2nd card) spans full width and moves to top on mobile */
+.v2-stats-grid > .v2-stat-card:nth-child(2) {
+  grid-column: 1 / -1;
+  order: -1;
+}
+
 @media (min-width: 768px) {
-  .v2-stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .v2-stats-grid { 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 24px;
+  }
+  .v2-stats-grid > .v2-stat-card:nth-child(2) {
+    grid-column: span 1;
+    order: 0;
+  }
 }
 
 .v2-stat-card {

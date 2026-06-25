@@ -107,7 +107,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
         <div className="v2-profile-nav-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
             <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>Aza</Link>
-            <div className="v2-profile-nav-links">
+            <div className="hidden md:flex items-center" style={{ gap: '24px' }}>
               <Link href="/creators" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Discover</Link>
               <Link href="#" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>How it Works</Link>
             </div>
@@ -115,7 +115,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {!user ? (
               <>
-                <Link href="/login" className="v2-profile-nav-links" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
+                <Link href="/login" className="hidden md:block" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
                 <Link href="/signup" className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '8px 24px', fontSize: '14px' }}>Start Creating</Link>
               </>
             ) : (
@@ -156,7 +156,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
           </div>
 
           {/* Subscription Section */}
-          <div style={{ marginBottom: '64px' }}>
+          <div id="tiers" style={{ marginBottom: '64px' }}>
             <div style={{ marginBottom: '32px', maxWidth: '768px' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '8px' }}>Support my work</h2>
               <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)' }}>Choose a tier to unlock exclusive content, early access, and join our private community. You can cancel anytime.</p>
@@ -314,7 +314,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                               backdropFilter: 'blur(8px)' 
                             }}>
                               <p style={{ fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '16px', fontSize: '16px' }}>Unlock this post by subscribing</p>
-                              <Link href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 300, behavior: 'smooth' })}} className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '12px 32px', display: 'inline-flex' }}>
+                              <Link href="#tiers" className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '12px 32px', display: 'inline-flex' }}>
                                 View Subscription Tiers
                               </Link>
                             </div>

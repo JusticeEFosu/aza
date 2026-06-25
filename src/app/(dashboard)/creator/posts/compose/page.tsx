@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef, Suspense } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import MobileNav from '@/components/MobileNav';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -170,6 +171,8 @@ function ComposeForm() {
           </form>
         </div>
       </nav>
+
+      <MobileNav role="creator" />
 
       {/* Main Content */}
       <main className="v2-main-content" style={{ maxWidth: '800px', paddingBottom: '128px' }}>

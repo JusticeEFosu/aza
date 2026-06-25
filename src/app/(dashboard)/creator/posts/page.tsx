@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import MobileNav from '@/components/MobileNav';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
 
@@ -86,6 +87,8 @@ export default function CreatorPostsPage() {
           </form>
         </div>
       </nav>
+
+      <MobileNav role="creator" />
 
       {/* Main Content */}
       <main className="v2-main-content" style={{ maxWidth: '800px', paddingBottom: '128px' }}>

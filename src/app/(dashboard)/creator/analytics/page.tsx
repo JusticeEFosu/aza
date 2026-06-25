@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import MobileNav from '@/components/MobileNav';
 import AnalyticsChartClient from './ChartClient';
 
 export default async function AnalyticsPage() {
@@ -146,7 +147,9 @@ export default async function AnalyticsPage() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      <MobileNav role="creator" />
+
+      {/* Main Content Area */}
       <main className="v2-main-content" style={{ background: 'var(--v2-surface)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
           

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { slugify } from '@/lib/utils';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 import Link from 'next/link';
+import MobileNav from '@/components/MobileNav';
 
 export default function CreatorSettings() {
   const [activeTab, setActiveTab] = useState<'profile' | 'tiers' | 'payouts' | 'account'>('payouts');
@@ -358,6 +359,8 @@ export default function CreatorSettings() {
           </form>
         </div>
       </nav>
+
+      <MobileNav role="creator" />
 
       <main className="v2-main-content" style={{ maxWidth: '1200px' }}>
         <header style={{ marginBottom: '32px' }}>

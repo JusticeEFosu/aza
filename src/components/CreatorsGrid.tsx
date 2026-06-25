@@ -1,0 +1,84 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+
+export default function CreatorsGrid({ creators }: { creators: any[] }) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCreators = creators.filter((c: any) => {
+    const name = c.display_name || c.profiles?.full_name || '';
+    const bio = c.bio || '';
+    const q = searchQuery.toLowerCase();
+    return name.toLowerCase().includes(q) || bio.toLowerCase().includes(q);
+  });
+
+  return (
+    <div style={{ padding: '32px 0' }}>
+      <div style={{ marginBottom: '32px', maxWidth: '600px', margin: '0 auto 48px auto' }}>
+        <div style={{ position: 'relative' }}>
+          <span className="material-symbols-outlined" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--v2-text-variant)' }}>
+            search
+          </span>
+          <input 
+            type="text" 
+            placeholder="Search creators by name or bio..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '16px 16px 16px 48px', 
+              fontSize: '16px', 
+              borderRadius: '99px', 
+              border: '1px solid var(--v2-outline)', 
+              background: 'var(--v2-surface)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+              outline: 'none'
+            }}
+          />
+        </div>
+      </div>
+
+      {filteredCreators.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '64px', background: 'var(--v2-surface-low)', borderRadius: '16px', border: '1px solid var(--v2-outline)' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--v2-text-variant)', marginBottom: '16px', display: 'block' }}>search_off</span>
+          <h3 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 8px 0' }}>No creators found</h3>
+          <p style={{ color: 'var(--v2-text-variant)' }}>Try adjusting your search query.</p>
+        </div>
+      ) : (
+        <div className="v2-subs-grid">
+          {filteredCreators.map((creator: any) => {
+            const name = creator.display_name || creator.profiles?.full_name || 'Creator';
+            return (
+              <Link
+                key={creator.slug}
+                href={`/c/${creator.slug}`}
+                className="v2-sub-card"
+                style={{ alignItems: 'center', textAlign: 'center', textDecoration: 'none', borderTopColor: 'transparent', transition: 'transform 0.2s, box-shadow 0.2s' }}
+              >
+                <div className="v2-sub-avatar" style={{ marginBottom: '16px', width: '96px', height: '96px' }}>
+                  {creator.profiles?.avatar_url ? (
+                    <img 
+                      src={creator.profiles.avatar_url} 
+                      alt="" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+                    />
+                  ) : (
+                    <span style={{ fontSize: '32px' }}>{name.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: 700, color: 'var(--v2-primary)' }}>{name}</h4>
+                <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                  {creator.bio || 'Sharing exclusive content with fans.'}
+                </p>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-primary)', background: 'var(--v2-surface-low)', padding: '6px 12px', borderRadius: '99px', marginTop: 'auto' }}>
+                  {creator.subscriber_count || 0} Subscriber{creator.subscriber_count === 1 ? '' : 's'}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
 import SubscriptionCardActions from '@/components/SubscriptionCardActions';
+import PostActions from '@/components/PostActions';
+import MobileNav from '@/components/MobileNav';
 
 export default async function FanDashboard() {
   const supabase = await createClient();
@@ -119,7 +121,7 @@ export default async function FanDashboard() {
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
             Dashboard
           </Link>
-          <Link href="/creators" className="v2-nav-item">
+          <Link href="/fan/discover" className="v2-nav-item">
             <span className="material-symbols-outlined">group</span>
             Discover Creators
           </Link>
@@ -151,13 +153,8 @@ export default async function FanDashboard() {
         </div>
       </nav>
 
-      {/* Mobile Top Bar */}
-      <div className="md:hidden fixed top-0 w-full h-16 border-b border-outline-variant bg-surface z-40 flex items-center justify-between" style={{ padding: '0 16px' }}>
-        <span className="v2-dash-title" style={{ fontSize: '24px', margin: 0 }}>Aza</span>
-        <button className="v2-mobile-toggle" style={{ background: 'transparent' }}>
-          <span className="material-symbols-outlined">menu</span>
-        </button>
-      </div>
+      {/* Mobile Top Bar & Drawer */}
+      <MobileNav role="fan" />
 
       {/* Main Content Area */}
       <main className="v2-fan-main">
@@ -351,6 +348,7 @@ export default async function FanDashboard() {
                           <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, margin: 0 }}>
                             {post.content}
                           </p>
+                          <PostActions postId={post.id} initialLikes={0} />
                         </>
                       ) : (
                         <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
