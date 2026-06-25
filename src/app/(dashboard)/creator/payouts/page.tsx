@@ -44,62 +44,7 @@ export default async function CreatorPayoutsPage() {
   const mrr = (activeSubs || []).reduce((sum, sub) => sum + sub.amount, 0);
 
   return (
-    <div className="v2-dashboard-layout">
-      {/* Sidebar */}
-      <nav className="v2-sidebar">
-        <div className="v2-sidebar-header">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="v2-sidebar-avatar" />
-          ) : (
-            <div className="v2-sidebar-avatar">{displayName.charAt(0).toUpperCase()}</div>
-          )}
-          <div>
-            <h2 className="v2-sidebar-title">{displayName}</h2>
-            <p className="v2-sidebar-subtitle">
-              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: 'var(--v2-green)' }}>verified</span>
-              Verified Account
-            </p>
-          </div>
-        </div>
-
-        <Link href="/creator/posts/compose" className="v2-sidebar-btn">
-          Post Update
-        </Link>
-
-        <div className="v2-nav-list" style={{ marginTop: '16px' }}>
-          <Link href="/creator" className="v2-nav-item">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>Home
-          </Link>
-          <Link href="/creator/tiers" className="v2-nav-item">
-            <span className="material-symbols-outlined">group</span>Subscriptions
-          </Link>
-          <Link href="#" className="v2-nav-item">
-            <span className="material-symbols-outlined">mail</span>Messages
-          </Link>
-          <Link href="/creator/payouts" className="v2-nav-item active">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>Earnings
-          </Link>
-          <Link href="/creator/settings" className="v2-nav-item">
-            <span className="material-symbols-outlined">settings</span>Settings
-          </Link>
-        </div>
-
-        <div className="v2-sidebar-footer">
-          <Link href="#" className="v2-nav-item">
-            <span className="material-symbols-outlined">help</span>Help
-          </Link>
-          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
-            <button type="submit" className="v2-nav-item" style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}>
-              <span className="material-symbols-outlined">logout</span>Sign Out
-            </button>
-          </form>
-        </div>
-      </nav>
-
-      <MobileNav role="creator" />
-
-      {/* Main Content Area */}
-      <main className="v2-main-content" style={{ background: 'var(--v2-surface)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main className="v2-main-content" style={{ background: 'var(--v2-surface)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
           
           {/* Page Header */}
@@ -214,16 +159,6 @@ export default async function CreatorPayoutsPage() {
 
           </div>
         </div>
-      </main>
-
-      {/* Bottom Nav (Mobile) */}
-      <nav className="v2-bottom-nav">
-        <Link href="/creator" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>home</span><span className="v2-bottom-nav-label">Home</span></Link>
-        <Link href="/creator/tiers" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">group</span><span className="v2-bottom-nav-label">Subs</span></Link>
-        <Link href="/creator/posts/compose" className="v2-bottom-fab"><span className="material-symbols-outlined">add</span></Link>
-        <Link href="/creator/payouts" className="v2-bottom-nav-item active"><span className="material-symbols-outlined v2-bottom-nav-icon">payments</span><span className="v2-bottom-nav-label">Earnings</span></Link>
-        <Link href="/creator/settings" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">settings</span><span className="v2-bottom-nav-label">Settings</span></Link>
-      </nav>
-    </div>
+    </main>
   );
 }

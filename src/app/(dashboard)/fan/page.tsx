@@ -29,7 +29,7 @@ export default async function FanDashboard() {
       current_period_end,
       creator_id,
       tiers ( name, amount ),
-      creator_profiles ( slug, bio, profiles ( full_name, display_name, avatar_url ) )
+      creator_profiles ( slug, bio, display_name, profiles ( full_name, display_name, avatar_url ) )
     `)
     .eq('fan_id', user.id)
     .eq('status', 'active');
@@ -68,6 +68,7 @@ export default async function FanDashboard() {
         *,
         creator_profiles (
           slug,
+          display_name,
           profiles ( full_name, display_name, avatar_url )
         )
       `)
@@ -101,6 +102,7 @@ export default async function FanDashboard() {
         slug,
         bio,
         subscriber_count,
+        display_name,
         profiles ( full_name, display_name, avatar_url )
       `)
       .order('subscriber_count', { ascending: false })
@@ -109,55 +111,7 @@ export default async function FanDashboard() {
   }
 
   return (
-    <div className="v2-fan-dashboard">
-      {/* Side Navigation */}
-      <nav className="v2-sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px', marginBottom: '16px' }}>
-          <span className="v2-dash-title" style={{ fontSize: '24px' }}>MyAzaa</span>
-        </div>
-        
-        <div className="v2-nav-list" style={{ marginTop: 0 }}>
-          <Link href="/fan" className="v2-nav-item active">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
-            Dashboard
-          </Link>
-          <Link href="/fan/discover" className="v2-nav-item">
-            <span className="material-symbols-outlined">group</span>
-            Discover Creators
-          </Link>
-          <Link href="/fan#feed" className="v2-nav-item">
-            <span className="material-symbols-outlined">dynamic_feed</span>
-            Feed
-          </Link>
-          <Link href="/fan/settings" className="v2-nav-item">
-            <span className="material-symbols-outlined">settings</span>
-            Settings
-          </Link>
-        </div>
-
-        <div className="v2-sidebar-footer">
-          <Link href="#" className="v2-nav-item">
-            <span className="material-symbols-outlined">help</span>
-            Help
-          </Link>
-          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
-            <button 
-              type="submit" 
-              className="v2-nav-item" 
-              style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}
-            >
-              <span className="material-symbols-outlined">logout</span>
-              Sign Out
-            </button>
-          </form>
-        </div>
-      </nav>
-
-      {/* Mobile Top Bar & Drawer */}
-      <MobileNav role="fan" />
-
-      {/* Main Content Area */}
-      <main className="v2-fan-main">
+    <main className="v2-fan-main">
         <div className="v2-fan-container">
           {/* Header */}
           <header>
@@ -193,7 +147,7 @@ export default async function FanDashboard() {
               ) : uniqueSubscriptions.map((sub: any) => {
                 const creatorProfile = sub.creator_profiles;
                 const fanProfile = creatorProfile?.profiles;
-                const creatorName = fanProfile?.display_name || fanProfile?.full_name || 'Creator';
+                const creatorName = creatorProfile?.display_name || fanProfile?.display_name || fanProfile?.full_name || 'Creator';
                 const creatorAvatar = fanProfile?.avatar_url;
                 const categoryOrBio = creatorProfile?.bio ? creatorProfile.bio.substring(0, 40) + '...' : 'Creator';
                 const tierInfo = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
@@ -257,7 +211,7 @@ export default async function FanDashboard() {
 
                 <div className="v2-subs-grid">
                   {featuredCreators.map((creator: any) => {
-                    const name = creator.profiles?.display_name || creator.profiles?.full_name;
+                    const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name;
                     return (
                       <Link 
                         key={creator.slug} 
@@ -285,7 +239,7 @@ export default async function FanDashboard() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '800px' }}>
                 {posts.map((post: any) => {
-                  const creatorName = post.creator_profiles?.profiles?.display_name || post.creator_profiles?.profiles?.full_name || 'Unknown';
+                  const creatorName = post.creator_profiles?.display_name || post.creator_profiles?.profiles?.display_name || post.creator_profiles?.profiles?.full_name || 'Unknown';
                   const creatorSlug = post.creator_profiles?.slug || '';
                   const creatorAvatar = post.creator_profiles?.profiles?.avatar_url;
                   const { hasAccess } = post;
@@ -408,6 +362,5 @@ export default async function FanDashboard() {
 
         </div>
       </main>
-    </div>
   );
 }

@@ -21,7 +21,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
         .select('full_name, avatar_url')
         .eq('id', user.id)
         .single();
-      
+
       if (profile) {
         setAvatarUrl(profile.avatar_url);
         if (profile.full_name) {
@@ -52,9 +52,9 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   return (
     <>
       {/* Fixed Top Bar */}
-      <div 
-        className="v2-mobile-topbar" 
-        style={{ 
+      <div
+        className="v2-mobile-topbar"
+        style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -70,8 +70,8 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           boxSizing: 'border-box'
         }}
       >
-        <button 
-          className="v2-mobile-toggle" 
+        <button
+          className="v2-mobile-toggle"
           style={{ background: 'transparent', border: 'none', color: 'var(--v2-text-variant)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
           onClick={() => setIsOpen(true)}
         >
@@ -82,7 +82,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           MyAzaa
         </span>
 
-        <button 
+        <button
           onClick={() => setIsOpen(true)}
           style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
         >
@@ -98,7 +98,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
 
       {/* Overlay */}
       {isOpen && (
-        <div 
+        <div
           onClick={() => setIsOpen(false)}
           style={{
             position: 'fixed',
@@ -112,7 +112,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
       )}
 
       {/* Slide-out Drawer */}
-      <div 
+      <div
         style={{
           position: 'fixed',
           top: 0, bottom: 0,
@@ -130,7 +130,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
       >
         <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="v2-dash-title" style={{ fontSize: '28px', color: 'var(--v2-primary)', margin: 0 }}>MyAzaa</span>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             style={{ background: 'none', border: 'none', color: 'var(--v2-text-variant)', cursor: 'pointer', display: 'flex' }}
           >
@@ -142,9 +142,9 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           {links.map(link => {
             const isActive = link.href === '/fan#feed' ? false : pathname === link.href;
             return (
-              <Link 
-                key={link.href} 
-                href={link.href} 
+              <Link
+                key={link.href}
+                href={link.href}
                 onClick={() => setIsOpen(false)}
                 className={`v2-nav-item ${isActive ? 'active' : ''}`}
                 style={{ marginBottom: '8px' }}
@@ -164,9 +164,9 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
             Help
           </Link>
           <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
-            <button 
-              type="submit" 
-              className="v2-nav-item" 
+            <button
+              type="submit"
+              className="v2-nav-item"
               style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}
             >
               <span className="material-symbols-outlined">logout</span>
@@ -175,8 +175,58 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           </form>
         </div>
       </div>
-      
-      <style dangerouslySetInnerHTML={{__html: `
+
+      {/* Sticky Bottom Navigation (Mobile Only) */}
+      <nav className="v2-bottom-nav">
+        {role === 'creator' ? (
+          <>
+            <Link href="/creator" className={`v2-bottom-nav-item ${pathname === '/creator' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/creator' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
+              <span className="v2-bottom-nav-label">Home</span>
+            </Link>
+            <Link href="/creator/tiers" className={`v2-bottom-nav-item ${pathname === '/creator/tiers' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/creator/tiers' ? "'FILL' 1" : "'FILL' 0" }}>group</span>
+              <span className="v2-bottom-nav-label">Subs</span>
+            </Link>
+            <Link href="/creator/posts/compose" className="v2-bottom-fab">
+              <span className="material-symbols-outlined">add</span>
+            </Link>
+            <Link href="/creator/payouts" className={`v2-bottom-nav-item ${pathname === '/creator/payouts' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/creator/payouts' ? "'FILL' 1" : "'FILL' 0" }}>payments</span>
+              <span className="v2-bottom-nav-label">Earnings</span>
+            </Link>
+            <Link href="/creator/settings" className={`v2-bottom-nav-item ${pathname === '/creator/settings' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/creator/settings' ? "'FILL' 1" : "'FILL' 0" }}>settings</span>
+              <span className="v2-bottom-nav-label">Settings</span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link href="/fan" className={`v2-bottom-nav-item ${pathname === '/fan' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
+              <span className="v2-bottom-nav-label">Home</span>
+            </Link>
+            <Link href="/fan/discover" className={`v2-bottom-nav-item ${pathname === '/fan/discover' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan/discover' ? "'FILL' 1" : "'FILL' 0" }}>group</span>
+              <span className="v2-bottom-nav-label">Discover</span>
+            </Link>
+            <Link href="/fan/discover" className="v2-bottom-fab">
+              <span className="material-symbols-outlined">search</span>
+            </Link>
+            <Link href="/fan#feed" className={`v2-bottom-nav-item ${pathname === '/fan#feed' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan#feed' ? "'FILL' 1" : "'FILL' 0" }}>dynamic_feed</span>
+              <span className="v2-bottom-nav-label">Feed</span>
+            </Link>
+            <Link href="/fan/settings" className={`v2-bottom-nav-item ${pathname === '/fan/settings' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan/settings' ? "'FILL' 1" : "'FILL' 0" }}>settings</span>
+              <span className="v2-bottom-nav-label">Settings</span>
+            </Link>
+          </>
+        )}
+      </nav>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (min-width: 768px) {
           .v2-mobile-topbar { display: none !important; }
@@ -184,6 +234,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
         @media (max-width: 767px) {
           .v2-main-content, .v2-fan-main {
             padding-top: 80px !important;
+            padding-bottom: 100px !important;
           }
         }
       `}} />

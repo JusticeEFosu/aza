@@ -122,60 +122,14 @@ export default function FanSettings() {
 
   if (loading) {
     return (
-      <div className="v2-fan-dashboard" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
          <span className="spinner" style={{ width: '32px', height: '32px', color: 'var(--v2-primary)', borderColor: 'rgba(0,0,0,0.1)', borderTopColor: 'currentColor' }} />
       </div>
     );
   }
 
   return (
-    <div className="v2-fan-dashboard">
-      <nav className="v2-sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px', marginBottom: '16px' }}>
-          <span className="v2-dash-title" style={{ fontSize: '24px' }}>MyAzaa</span>
-        </div>
-        
-        <div className="v2-nav-list" style={{ marginTop: 0 }}>
-          <Link href="/fan" className="v2-nav-item">
-            <span className="material-symbols-outlined">home</span>
-            Dashboard
-          </Link>
-          <Link href="/fan/discover" className="v2-nav-item">
-            <span className="material-symbols-outlined">group</span>
-            Discover Creators
-          </Link>
-          <Link href="/fan#feed" className="v2-nav-item">
-            <span className="material-symbols-outlined">dynamic_feed</span>
-            Feed
-          </Link>
-          <Link href="/fan/settings" className="v2-nav-item active">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
-            Settings
-          </Link>
-        </div>
-
-        <div className="v2-sidebar-footer">
-          <Link href="#" className="v2-nav-item">
-            <span className="material-symbols-outlined">help</span>
-            Help
-          </Link>
-          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
-            <button 
-              type="submit" 
-              className="v2-nav-item" 
-              style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}
-            >
-              <span className="material-symbols-outlined">logout</span>
-              Sign Out
-            </button>
-          </form>
-        </div>
-      </nav>
-
-      {/* Mobile Top Bar & Drawer */}
-      <MobileNav role="fan" />
-
-      <main className="v2-fan-main">
+    <main className="v2-fan-main">
         <div className="v2-fan-container">
           <header style={{ marginBottom: '32px' }}>
             <h1 className="v2-dash-title">Settings</h1>
@@ -330,6 +284,5 @@ export default function FanSettings() {
 
         </div>
       </main>
-    </div>
   );
 }

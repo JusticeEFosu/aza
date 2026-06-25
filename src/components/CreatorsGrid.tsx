@@ -7,7 +7,7 @@ export default function CreatorsGrid({ creators }: { creators: any[] }) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCreators = creators.filter((c: any) => {
-    const name = c.display_name || c.profiles?.full_name || '';
+    const name = c.display_name || c.profiles?.display_name || c.profiles?.full_name || '';
     const bio = c.bio || '';
     const q = searchQuery.toLowerCase();
     return name.toLowerCase().includes(q) || bio.toLowerCase().includes(q);
@@ -48,7 +48,7 @@ export default function CreatorsGrid({ creators }: { creators: any[] }) {
       ) : (
         <div className="v2-subs-grid">
           {filteredCreators.map((creator: any) => {
-            const name = creator.display_name || creator.profiles?.full_name || 'Creator';
+            const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name || 'Creator';
             return (
               <Link
                 key={creator.slug}

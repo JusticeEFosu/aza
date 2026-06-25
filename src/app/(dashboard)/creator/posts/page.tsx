@@ -57,41 +57,7 @@ export default function CreatorPostsPage() {
   }
 
   return (
-    <div className="v2-dashboard-layout">
-      {/* Sidebar */}
-      <nav className="v2-sidebar">
-        <div className="v2-sidebar-header">
-          {avatarUrl ? <img src={avatarUrl} alt="" className="v2-sidebar-avatar" /> : <div className="v2-sidebar-avatar">{displayName.charAt(0).toUpperCase()}</div>}
-          <div>
-            <h2 className="v2-sidebar-title">{displayName}</h2>
-            <p className="v2-sidebar-subtitle">Verified Account</p>
-          </div>
-        </div>
-        <Link href="/creator/posts/compose" className="v2-sidebar-btn">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
-          Post Update
-        </Link>
-        <div className="v2-nav-list">
-          <Link href="/creator" className="v2-nav-item"><span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>Home</Link>
-          <Link href="/creator/tiers" className="v2-nav-item"><span className="material-symbols-outlined">group</span>Subscribers</Link>
-          <Link href="#" className="v2-nav-item"><span className="material-symbols-outlined">mail</span>Messages</Link>
-          <Link href="/creator/payouts" className="v2-nav-item"><span className="material-symbols-outlined">payments</span>Earnings</Link>
-          <Link href="/creator/settings" className="v2-nav-item"><span className="material-symbols-outlined">settings</span>Settings</Link>
-        </div>
-        <div className="v2-sidebar-footer">
-          <Link href="#" className="v2-nav-item"><span className="material-symbols-outlined">help</span>Help</Link>
-          <form action="/api/auth/signout" method="POST" style={{ display: 'inline' }}>
-            <button type="submit" className="v2-nav-item" style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', font: 'inherit', color: 'inherit' }}>
-              <span className="material-symbols-outlined">logout</span>Sign Out
-            </button>
-          </form>
-        </div>
-      </nav>
-
-      <MobileNav role="creator" />
-
-      {/* Main Content */}
-      <main className="v2-main-content" style={{ maxWidth: '800px', paddingBottom: '128px' }}>
+    <main className="v2-main-content" style={{ maxWidth: '800px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid var(--v2-outline)', paddingBottom: '16px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', margin: 0, letterSpacing: '-0.01em' }}>
             Posts Feed
@@ -164,15 +130,5 @@ export default function CreatorPostsPage() {
           </div>
         )}
       </main>
-
-      {/* Bottom Nav (Mobile) */}
-      <nav className="v2-bottom-nav">
-        <Link href="/creator" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: "'FILL' 1" }}>home</span><span className="v2-bottom-nav-label">Home</span></Link>
-        <Link href="/creator/tiers" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">group</span><span className="v2-bottom-nav-label">Subs</span></Link>
-        <Link href="/creator/posts/compose" className="v2-bottom-fab"><span className="material-symbols-outlined">add</span></Link>
-        <Link href="/creator/payouts" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">payments</span><span className="v2-bottom-nav-label">Earnings</span></Link>
-        <Link href="/creator/settings" className="v2-bottom-nav-item"><span className="material-symbols-outlined v2-bottom-nav-icon">settings</span><span className="v2-bottom-nav-label">Settings</span></Link>
-      </nav>
-    </div>
   );
 }
