@@ -28,9 +28,9 @@ export default function SubscribeButton({
 
       const data = await res.json();
       
-      // If unauthorized, redirect to login with a return URL
+      // If unauthorized, redirect to signup with a return URL
       if (res.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        window.location.href = `/signup?role=fan&redirect=${encodeURIComponent(window.location.pathname)}`;
         return;
       }
 

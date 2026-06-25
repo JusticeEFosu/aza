@@ -56,43 +56,50 @@ function LoginForm() {
   }
 
   return (
-    <div className="auth-card">
-      <div className="glass-card">
-        <div className="auth-header">
-          <h1 className="auth-logo">MyAzaa</h1>
-          <p className="auth-subtitle">
-            Welcome back — log in to your account
-          </p>
+    <main className="v3-auth-main">
+      <header className="v3-auth-header">
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <h1 className="v3-auth-logo">MyAzaa</h1>
+        </Link>
+      </header>
+
+      <div className="v3-auth-card">
+        <div className="v3-auth-tabs">
+          <Link href="/login" className="v3-auth-tab active">Log In</Link>
+          <Link href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`} className="v3-auth-tab">Sign Up</Link>
         </div>
 
         {error && (
-          <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+          <div className="alert alert-error" style={{ marginBottom: '1.25rem', backgroundColor: '#ffdad6', color: '#ba1a1a', border: '1px solid #ba1a1a', borderRadius: '8px', padding: '12px' }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">Email</label>
+        <form onSubmit={handleLogin} className="v3-auth-form">
+          <div className="v3-form-group">
+            <label htmlFor="email" className="v3-form-label">Email Address</label>
             <input
               id="email"
               type="email"
-              className="form-input"
-              placeholder="you@example.com"
+              className="v3-form-input"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
+          <div className="v3-form-group">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label htmlFor="password" className="v3-form-label">Password</label>
+              <a href="#" style={{ fontSize: '12px', fontWeight: 600, color: '#4c4546', textDecoration: 'underline' }}>Forgot?</a>
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                className="form-input"
-                placeholder="Enter your password"
+                className="v3-form-input"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ paddingRight: '4rem' }}
@@ -108,10 +115,10 @@ function LoginForm() {
                   transform: 'translateY(-50%)',
                   background: 'none',
                   border: 'none',
-                  color: 'var(--text-muted)',
+                  color: '#4c4546',
                   cursor: 'pointer',
                   fontSize: '0.875rem',
-                  fontWeight: 500
+                  fontWeight: 600
                 }}
               >
                 {showPassword ? 'Hide' : 'Show'}
@@ -121,40 +128,35 @@ function LoginForm() {
 
           <button
             type="submit"
-            className="btn btn-primary btn-lg btn-full"
+            className="v3-auth-btn"
             disabled={loading}
           >
             {loading ? (
               <>
-                <span className="spinner"></span>
+                <span className="spinner" style={{ marginRight: '8px', borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'white' }}></span>
                 Logging in...
               </>
             ) : (
-              'Log in'
+              'Log In'
             )}
           </button>
         </form>
 
-        <div className="auth-footer">
-          Don&apos;t have an account?{' '}
-          <Link href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}>
-            Sign up
-          </Link>
-        </div>
+        <footer className="v3-auth-footer">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", fontSize: '16px' }}>lock</span>
+          <span className="v3-auth-footer-text">Secured by Paystack</span>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="auth-page">
+    <div className="v3-auth-page">
       <Suspense fallback={
-        <div className="auth-card">
-          <div className="glass-card" style={{ textAlign: 'center', padding: '3rem' }}>
-            <span className="spinner" style={{ margin: '0 auto' }}></span>
-            <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Loading Login...</p>
-          </div>
+        <div className="v3-auth-main" style={{ textAlign: 'center' }}>
+          <span className="spinner" style={{ margin: '0 auto', borderColor: '#000000' }}></span>
         </div>
       }>
         <LoginForm />
