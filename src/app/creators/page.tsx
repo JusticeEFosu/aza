@@ -23,7 +23,7 @@ export default async function CreatorsPage() {
       <nav className="v2-profile-nav">
         <div className="v2-profile-nav-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>Aza</Link>
+            <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
             <div className="v2-profile-nav-links">
               <Link href="/creators" style={{ color: 'var(--v2-primary)', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>Discover</Link>
               <Link href="#" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>How it Works</Link>

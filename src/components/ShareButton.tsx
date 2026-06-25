@@ -9,8 +9,8 @@ export default function ShareButton({ url, username }: { url: string, username: 
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `Support ${username} on Aza`,
-          text: `Subscribe to my tiers on Aza for exclusive perks and content!`,
+          title: `Support ${username} on MyAzaa`,
+          text: `Subscribe to my tiers on MyAzaa for exclusive perks and content!`,
           url: url,
         });
       } else {

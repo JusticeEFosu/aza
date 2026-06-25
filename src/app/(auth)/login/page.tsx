@@ -59,7 +59,7 @@ function LoginForm() {
     <div className="auth-card">
       <div className="glass-card">
         <div className="auth-header">
-          <h1 className="auth-logo">Aza</h1>
+          <h1 className="auth-logo">MyAzaa</h1>
           <p className="auth-subtitle">
             Welcome back — log in to your account
           </p>

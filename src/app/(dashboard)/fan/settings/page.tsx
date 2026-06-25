@@ -132,7 +132,7 @@ export default function FanSettings() {
     <div className="v2-fan-dashboard">
       <nav className="v2-sidebar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px', marginBottom: '16px' }}>
-          <span className="v2-dash-title" style={{ fontSize: '24px' }}>Aza</span>
+          <span className="v2-dash-title" style={{ fontSize: '24px' }}>MyAzaa</span>
         </div>
         
         <div className="v2-nav-list" style={{ marginTop: 0 }}>
@@ -243,7 +243,7 @@ export default function FanSettings() {
                     placeholder="e.g. SuperFan99"
                     style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
                   />
-                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>This is how creators and other fans will see you on Aza.</span>
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>This is how creators and other fans will see you on MyAzaa.</span>
                 </div>
 
                 <div>

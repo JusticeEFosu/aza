@@ -113,7 +113,7 @@ export default async function FanDashboard() {
       {/* Side Navigation */}
       <nav className="v2-sidebar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px', marginBottom: '16px' }}>
-          <span className="v2-dash-title" style={{ fontSize: '24px' }}>Aza</span>
+          <span className="v2-dash-title" style={{ fontSize: '24px' }}>MyAzaa</span>
         </div>
         
         <div className="v2-nav-list" style={{ marginTop: 0 }}>

@@ -37,7 +37,7 @@ export default async function HomePage() {
       <nav className="v2-nav">
         <div className="v2-nav-inner">
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Link href="/" className="v2-brand">Aza</Link>
+            <Link href="/" className="v2-brand">MyAzaa</Link>
             <div className="v2-nav-links">
               <Link href="/creators" className="v2-nav-link active">Discover</Link>
               <Link href="/how-it-works" className="v2-nav-link">How it Works</Link>
@@ -84,7 +84,7 @@ export default async function HomePage() {
             <div className="v2-section-header">
               <div>
                 <h2 className="v2-section-title">Trending Creators</h2>
-                <p className="v2-section-desc">Discover top talent building their communities on Aza.</p>
+                <p className="v2-section-desc">Discover top talent building their communities on MyAzaa.</p>
               </div>
               <Link href="/creators" className="v2-view-all">View all creators</Link>
             </div>
@@ -160,7 +160,7 @@ export default async function HomePage() {
                 <span className="material-symbols-outlined">share</span>
               </div>
               <h3 className="v2-step-title">Share</h3>
-              <p className="v2-step-desc">Promote your Aza link across your social platforms. Invite your audience to join your inner circle.</p>
+              <p className="v2-step-desc">Promote your MyAzaa link across your social platforms. Invite your audience to join your inner circle.</p>
             </div>
             
             <div className="v2-step">
@@ -184,8 +184,8 @@ export default async function HomePage() {
       <footer className="v2-footer">
         <div className="v2-footer-inner">
           <div className="v2-footer-left">
-            <Link href="/" className="v2-footer-brand">Aza</Link>
-            <p className="v2-footer-copy">© {new Date().getFullYear()} Aza. Built for Nigerian Creators.</p>
+            <Link href="/" className="v2-footer-brand">MyAzaa</Link>
+            <p className="v2-footer-copy">© {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.</p>
           </div>
           <div className="v2-footer-links">
             <Link href="#" className="v2-footer-link">Privacy</Link>

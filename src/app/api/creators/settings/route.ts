@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       try {
         const platformFeePercentage = 10;
         const subRes = await createSubaccount({
-          business_name: profile?.full_name || 'Aza Creator',
+          business_name: profile?.full_name || 'MyAzaa Creator',
           settlement_bank: bankCode,
           account_number: accountNumber,
           percentage_charge: platformFeePercentage,

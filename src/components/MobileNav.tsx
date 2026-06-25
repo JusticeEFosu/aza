@@ -79,7 +79,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
         </button>
 
         <span className="v2-dash-title" style={{ fontSize: '24px', margin: 0, color: 'var(--v2-primary)', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-          Aza
+          MyAzaa
         </span>
 
         <button 
@@ -129,7 +129,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
         }}
       >
         <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="v2-dash-title" style={{ fontSize: '28px', color: 'var(--v2-primary)', margin: 0 }}>Aza</span>
+          <span className="v2-dash-title" style={{ fontSize: '28px', color: 'var(--v2-primary)', margin: 0 }}>MyAzaa</span>
           <button 
             onClick={() => setIsOpen(false)}
             style={{ background: 'none', border: 'none', color: 'var(--v2-text-variant)', cursor: 'pointer', display: 'flex' }}
