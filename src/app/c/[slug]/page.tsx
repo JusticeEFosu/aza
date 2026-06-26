@@ -250,9 +250,9 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                           gap: '6px'
                         }}>
                           {post.is_public ? 'Public' : (hasAccess ? (
-                            <><span style={{ fontSize: '14px' }}>💎</span> {post.requiredTierName} Required</>
+                            <><span className="material-symbols-outlined" style={{ fontSize: '16px' }}>diamond</span> {post.requiredTierName} Required</>
                           ) : (
-                            <><span style={{ fontSize: '14px' }}>🔒</span> {post.requiredTierName} Required</>
+                            <><span className="material-symbols-outlined" style={{ fontSize: '16px' }}>lock</span> {post.requiredTierName} Required</>
                           ))}
                         </span>
                       </div>
@@ -291,7 +291,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                               color: '#fbbf24',
                               border: '1px solid rgba(251, 191, 36, 0.2)'
                             }}>
-                              <div style={{ fontSize: '48px' }}>🔒</div>
+                              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--v2-text-variant)' }}>lock</span>
                               <div style={{ textAlign: 'center' }}>
                                  <p style={{ fontWeight: 600, margin: 0, color: 'white', fontSize: '16px' }}>Exclusive {post.image_url?.includes('/video/') ? 'Video' : 'Photo'}</p>
                                  <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.8 }}>Available for {post.requiredTierName}</p>

@@ -46,6 +46,7 @@ export default function VideoPlayer({
       <video
         ref={videoRef}
         src={src}
+        poster={poster}
         controls
         controlsList="nodownload"
         onContextMenu={(e) => e.preventDefault()}
@@ -72,7 +73,8 @@ export default function VideoPlayer({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 10
+            zIndex: 10,
+            overflow: 'hidden'
           }}
         >
           {poster && (
@@ -85,49 +87,46 @@ export default function VideoPlayer({
                 left: 0,
                 width: '100%', 
                 height: '100%', 
-                objectFit: 'contain',
-                opacity: 0.8
+                objectFit: 'cover',
+                opacity: 1
               }} 
             />
           )}
+
+          {/* Subtle gradient to make the play button pop without dimming the whole image */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%)',
+            pointerEvents: 'none'
+          }} />
 
           {/* Premium Play Button Overlay */}
           <div style={{ 
             width: '80px',
             height: '80px',
             borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.1)',
+            background: 'rgba(255, 255, 255, 0.15)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-            transition: 'all 0.3s ease',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 20
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
             e.currentTarget.style.transform = 'scale(1.1)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
             e.currentTarget.style.transform = 'scale(1)';
           }}
           >
-            <svg 
-              width="32" 
-              height="32" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path 
-                d="M8 5V19L19 12L8 5Z" 
-                fill="white" 
-              />
-            </svg>
+            <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'white', marginLeft: '4px' }}>play_arrow</span>
           </div>
 
           {/* Corner badge */}
@@ -135,15 +134,19 @@ export default function VideoPlayer({
             position: 'absolute',
             bottom: '1rem',
             right: '1rem',
-            background: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(4px)',
-            padding: '0.25rem 0.75rem',
-            borderRadius: '1rem',
-            fontSize: '0.75rem',
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(8px)',
+            padding: '4px 12px',
+            borderRadius: '16px',
+            fontSize: '12px',
             color: 'white',
             fontWeight: 600,
-            zIndex: 20
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
           }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>play_circle</span>
             Video
           </div>
         </div>

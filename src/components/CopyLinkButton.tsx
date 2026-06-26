@@ -17,7 +17,7 @@ export default function CopyLinkButton({ url }: { url: string }) {
         }
       }}
     >
-      {copied ? '✅  Copied!' : 'Copy Link'}
+      {copied ? 'Copied!' : 'Copy Link'}
     </button>
   );
 }

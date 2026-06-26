@@ -63,7 +63,9 @@ export default function CreatorSetupChecklist({ steps }: CreatorSetupChecklistPr
                 fontSize: '1.25rem',
                 opacity: step.completed ? 1 : 0.4
               }}>
-                {step.completed ? '✅' : '⭕'}
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                  {step.completed ? 'check_circle' : 'radio_button_unchecked'}
+                </span>
               </span>
               <span style={{ 
                 fontSize: '0.75rem', 

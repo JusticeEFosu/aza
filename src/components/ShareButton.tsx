@@ -25,7 +25,7 @@ export default function ShareButton({ url, username }: { url: string, username: 
 
   return (
     <button onClick={handleShare} className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }}>
-      {copied ? '✅ Link Copied!' : '📤 Share Profile'}
+      {copied ? 'Link Copied!' : 'Share Profile'}
     </button>
   );
 }

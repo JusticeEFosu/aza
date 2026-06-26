@@ -458,7 +458,7 @@ export default function CreatorSettings() {
                     {isVerified ? (
                       <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '16px' }}>
                         <div style={{ fontWeight: 600, color: '#064e3b', marginBottom: '8px', fontSize: '16px' }}>
-                          ✅ Verified as: {persistedBankName.toUpperCase() || 'YOUR ACCOUNT'}
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginRight: '4px' }}>verified</span> Verified as: {persistedBankName.toUpperCase() || 'YOUR ACCOUNT'}
                         </div>
                         <div style={{ color: '#065f46', fontSize: '14px' }}>
                           Account: {accountNumber.substring(0, 4)}•••••• ({availableBanks.find(b => b.code === bankCode)?.name || bankCode})
@@ -512,7 +512,7 @@ export default function CreatorSettings() {
 
                           {resolvedName && !resolvingBank && (
                             <div style={{ color: '#059669', fontWeight: 500, fontSize: '15px', background: '#ecfdf5', padding: '12px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-                              ✅ Account Name: {resolvedName}
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle', marginRight: '4px' }}>verified</span> Account Name: {resolvedName}
                             </div>
                           )}
                         </div>
