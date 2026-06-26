@@ -216,14 +216,14 @@ export default function InlineComposer({
           <div style={{ padding: '20px' }}>
             <input 
               type="text" 
-              placeholder="Give your update a clear title (Optional)" 
+              placeholder="Title" 
               value={title} 
               onChange={e => setTitle(e.target.value)} 
               style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--v2-outline)', fontSize: '20px', fontWeight: 600, paddingBottom: '12px', marginBottom: '16px', outline: 'none', color: 'var(--v2-primary)' }} 
             />
 
             <textarea 
-              placeholder="What's new? Share updates, thoughts, or exclusive content..." 
+              placeholder="Description" 
               value={content} 
               onChange={e => setContent(e.target.value)} 
               required
