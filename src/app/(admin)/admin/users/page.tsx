@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import SuspendUserButton from '@/components/SuspendUserButton';
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
@@ -12,6 +13,7 @@ export default async function AdminUsersPage() {
       full_name,
       role,
       is_admin,
+      is_suspended,
       created_at,
       creator_profiles ( slug, total_earnings, subscriber_count )
     `)
@@ -40,15 +42,16 @@ export default async function AdminUsersPage() {
               const cProfile = Array.isArray(user.creator_profiles) ? user.creator_profiles[0] : user.creator_profiles;
               
               return (
-                <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 0.5fr', padding: '16px 24px', borderBottom: '1px solid var(--v2-outline)', alignItems: 'center' }}>
+                <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 0.5fr', padding: '16px 24px', borderBottom: '1px solid var(--v2-outline)', alignItems: 'center', opacity: user.is_suspended ? 0.6 : 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--v2-surface-low)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: 'var(--v2-primary)' }}>
                       {user.full_name?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {user.full_name}
-                        {user.is_admin && <span style={{ marginLeft: '8px', fontSize: '10px', background: 'var(--v2-green)', color: '#002116', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Admin</span>}
+                        {user.is_admin && <span style={{ fontSize: '10px', background: 'var(--v2-green)', color: '#002116', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Admin</span>}
+                        {user.is_suspended && <span style={{ fontSize: '10px', background: '#ffdad6', color: '#ba1a1a', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Suspended</span>}
                       </div>
                       {cProfile && <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>@{cProfile.slug}</div>}
                     </div>
@@ -64,11 +67,11 @@ export default async function AdminUsersPage() {
                       borderRadius: '8px', 
                       fontSize: '12px', 
                       fontWeight: 600,
-                      background: user.role === 'creator' ? 'var(--v2-surface-low)' : 'transparent',
-                      color: user.role === 'creator' ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
-                      border: user.role === 'creator' ? '1px solid var(--v2-outline)' : '1px solid transparent'
+                      background: user.is_admin ? '#cce5ff' : user.role === 'creator' ? 'var(--v2-surface-low)' : 'transparent',
+                      color: user.is_admin ? '#004085' : user.role === 'creator' ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
+                      border: user.is_admin ? '1px solid #b8daff' : user.role === 'creator' ? '1px solid var(--v2-outline)' : '1px solid transparent'
                     }}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      {user.is_admin ? 'Admin' : (user.role.charAt(0).toUpperCase() + user.role.slice(1))}
                     </span>
                   </div>
 
@@ -81,9 +84,7 @@ export default async function AdminUsersPage() {
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <button style={{ background: 'transparent', border: '1px solid var(--v2-outline)', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: 'var(--v2-text-variant)' }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>more_horiz</span>
-                    </button>
+                    <SuspendUserButton userId={user.id} isSuspended={user.is_suspended} />
                   </div>
                 </div>
               );

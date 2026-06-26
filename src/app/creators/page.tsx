@@ -13,8 +13,10 @@ export default async function CreatorsPage() {
       bio,
       subscriber_count,
       display_name,
-      profiles ( full_name, avatar_url )
+      profiles!inner ( full_name, avatar_url, is_suspended, is_admin )
     `)
+    .eq('profiles.is_suspended', false)
+    .eq('profiles.is_admin', false)
     .order('subscriber_count', { ascending: false });
 
   return (

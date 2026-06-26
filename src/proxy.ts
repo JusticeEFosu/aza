@@ -54,12 +54,16 @@ export async function proxy(request: NextRequest) {
     // Fetch user role for smart redirect
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_admin')
       .eq('id', user.id)
       .single();
 
     const url = request.nextUrl.clone();
-    url.pathname = profile?.role === 'creator' ? '/creator' : '/fan';
+    if (profile?.is_admin) {
+      url.pathname = '/admin';
+    } else {
+      url.pathname = profile?.role === 'creator' ? '/creator' : '/fan';
+    }
     return NextResponse.redirect(url);
   }
 

@@ -37,11 +37,13 @@ function LoginForm() {
       } else {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, is_admin')
           .eq('id', data.user.id)
           .single();
 
-        if (profile?.role === 'creator') {
+        if (profile?.is_admin) {
+          router.push('/admin');
+        } else if (profile?.role === 'creator') {
           router.push('/creator');
         } else {
           router.push('/fan');

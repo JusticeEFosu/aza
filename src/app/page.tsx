@@ -23,9 +23,11 @@ export default async function HomePage() {
       bio,
       display_name,
       subscriber_count,
-      profiles ( full_name, display_name, avatar_url ),
+      profiles!inner ( full_name, display_name, avatar_url, is_suspended, is_admin ),
       tiers ( amount )
     `)
+    .eq('profiles.is_suspended', false)
+    .eq('profiles.is_admin', false)
     .order('subscriber_count', { ascending: false })
     .limit(4);
 
