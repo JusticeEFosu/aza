@@ -90,11 +90,11 @@ export default async function HomePage() {
               </div>
               <Link href="/creators" className="v2-view-all">View all creators</Link>
             </div>
-            
+
             <div className="v2-creators-grid">
               {displayCreators.map((creator: any) => {
                 const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name || 'Creator';
-                
+
                 // Calculate dynamic price strictly based on DB minimum tier
                 let displayPrice = 'Free';
                 if (creator.tiers && creator.tiers.length > 0) {
@@ -104,8 +104,8 @@ export default async function HomePage() {
 
                 // Format subscribers (e.g. 1.2k)
                 const subCount = creator.subscriber_count || 0;
-                const displaySubscribers = subCount > 999 
-                  ? (subCount/1000).toFixed(1) + 'k' 
+                const displaySubscribers = subCount > 999
+                  ? (subCount / 1000).toFixed(1) + 'k'
                   : subCount;
 
                 return (
@@ -148,7 +148,7 @@ export default async function HomePage() {
 
           <div className="v2-steps-grid">
             <div className="v2-step-line"></div>
-            
+
             <div className="v2-step">
               <div className="v2-step-icon">
                 <span className="material-symbols-outlined">add_circle</span>
@@ -156,7 +156,7 @@ export default async function HomePage() {
               <h3 className="v2-step-title">Create</h3>
               <p className="v2-step-desc">Set up your page in minutes. Define your subscription tiers and what exclusive value you offer.</p>
             </div>
-            
+
             <div className="v2-step">
               <div className="v2-step-icon">
                 <span className="material-symbols-outlined">share</span>
@@ -164,7 +164,7 @@ export default async function HomePage() {
               <h3 className="v2-step-title">Share</h3>
               <p className="v2-step-desc">Promote your MyAzaa link across your social platforms. Invite your audience to join your inner circle.</p>
             </div>
-            
+
             <div className="v2-step">
               <div className="v2-step-icon">
                 <span className="material-symbols-outlined">payments</span>
@@ -173,7 +173,7 @@ export default async function HomePage() {
               <p className="v2-step-desc">Get paid directly to your local bank account. Fast payouts, transparent fees, built for Nigeria.</p>
             </div>
           </div>
-          
+
           <div className="v2-cta-wrapper">
             <Link href="/signup" className="v2-btn-primary lg" style={{ display: 'inline-flex' }}>
               Create Your Page Now
@@ -187,7 +187,8 @@ export default async function HomePage() {
         <div className="v2-footer-inner">
           <div className="v2-footer-left">
             <Link href="/" className="v2-footer-brand">MyAzaa</Link>
-            <p className="v2-footer-copy">© {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.</p>
+            <p className="v2-footer-copy" style={{ marginBottom: '4px' }}>© {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.</p>
+            <p style={{ fontSize: '13px', color: 'var(--v2-text-variant)', fontWeight: 500, margin: 0 }}>Developed by Justice Fosu (In Active Development)</p>
           </div>
           <div className="v2-footer-links">
             <Link href="#" className="v2-footer-link">Privacy</Link>

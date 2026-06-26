@@ -46,7 +46,7 @@ export default async function CreatorsPage() {
 
       <main style={{ width: '100%', paddingBottom: '64px' }}>
         <div className="v2-profile-container" style={{ paddingTop: '64px' }}>
-          
+
           <header style={{ textAlign: 'center', marginBottom: '48px' }}>
             <h1 className="v2-profile-name" style={{ fontSize: '48px', marginBottom: '16px' }}>Discover Creators</h1>
             <p className="v2-profile-bio" style={{ margin: '0 auto', maxWidth: '600px', fontSize: '18px' }}>
@@ -62,8 +62,9 @@ export default async function CreatorsPage() {
       {/* Footer */}
       <footer className="v2-profile-footer">
         <div className="v2-profile-footer-inner">
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)' }}>
-              © 2024 Aza. Built for Nigerian Creators.
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', lineHeight: '1.5' }}>
+              © {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.<br/>
+              <span style={{ fontWeight: 500 }}>Developed by Justice Fosu (In Active Development)</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '24px', fontSize: '12px', fontWeight: 600 }}>
             <Link href="/" style={{ color: 'var(--v2-text-variant)', textDecoration: 'none' }}>Privacy</Link>
