@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import MobileNav from '@/components/MobileNav';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
+import InlineComposer from '@/components/InlineComposer';
 
 export default function CreatorPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -12,6 +13,7 @@ export default function CreatorPostsPage() {
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('Creator');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -62,25 +64,15 @@ export default function CreatorPostsPage() {
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', margin: 0, letterSpacing: '-0.01em' }}>
             Posts Feed
           </h1>
-          <Link 
-            href="/creator/posts/compose"
-            style={{
-              background: 'var(--v2-primary)',
-              color: 'var(--v2-on-primary)',
-              borderRadius: '8px',
-              padding: '10px 24px',
-              fontWeight: 600,
-              fontSize: '14px',
-              border: 'none',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            Create Post
-          </Link>
         </header>
+
+        {/* Inline Composer */}
+        <InlineComposer 
+          tiers={tiers} 
+          editId={editingPostId}
+          onSuccess={() => { setEditingPostId(null); fetchData(); }} 
+          onCancel={() => setEditingPostId(null)}
+        />
 
         {/* Published Posts */}
         {posts.length === 0 ? (
@@ -103,7 +95,7 @@ export default function CreatorPostsPage() {
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <Link href={`/creator/posts/compose?edit=${post.id}`} style={{ padding: '6px 14px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, textDecoration: 'none', color: 'var(--v2-primary)' }}>Edit</Link>
+                      <button onClick={() => { setEditingPostId(post.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ padding: '6px 14px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--v2-primary)' }}>Edit</button>
                       <button onClick={() => handleDeletePost(post.id)} style={{ padding: '6px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#dc2626' }}>Delete</button>
                     </div>
                   </div>

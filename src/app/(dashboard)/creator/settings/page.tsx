@@ -138,7 +138,10 @@ export default function CreatorSettings() {
         ]);
 
         if (Array.isArray(banksData)) {
-          setAvailableBanks(banksData);
+          const uniqueBanks = banksData.filter((b, index, self) => 
+            index === self.findIndex((t) => t.code === b.code)
+          );
+          setAvailableBanks(uniqueBanks);
         }
 
         let fallbackName = '';

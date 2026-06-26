@@ -81,7 +81,7 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
       </div>
 
       {role === 'creator' && (
-        <Link href="/creator/posts/compose" className="v2-sidebar-btn">
+        <Link href="/creator/posts" className="v2-sidebar-btn">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
           Post Update
         </Link>

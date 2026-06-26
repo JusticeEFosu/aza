@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import MobileNav from '@/components/MobileNav';
 import HeaderShareButton from '@/components/HeaderShareButton';
+import CreatorSetupChecklist from '@/components/CreatorSetupChecklist';
 
 // Utility for relative time formatting
 function formatTimeAgo(dateString: string) {
@@ -93,6 +94,33 @@ export default async function CreatorDashboard() {
   const avatarUrl = profile?.avatar_url;
   const shareUrl = `https://aza-chi.vercel.app/c/${creatorProfile?.slug}`; // Should use NEXT_PUBLIC variables later
 
+  const { data: creatorTiers } = await supabase
+    .from('tiers')
+    .select('id')
+    .eq('creator_id', user.id)
+    .eq('is_active', true)
+    .limit(1);
+
+  const hasTiers = Boolean(creatorTiers && creatorTiers.length > 0);
+  const hasBank = Boolean(creatorProfile?.bank_account_number && creatorProfile?.bank_code);
+
+  const setupSteps = [
+    {
+      id: 'bank',
+      title: 'Verify Bank Account',
+      description: 'Link your payout account so you can receive your earnings.',
+      href: '/creator/settings', // Default tab for settings is profile/payouts, payouts tab is clickable there.
+      completed: hasBank
+    },
+    {
+      id: 'tier',
+      title: 'Set Up Tiers',
+      description: 'Create subscription levels for your fans to join.',
+      href: '/creator/settings', // They can switch to tiers tab.
+      completed: hasTiers
+    }
+  ];
+
   return (
     <main className="v2-main-content">
         <header className="v2-dash-header">
@@ -104,6 +132,8 @@ export default async function CreatorDashboard() {
              <HeaderShareButton url={shareUrl} />
           </div>
         </header>
+
+        <CreatorSetupChecklist steps={setupSteps} />
 
         {/* Stats Grid */}
         <div className="v2-stats-grid">

@@ -188,7 +188,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
               <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/creator/tiers' ? "'FILL' 1" : "'FILL' 0" }}>group</span>
               <span className="v2-bottom-nav-label">Subs</span>
             </Link>
-            <Link href="/creator/posts/compose" className="v2-bottom-fab">
+            <Link href="/creator/posts" className="v2-bottom-fab">
               <span className="material-symbols-outlined">add</span>
             </Link>
             <Link href="/creator/payouts" className={`v2-bottom-nav-item ${pathname === '/creator/payouts' ? 'active' : ''}`}>

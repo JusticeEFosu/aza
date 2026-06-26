@@ -51,7 +51,7 @@ export default async function HomePage() {
             ) : (
               <Link href="/login" className="v2-btn-outline v2-hidden-mobile">Log In</Link>
             )}
-            <Link href="/signup" className="v2-btn-primary">Start Creating</Link>
+            <Link href="/signup" className="v2-btn-primary">Create Account</Link>
             <button className="v2-mobile-menu">
               <span className="material-symbols-outlined">menu</span>
             </button>
@@ -72,7 +72,7 @@ export default async function HomePage() {
           </div>
           <div className="v2-hero-actions">
             <Link href="/signup" className="v2-btn-primary lg">
-              Start Creating <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+              Create Account <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
             </Link>
             <Link href="/creators" className="v2-btn-outline lg">
               Explore Creators
