@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh the session
+  // Refresh the session and verify JWT
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // 1. Protected routes: redirect to login if not authenticated
-  const protectedPaths = ['/fan', '/creator'];
+  const protectedPaths = ['/fan', '/creator', '/admin'];
   const isProtectedRoute = protectedPaths.some((p) =>
     path === p || path.startsWith(`${p}/`)
   );
@@ -49,43 +49,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 2. If logged in and trying to access login/signup, redirect to their dashboard
+  // 2. If logged in and trying to access login/signup, redirect away
+  // We bounce them to /fan, and the fan/layout.tsx will redirect them if they are actually a creator or admin.
+  // This completely eliminates the need to fetch the database on every middleware run.
   if (user && (path === '/login' || path === '/signup')) {
-    // Fetch user role for smart redirect
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, is_admin')
-      .eq('id', user.id)
-      .single();
-
     const url = request.nextUrl.clone();
-    if (profile?.is_admin) {
-      url.pathname = '/admin';
-    } else {
-      url.pathname = profile?.role === 'creator' ? '/creator' : '/fan';
-    }
+    url.pathname = '/fan';
     return NextResponse.redirect(url);
-  }
-
-  // 3. Admin Protection
-  if (path.startsWith('/admin')) {
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
-    }
-    
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single();
-      
-    if (!profile?.is_admin) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
   }
 
   return supabaseResponse;

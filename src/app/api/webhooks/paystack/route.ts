@@ -20,8 +20,6 @@ export async function POST(request: Request) {
         reference,
         amount,          // in kobo
         metadata,
-        customer,
-        plan
       } = event.data;
 
       // Ensure we have our custom metadata
@@ -29,107 +27,46 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Ignored unrelated charge' });
       }
 
-      // Check if transaction already exists (Paystack can send duplicate webhooks)
-      const { data: existingTx } = await supabase
-        .from('transactions')
-        .select('id')
-        .eq('paystack_reference', reference)
-        .single();
-        
-      if (existingTx) {
-        return NextResponse.json({ success: true, message: 'Already processed' });
-      }
-
-      // 1. Calculate fees (10% platform, 90% creator)
+      // Calculate fees (10% platform, 90% creator)
       const platform_fee = Math.floor(amount * 0.1);
       const creator_share = amount - platform_fee;
 
-      // 2. Fetch or create subscription record
-      // Look up by fan_id + creator_id (not tier_id) to find ANY existing subscription
-      // This prevents duplicate entries when a fan upgrades tiers
-      let subscriptionId;
-      let isNewSubscriber = false;
-      const { data: existingSub } = await supabase
-        .from('subscriptions')
-        .select('id, tier_id')
-        .eq('fan_id', metadata.fan_id)
-        .eq('creator_id', metadata.creator_id)
-        .eq('status', 'active')
-        .single();
+      // Call our secure Postgres RPC to handle everything atomically
+      const { error } = await supabase.rpc('process_paystack_charge_success', {
+        p_reference: reference,
+        p_amount: amount,
+        p_platform_fee: platform_fee,
+        p_creator_share: creator_share,
+        p_fan_id: metadata.fan_id,
+        p_creator_id: metadata.creator_id,
+        p_tier_id: metadata.tier_id,
+        p_subscription_code: event.data.subscription?.subscription_code || ('PAYSTACK_SUB_' + Date.now()),
+        p_email_token: event.data.subscription?.email_token || 'TOKEN'
+      });
 
-      const newEndDate = new Date();
-      newEndDate.setMonth(newEndDate.getMonth() + 1);
-
-      if (existingSub) {
-        subscriptionId = existingSub.id;
-        // Upgrade: update the tier and extend the period
-        await supabase
-          .from('subscriptions')
-          .update({ 
-            tier_id: metadata.tier_id,
-            current_period_end: newEndDate.toISOString() 
-          })
-          .eq('id', subscriptionId);
-      } else {
-        // Brand new subscriber for this creator
-        isNewSubscriber = true;
-        
-        const { data: newSub } = await supabase
-          .from('subscriptions')
-          .insert({
-            fan_id: metadata.fan_id,
-            creator_id: metadata.creator_id,
-            tier_id: metadata.tier_id,
-            paystack_subscription_code: event.data.subscription?.subscription_code || ('PAYSTACK_SUB_' + Date.now()),
-            paystack_email_token: event.data.subscription?.email_token || 'TOKEN',
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            current_period_end: newEndDate.toISOString()
-          })
-          .select()
-          .single();
-        
-        subscriptionId = newSub?.id;
+      if (error) {
+        console.error('RPC Error:', error);
+        throw error;
       }
-
-      // 3. Record Transaction
+      
+      return NextResponse.json({ success: true, message: 'Processed via RPC' });
+    } 
+    else if (event.event === 'charge.failed') {
+      console.log('Charge failed:', event.data.reference);
+      return NextResponse.json({ success: true, message: 'Handled failed charge' });
+    }
+    else if (event.event === 'subscription.disable') {
+      console.log('Subscription disabled:', event.data.subscription_code);
+      
       await supabase
-        .from('transactions')
-        .insert({
-          subscription_id: subscriptionId,
-          fan_id: metadata.fan_id,
-          creator_id: metadata.creator_id,
-          amount,
-          platform_fee,
-          creator_share,
-          paystack_reference: reference,
-          status: 'success',
-          paid_at: new Date().toISOString()
-        });
-
-      // 4. Update Creator's total earnings & subscriber count (only increment for new subscribers)
-      const { data: creator } = await supabase
-        .from('creator_profiles')
-        .select('total_earnings, subscriber_count')
-        .eq('id', metadata.creator_id)
-        .single();
-
-      if (creator) {
-        const updates: any = {
-          total_earnings: (creator.total_earnings || 0) + creator_share,
-        };
-        // Only bump subscriber count for genuinely new subscribers, not tier upgrades
-        if (isNewSubscriber) {
-          updates.subscriber_count = (creator.subscriber_count || 0) + 1;
-        }
-        await supabase
-          .from('creator_profiles')
-          .update(updates)
-          .eq('id', metadata.creator_id);
-      }
+        .from('subscriptions')
+        .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+        .eq('paystack_subscription_code', event.data.subscription_code);
+        
+      return NextResponse.json({ success: true, message: 'Handled subscription disabled' });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: 'Event ignored' });
   } catch (err: any) {
     console.error('Webhook processing error:', err);
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });

@@ -62,18 +62,15 @@ export async function POST(request: Request) {
 
     const updateData: any = {
       id: user.id, // Required for upsert
-      bio: bio || '',
-      display_name: displayName || null,
-      social_links: socialLinks || {},
     };
 
-    // Update slug if display name is provided, otherwise ensure it exists if inserting
+    if (bio !== undefined) updateData.bio = bio;
+    if (socialLinks !== undefined) updateData.social_links = socialLinks;
+
+    // Update slug if display name is provided
     if (displayName) {
+      updateData.display_name = displayName;
       updateData.slug = slugify(displayName);
-    } else {
-      // If we are upserting and don't have a display name, 
-      // we need a fallback slug in case the row doesn't exist yet
-      updateData.slug = slugify(profile?.full_name || `creator-${user.id.slice(0, 8)}`);
     }
 
     if (isVerified) {

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import MobileNav from '@/components/MobileNav';
 import HeaderShareButton from '@/components/HeaderShareButton';
-import CreatorSetupChecklist from '@/components/CreatorSetupChecklist';
+import SetupWidget from '@/components/SetupWidget';
 
 // Utility for relative time formatting
 function formatTimeAgo(dateString: string) {
@@ -103,23 +103,8 @@ export default async function CreatorDashboard() {
 
   const hasTiers = Boolean(creatorTiers && creatorTiers.length > 0);
   const hasBank = Boolean(creatorProfile?.bank_account_number && creatorProfile?.bank_code);
-
-  const setupSteps = [
-    {
-      id: 'bank',
-      title: 'Verify Bank Account',
-      description: 'Link your payout account so you can receive your earnings.',
-      href: '/creator/settings', // Default tab for settings is profile/payouts, payouts tab is clickable there.
-      completed: hasBank
-    },
-    {
-      id: 'tier',
-      title: 'Set Up Tiers',
-      description: 'Create subscription levels for your fans to join.',
-      href: '/creator/settings', // They can switch to tiers tab.
-      completed: hasTiers
-    }
-  ];
+  const hasProfile = Boolean(profile?.avatar_url && creatorProfile?.bio);
+  const isPublished = Boolean(creatorProfile?.is_published);
 
   return (
     <main className="v2-main-content">
@@ -133,7 +118,13 @@ export default async function CreatorDashboard() {
           </div>
         </header>
 
-        <CreatorSetupChecklist steps={setupSteps} />
+        <SetupWidget 
+          userId={user.id} 
+          hasProfile={hasProfile} 
+          hasBank={hasBank} 
+          hasTiers={hasTiers} 
+          isPublished={isPublished} 
+        />
 
         {/* Stats Grid */}
         <div className="v2-stats-grid">

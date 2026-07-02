@@ -219,6 +219,7 @@ export default function InlineComposer({
               placeholder="Title" 
               value={title} 
               onChange={e => setTitle(e.target.value)} 
+              required
               style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--v2-outline)', fontSize: '20px', fontWeight: 600, paddingBottom: '12px', marginBottom: '16px', outline: 'none', color: 'var(--v2-primary)' }} 
             />
 
@@ -226,7 +227,6 @@ export default function InlineComposer({
               placeholder="Description" 
               value={content} 
               onChange={e => setContent(e.target.value)} 
-              required
               style={{ 
                 width: '100%', 
                 background: 'transparent', 
@@ -358,7 +358,7 @@ export default function InlineComposer({
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '12px', paddingBottom: '4px' }}>
                  <button 
                   type="submit" 
-                  disabled={isSubmitting || (!title && !content)}
+                  disabled={isSubmitting || !title}
                   style={{
                     background: 'var(--v2-primary)',
                     color: 'var(--v2-on-primary)',
@@ -367,8 +367,8 @@ export default function InlineComposer({
                     fontWeight: 600,
                     fontSize: '14px',
                     border: 'none',
-                    cursor: (isSubmitting || (!title && !content)) ? 'not-allowed' : 'pointer',
-                    opacity: (isSubmitting || (!title && !content)) ? 0.5 : 1,
+                    cursor: (isSubmitting || !title) ? 'not-allowed' : 'pointer',
+                    opacity: (isSubmitting || !title) ? 0.5 : 1,
                     transition: 'opacity 0.2s',
                     width: '100%',
                     display: 'flex',

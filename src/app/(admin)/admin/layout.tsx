@@ -53,10 +53,12 @@ export default async function AdminLayout({
         </nav>
 
         <div style={{ borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>exit_to_app</span>
-            Exit Admin
-          </Link>
+          <form action="/api/auth/signout" method="POST" style={{ margin: 0, padding: 0 }}>
+            <button type="submit" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', background: 'transparent', border: 'none', borderRadius: '8px', fontWeight: 500, cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>exit_to_app</span>
+              Exit Admin / Sign Out
+            </button>
+          </form>
         </div>
       </aside>
 

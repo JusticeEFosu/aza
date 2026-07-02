@@ -49,9 +49,9 @@ function SignupForm() {
       if (redirect) {
         router.push(redirect);
       } 
-      // 2. Otherwise default to role-based dashboard
+      // 2. Otherwise route to onboarding (for creators) or dashboard (for fans)
       else if (role === 'creator') {
-        router.push('/creator');
+        router.push('/onboarding');
       } else {
         router.push('/fan');
       }
