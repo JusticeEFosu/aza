@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 interface SetupWidgetProps {
   userId: string;
-  hasProfile: boolean; // avatar and bio
+  hasProfile: boolean;
   hasBank: boolean;
   hasTiers: boolean;
   isPublished: boolean;
@@ -20,13 +20,20 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form states
+  // Payout states
   const [bankAccount, setBankAccount] = useState('');
   const [bankCode, setBankCode] = useState('');
-  
+  const [availableBanks, setAvailableBanks] = useState<any[]>([]);
+  const [banksLoading, setBanksLoading] = useState(false);
+  const [resolvingBank, setResolvingBank] = useState(false);
+  const [resolvedName, setResolvedName] = useState('');
+  const [resolveError, setResolveError] = useState('');
+
+  // Tier states
   const [tierName, setTierName] = useState('');
   const [tierPrice, setTierPrice] = useState('');
   const [tierDesc, setTierDesc] = useState('');
+  const [tierPerksText, setTierPerksText] = useState('');
   const [tierStep, setTierStep] = useState(1);
 
   const steps = [
@@ -60,6 +67,58 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
   const progressPercent = Math.round((completedCount / steps.length) * 100);
   const isFinished = completedCount === steps.length;
 
+  useEffect(() => {
+    if (activeModal === 'bank') {
+      const fetchBanks = async () => {
+        setBanksLoading(true);
+        try {
+          const res = await fetch('/api/banks');
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            const uniqueBanks = data.filter((b, index, self) => 
+              index === self.findIndex((t) => t.code === b.code)
+            );
+            setAvailableBanks(uniqueBanks);
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setBanksLoading(false);
+        }
+      };
+      fetchBanks();
+    }
+  }, [activeModal]);
+
+  useEffect(() => {
+    const resolveAccount = async () => {
+      if (bankAccount.length !== 10 || !bankCode) {
+        setResolvedName('');
+        setResolveError('');
+        return;
+      }
+      setResolvingBank(true);
+      setResolveError('');
+      setResolvedName('');
+      try {
+        const res = await fetch('/api/banks/resolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bankCode, accountNumber: bankAccount })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        setResolvedName(data.account_name);
+      } catch (err: any) {
+        setResolveError(err.message || 'Could not verify account. Please try again.');
+      } finally {
+        setResolvingBank(false);
+      }
+    };
+    const timeoutId = setTimeout(() => resolveAccount(), 500);
+    return () => clearTimeout(timeoutId);
+  }, [bankAccount, bankCode]);
+
   if (isFinished) return null;
 
   const handlePublish = async () => {
@@ -90,10 +149,7 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
         body: JSON.stringify({ bankCode, accountNumber: bankAccount })
       });
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to setup payouts');
-      }
+      if (!response.ok) throw new Error(data.error || 'Failed to setup payouts');
       
       setActiveModal(null);
       router.refresh();
@@ -107,15 +163,20 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
   const saveTier = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
-      const { error } = await supabase.from('tiers').insert({
-        creator_id: userId,
-        name: tierName,
-        description: tierDesc,
-        amount: parseInt(tierPrice) * 100, // convert Naira to kobo
-        is_active: true
+      const amountKobo = Math.round(parseFloat(tierPrice) * 100);
+      if (amountKobo < 100) throw new Error('Minimum tier amount is ₦1');
+      const perksArray = tierPerksText.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+      
+      const response = await fetch('/api/tiers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tierName, amount: amountKobo, description: tierDesc, perks: perksArray })
       });
-      if (error) throw error;
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to create tier');
+      
       setActiveModal(null);
       router.refresh();
     } catch (e: any) {
@@ -123,6 +184,12 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeDrawer = () => {
+    setActiveModal(null);
+    setError(null);
+    setTierStep(1);
   };
 
   return (
@@ -189,84 +256,169 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
         </div>
       </div>
 
-      {/* Modals */}
+      {/* Slide-Over Drawer */}
       {activeModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', padding: '32px', borderRadius: '8px', width: '100%', maxWidth: '500px', position: 'relative' }}>
-            <button onClick={() => setActiveModal(null)} style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <span className="material-symbols-outlined">close</span>
-            </button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
+          {/* Backdrop */}
+          <div 
+            onClick={closeDrawer} 
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', animation: 'fadeIn 0.3s ease' }} 
+          />
+          
+          {/* Drawer Panel */}
+          <div style={{ 
+            width: '100%', 
+            maxWidth: '500px', 
+            background: 'var(--v2-surface-lowest)', 
+            height: '100%', 
+            position: 'relative', 
+            zIndex: 1001, 
+            display: 'flex', 
+            flexDirection: 'column',
+            boxShadow: '-8px 0 32px rgba(0,0,0,0.1)',
+            animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
+            <style>{`
+              @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            `}</style>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderBottom: '1px solid var(--v2-outline)' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--v2-primary)' }}>
+                {activeModal === 'profile' && 'Complete Profile'}
+                {activeModal === 'bank' && 'Set up Payouts'}
+                {activeModal === 'tier' && 'Create a Tier'}
+              </h3>
+              <button onClick={closeDrawer} style={{ background: 'var(--v2-surface-low)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--v2-text-variant)' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
+              </button>
+            </div>
 
-            {error && <div style={{ color: 'red', marginBottom: '16px' }}>{error}</div>}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px' }}>
+              {error && <div style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
 
-            {activeModal === 'profile' && (
-              <div>
-                <h3 style={{ fontSize: '24px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, marginBottom: '16px' }}>Complete Profile</h3>
-                <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px' }}>Upload your avatar and banner. (Connecting social links is optional).</p>
-                {/* Simplified for now, just a redirect to settings for complex file uploads */}
-                <button onClick={() => router.push('/creator/settings')} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00' }}>
-                  Go to Settings
-                </button>
-              </div>
-            )}
-
-            {activeModal === 'bank' && (
-              <form onSubmit={saveBank}>
-                <h3 style={{ fontSize: '24px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, marginBottom: '16px' }}>Set up Payouts</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Bank Code (e.g. 058 for GTB)</label>
-                    <input required value={bankCode} onChange={e => setBankCode(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Account Number</label>
-                    <input required value={bankAccount} onChange={e => setBankAccount(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px' }} />
-                  </div>
+              {activeModal === 'profile' && (
+                <div>
+                  <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px', lineHeight: 1.6 }}>Your public profile is where fans come to subscribe. To complete it, you should upload a profile picture and set a cover banner so it looks premium.</p>
+                  <button onClick={() => router.push('/creator/settings')} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    Open Profile Settings
+                  </button>
                 </div>
-                <button type="submit" disabled={loading} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00' }}>
-                  {loading ? 'Saving...' : 'Save Bank Details'}
-                </button>
-              </form>
-            )}
+              )}
 
-            {activeModal === 'tier' && (
-              <form onSubmit={saveTier}>
-                <h3 style={{ fontSize: '24px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, marginBottom: '16px' }}>
-                  Create Tier (Step {tierStep} of 2)
-                </h3>
-                
-                {tierStep === 1 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              {activeModal === 'bank' && (
+                <form onSubmit={saveBank}>
+                  <p style={{ color: 'var(--v2-text-variant)', marginBottom: '32px', lineHeight: 1.6 }}>Connect your Nigerian bank account to receive automatic weekly payouts.</p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Tier Name</label>
-                      <input required value={tierName} onChange={e => setTierName(e.target.value)} placeholder="e.g. Super Fan" style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px' }} />
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Select Bank</label>
+                      <select 
+                        required 
+                        value={bankCode} 
+                        onChange={e => setBankCode(e.target.value)} 
+                        disabled={banksLoading}
+                        style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px', color: 'var(--v2-primary)' }}
+                      >
+                        <option value="" disabled>{banksLoading ? 'Loading banks...' : 'Select your bank...'}</option>
+                        {availableBanks.map(b => (
+                          <option key={b.code} value={b.code}>{b.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Description</label>
-                      <textarea required value={tierDesc} onChange={e => setTierDesc(e.target.value)} rows={3} style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px' }} />
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Account Number</label>
+                      <input 
+                        required 
+                        maxLength={10}
+                        value={bankAccount} 
+                        onChange={e => setBankAccount(e.target.value)} 
+                        placeholder="0123456789"
+                        style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px', color: 'var(--v2-primary)' }} 
+                      />
                     </div>
-                    <button type="button" onClick={() => setTierStep(2)} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00' }}>
-                      Next
-                    </button>
+
+                    <div style={{ minHeight: '48px' }}>
+                      {resolvingBank && (
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--v2-text-variant)', fontSize: '14px' }}>
+                          <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                          Resolving account name...
+                        </div>
+                      )}
+                      
+                      {resolveError && !resolvingBank && (
+                        <div style={{ color: '#dc2626', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>error</span>
+                          {resolveError}
+                        </div>
+                      )}
+
+                      {resolvedName && !resolvingBank && (
+                        <div style={{ color: '#059669', fontWeight: 600, fontSize: '15px', background: '#ecfdf5', padding: '12px 16px', borderRadius: '8px', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>verified</span> 
+                          {resolvedName}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  <button type="submit" disabled={loading || !resolvedName} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: (loading || !resolvedName) ? 0.5 : 1 }}>
+                    {loading ? 'Saving...' : 'Save Bank Details'}
+                  </button>
+                </form>
+              )}
+
+              {activeModal === 'tier' && (
+                <form onSubmit={saveTier}>
+                  {tierStep === 1 ? (
                     <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Price (in Naira)</label>
-                      <input type="number" required value={tierPrice} onChange={e => setTierPrice(e.target.value)} placeholder="5000" style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px' }} />
+                      <p style={{ color: 'var(--v2-text-variant)', marginBottom: '32px', lineHeight: 1.6 }}>Give your fans a way to support you by creating a subscription tier.</p>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Tier Name</label>
+                          <input required value={tierName} onChange={e => setTierName(e.target.value)} placeholder="e.g. Super Fan, Inner Circle" style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Description</label>
+                          <textarea required value={tierDesc} onChange={e => setTierDesc(e.target.value)} rows={3} placeholder="What is this tier about?" style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px' }} />
+                        </div>
+                        <button type="button" onClick={() => setTierStep(2)} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                          Continue
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <button type="button" onClick={() => setTierStep(1)} className="v2-btn-outline" style={{ flex: 1, justifyContent: 'center' }}>
-                        Back
-                      </button>
-                      <button type="submit" disabled={loading} className="v2-btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00' }}>
-                        {loading ? 'Saving...' : 'Finish'}
-                      </button>
+                  ) : (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px', cursor: 'pointer', color: 'var(--v2-text-variant)' }} onClick={() => setTierStep(1)}>
+                        <span className="material-symbols-outlined">arrow_back</span>
+                        <span style={{ fontSize: '14px', fontWeight: 600 }}>Back to Details</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Monthly Price (₦)</label>
+                          <input type="number" required min="100" step="100" value={tierPrice} onChange={e => setTierPrice(e.target.value)} placeholder="e.g. 5000" style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px' }} />
+                          <span style={{ display: 'block', marginTop: '8px', fontSize: '13px', color: 'var(--v2-text-variant)' }}>Minimum price is ₦100.</span>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Perks (One per line)</label>
+                          <textarea 
+                            value={tierPerksText} 
+                            onChange={e => setTierPerksText(e.target.value)} 
+                            rows={4} 
+                            placeholder={"Exclusive videos\nPrivate Discord\nMonthly Q&A"} 
+                            style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px', lineHeight: 1.6 }} 
+                          />
+                        </div>
+                        <button type="submit" disabled={loading} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                          {loading ? 'Publishing Tier...' : 'Create Tier'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </form>
-            )}
+                  )}
+                </form>
+              )}
+            </div>
           </div>
         </div>
       )}

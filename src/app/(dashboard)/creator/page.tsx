@@ -114,7 +114,7 @@ export default async function CreatorDashboard() {
             <p className="v2-dash-desc">Here's what's happening with your community today.</p>
           </div>
           <div className="hidden md:flex">
-             <HeaderShareButton url={shareUrl} />
+             {isPublished && <HeaderShareButton url={shareUrl} />}
           </div>
         </header>
 
@@ -172,7 +172,10 @@ export default async function CreatorDashboard() {
           <div className="v2-activity-list">
             {(!transactions || transactions.length === 0) ? (
               <div style={{ padding: '24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
-                No recent activity yet. Share your page to get your first subscriber!
+                {isPublished 
+                  ? "No recent activity yet. Share your page to get your first subscriber!"
+                  : "Complete your setup and publish your page to start getting subscribers!"
+                }
               </div>
             ) : (
               transactions.map((tx: any) => {
