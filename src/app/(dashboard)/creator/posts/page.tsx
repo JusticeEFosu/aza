@@ -6,6 +6,8 @@ import MobileNav from '@/components/MobileNav';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
 import InlineComposer from '@/components/InlineComposer';
+import ConfirmModal from '@/components/ConfirmModal';
+import ExpandableText from '@/components/ExpandableText';
 
 export default function CreatorPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -14,6 +16,7 @@ export default function CreatorPostsPage() {
   const [displayName, setDisplayName] = useState('Creator');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -44,10 +47,15 @@ export default function CreatorPostsPage() {
     finally { setLoading(false); }
   };
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) return;
-    try { const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' }); if (!res.ok) { const data = await res.json(); throw new Error(data.error || 'Failed'); } await fetchData(); }
+  const confirmDeletePost = (postId: string) => {
+    setDeletePostId(postId);
+  };
+
+  const executeDeletePost = async () => {
+    if (!deletePostId) return;
+    try { const res = await fetch(`/api/posts/${deletePostId}`, { method: 'DELETE' }); if (!res.ok) { const data = await res.json(); throw new Error(data.error || 'Failed'); } await fetchData(); }
     catch (err: any) { alert(err.message); }
+    finally { setDeletePostId(null); }
   };
 
   if (loading) {
@@ -96,7 +104,7 @@ export default function CreatorPostsPage() {
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => { setEditingPostId(post.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ padding: '6px 14px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--v2-primary)' }}>Edit</button>
-                      <button onClick={() => handleDeletePost(post.id)} style={{ padding: '6px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#dc2626' }}>Delete</button>
+                      <button onClick={() => confirmDeletePost(post.id)} style={{ padding: '6px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#dc2626' }}>Delete</button>
                     </div>
                   </div>
 
@@ -110,9 +118,11 @@ export default function CreatorPostsPage() {
                     </div>
                   )}
 
-                  <p style={{ color: 'var(--v2-text-variant)', whiteSpace: 'pre-wrap', fontSize: '14px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {post.content}
-                  </p>
+                  <ExpandableText 
+                    text={post.content || ''} 
+                    maxLength={250} 
+                    style={{ color: 'var(--v2-text-variant)', fontSize: '14px' }} 
+                  />
                   <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>
                     Published {new Date(post.created_at).toLocaleDateString()}
                   </div>
@@ -121,6 +131,16 @@ export default function CreatorPostsPage() {
             })}
           </div>
         )}
+        
+        <ConfirmModal 
+          isOpen={!!deletePostId}
+          title="Delete Post"
+          message="Are you sure you want to delete this post? This action cannot be undone."
+          confirmText="Delete"
+          isDestructive={true}
+          onConfirm={executeDeletePost}
+          onCancel={() => setDeletePostId(null)}
+        />
       </main>
   );
 }

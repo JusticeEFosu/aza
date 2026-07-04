@@ -1,17 +1,71 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
-export default function CreatorsGrid({ creators }: { creators: any[] }) {
+export default function CreatorsGrid({ initialCreators }: { initialCreators: any[] }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [creatorsList, setCreatorsList] = useState(initialCreators);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(initialCreators.length >= 20);
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
+  const isFirstRender = useRef(true);
 
-  const filteredCreators = creators.filter((c: any) => {
-    const name = c.display_name || c.profiles?.display_name || c.profiles?.full_name || '';
-    const bio = c.bio || '';
-    const q = searchQuery.toLowerCase();
-    return name.toLowerCase().includes(q) || bio.toLowerCase().includes(q);
-  });
+  const fetchCreators = async (pageNum: number, query: string, append = false) => {
+    setLoading(true);
+    let request = supabase
+      .from('creator_profiles')
+      .select(`
+        slug,
+        bio,
+        subscriber_count,
+        display_name,
+        profiles!inner ( full_name, avatar_url, is_suspended, is_admin )
+      `)
+      .eq('profiles.is_suspended', false)
+      .eq('profiles.is_admin', false)
+      .order('subscriber_count', { ascending: false });
+
+    if (query.trim()) {
+      request = request.or(`display_name.ilike.%${query}%,bio.ilike.%${query}%`);
+    }
+
+    const pageSize = 20;
+    const from = (pageNum - 1) * pageSize;
+    const to = from + pageSize - 1;
+    request = request.range(from, to);
+
+    const { data } = await request;
+    if (data) {
+      if (append) {
+        setCreatorsList(prev => [...prev, ...data]);
+      } else {
+        setCreatorsList(data);
+      }
+      setHasMore(data.length === pageSize);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setPage(1);
+      fetchCreators(1, searchQuery, false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchCreators(nextPage, searchQuery, true);
+  };
 
   return (
     <div style={{ padding: '32px 0' }}>
@@ -39,7 +93,7 @@ export default function CreatorsGrid({ creators }: { creators: any[] }) {
         </div>
       </div>
 
-      {filteredCreators.length === 0 ? (
+      {creatorsList.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '64px', background: 'var(--v2-surface-low)', borderRadius: '16px', border: '1px solid var(--v2-outline)' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--v2-text-variant)', marginBottom: '16px', display: 'block' }}>search_off</span>
           <h3 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 8px 0' }}>No creators found</h3>
@@ -47,7 +101,7 @@ export default function CreatorsGrid({ creators }: { creators: any[] }) {
         </div>
       ) : (
         <div className="v2-subs-grid">
-          {filteredCreators.map((creator: any) => {
+          {creatorsList.map((creator: any) => {
             const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name || 'Creator';
             return (
               <Link
@@ -77,6 +131,19 @@ export default function CreatorsGrid({ creators }: { creators: any[] }) {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {hasMore && (
+        <div style={{ textAlign: 'center', marginTop: '48px' }}>
+          <button 
+            onClick={handleLoadMore} 
+            disabled={loading}
+            className="v2-sub-btn v2-sub-btn-primary"
+            style={{ padding: '12px 32px', display: 'inline-flex', opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? 'Loading...' : 'Load More'}
+          </button>
         </div>
       )}
     </div>

@@ -40,7 +40,7 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
     {
       id: 'profile',
       title: 'Complete Profile',
-      description: 'Add a profile picture and banner to stand out.',
+      description: 'Add a profile picture to stand out.',
       completed: hasProfile,
     },
     {
@@ -340,8 +340,8 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
 
                     {step.id === 'profile' && (
                       <div style={{ background: 'white', padding: '24px', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
-                        <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px' }}>Your public profile is where fans come to subscribe. To complete it, you should upload a profile picture and set a cover banner so it looks premium.</p>
-                        <button onClick={() => router.push('/creator/settings')} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', border: 'none', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                        <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px' }}>Your public profile is where fans come to subscribe. To complete it, you should upload a profile picture so it looks premium.</p>
+                        <button onClick={() => router.push('/creator/settings?tab=profile')} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', border: 'none', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                           Open Profile Settings
                         </button>
                       </div>

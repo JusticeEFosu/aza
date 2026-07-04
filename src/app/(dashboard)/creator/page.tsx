@@ -4,6 +4,7 @@ import Link from 'next/link';
 import MobileNav from '@/components/MobileNav';
 import HeaderShareButton from '@/components/HeaderShareButton';
 import SetupWidget from '@/components/SetupWidget';
+import AnalyticsChart from '@/components/AnalyticsChart';
 
 // Utility for relative time formatting
 function formatTimeAgo(dateString: string) {
@@ -90,6 +91,14 @@ export default async function CreatorDashboard() {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  // Fetch all successful transactions for the Analytics chart
+  const { data: allTransactions } = await supabase
+    .from('transactions')
+    .select('amount, created_at, status')
+    .eq('creator_id', user.id)
+    .eq('status', 'success')
+    .order('created_at', { ascending: true });
+
   const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
   const avatarUrl = profile?.avatar_url;
   const shareUrl = `https://aza-chi.vercel.app/c/${creatorProfile?.slug}`; // Should use NEXT_PUBLIC variables later
@@ -103,7 +112,7 @@ export default async function CreatorDashboard() {
 
   const hasTiers = Boolean(creatorTiers && creatorTiers.length > 0);
   const hasBank = Boolean(creatorProfile?.bank_account_number && creatorProfile?.bank_code);
-  const hasProfile = Boolean(profile?.avatar_url && creatorProfile?.bio);
+  const hasProfile = Boolean(profile?.avatar_url);
   const isPublished = Boolean(creatorProfile?.is_published);
 
   return (
@@ -138,18 +147,8 @@ export default async function CreatorDashboard() {
             <div style={{ height: '24px' }}></div>
           </div>
 
-          {/* Stat Card 2 */}
           <div className="v2-stat-card">
-            <div>
-              <p className="v2-stat-label">Monthly Recurring Revenue</p>
-              <h3 className="v2-stat-value">{formatMRR(mrr)}</h3>
-            </div>
-            {/* Simple Line Chart (SVG) */}
-            <div style={{ marginTop: '24px', height: '48px', width: '100%' }}>
-              <svg style={{ width: '100%', height: '100%', stroke: 'var(--v2-green)', fill: 'none', strokeWidth: 2 }} preserveAspectRatio="none" viewBox="0 0 100 30">
-                <path d="M0,30 L10,25 L20,28 L30,15 L40,20 L50,10 L60,18 L70,5 L80,12 L90,2 L100,0" vectorEffect="non-scaling-stroke"></path>
-              </svg>
-            </div>
+            <AnalyticsChart transactions={allTransactions || []} formattedMRR={formatMRR(mrr)} />
           </div>
 
           {/* Stat Card 3 */}

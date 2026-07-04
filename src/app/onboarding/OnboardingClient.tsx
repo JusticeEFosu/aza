@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface OnboardingClientProps {
   userId: string;
@@ -25,6 +26,8 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
   // Real-time checking state
   const [checkingName, setCheckingName] = useState(false);
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+  
+  const [showRevertModal, setShowRevertModal] = useState(false);
 
   useEffect(() => {
     if (!displayName) {
@@ -108,8 +111,10 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
   };
 
   const handleRevertToFan = async () => {
-    if (!confirm("Are you sure you want to skip creator setup and just be a fan?")) return;
-    
+    setShowRevertModal(true);
+  };
+
+  const executeRevertToFan = async () => {
     setLoading(true);
     try {
       await supabase.from('profiles').update({ role: 'fan' }).eq('id', userId);
@@ -117,6 +122,8 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
     } catch (err: any) {
       alert("Something went wrong. Please try again.");
       setLoading(false);
+    } finally {
+      setShowRevertModal(false);
     }
   };
 
@@ -206,6 +213,16 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
           Wait, I just want to be a fan.
         </button>
       </div>
+
+      <ConfirmModal 
+        isOpen={showRevertModal}
+        title="Skip Creator Setup?"
+        message="Are you sure you want to skip creator setup and just be a fan? You can always become a creator later."
+        confirmText="Skip Setup"
+        isDestructive={false}
+        onConfirm={executeRevertToFan}
+        onCancel={() => setShowRevertModal(false)}
+      />
     </form>
   );
 }

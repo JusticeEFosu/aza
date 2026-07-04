@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SubscribeButton from './SubscribeButton';
+import ConfirmModal from './ConfirmModal';
 
 interface Tier {
   id: string;
@@ -32,13 +33,15 @@ export default function ManageSubscription({
 }: ManageSubscriptionProps) {
   const [cancelling, setCancelling] = useState(false);
   const [showTiers, setShowTiers] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
   const handleCancel = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription? You will lose access to exclusive content.')) {
-      return;
-    }
+    setShowCancelModal(true);
+  };
+
+  const executeCancel = async () => {
     setCancelling(true);
     setError('');
 
@@ -56,6 +59,8 @@ export default function ManageSubscription({
     } catch (err: any) {
       setError(err.message);
       setCancelling(false);
+    } finally {
+      setShowCancelModal(false);
     }
   };
 
@@ -170,6 +175,16 @@ export default function ManageSubscription({
           )}
         </div>
       )}
+
+      <ConfirmModal 
+        isOpen={showCancelModal}
+        title="Cancel Subscription"
+        message="Are you sure you want to cancel your subscription? You will lose access to exclusive content at the end of your billing cycle."
+        confirmText="Cancel Subscription"
+        isDestructive={true}
+        onConfirm={executeCancel}
+        onCancel={() => setShowCancelModal(false)}
+      />
     </div>
   );
 }

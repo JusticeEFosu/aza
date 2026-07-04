@@ -6,9 +6,12 @@ import { slugify } from '@/lib/utils';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 import Link from 'next/link';
 import MobileNav from '@/components/MobileNav';
+import ConfirmModal from '@/components/ConfirmModal';
+import { useRouter } from 'next/navigation';
 
 export default function CreatorSettings() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'tiers' | 'payouts' | 'account'>('payouts');
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'profile' | 'tiers' | 'payouts' | 'account'>('profile');
   
   const [loading, setLoading] = useState(false);
   const [initialFetchLoading, setInitialFetchLoading] = useState(true);
@@ -17,6 +20,7 @@ export default function CreatorSettings() {
   const [bio, setBio] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [slug, setSlug] = useState('');
+  const [socialLinks, setSocialLinks] = useState<any>({ x: '', instagram: '', youtube: '' });
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState('');
   const [checkingName, setCheckingName] = useState(false);
@@ -54,6 +58,20 @@ export default function CreatorSettings() {
   const [tierMsg, setTierMsg] = useState({ text: '', type: '' });
   const [showTierForm, setShowTierForm] = useState(false);
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    isDestructive: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    isDestructive: false,
+    onConfirm: () => {},
+  });
 
   const [msg, setMsg] = useState({ text: '', type: '' });
   const supabase = createClient();
@@ -114,14 +132,22 @@ export default function CreatorSettings() {
   }
 
   async function handleArchiveTier(id: string) {
-    if (!confirm('Are you sure you want to archive this tier? It will no longer be available for new subscribers, but existing subscribers will continue to be billed.')) return;
-    try {
-      const res = await fetch(`/api/tiers/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to archive tier');
-      fetchTiers();
-    } catch (err: any) {
-      alert(err.message);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Archive Tier',
+      message: 'Are you sure you want to archive this tier? It will no longer be available for new subscribers, but existing subscribers will continue to be billed.',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/tiers/${id}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error('Failed to archive tier');
+          fetchTiers();
+        } catch (err: any) {
+          alert(err.message);
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   }
 
   useEffect(() => {
@@ -162,6 +188,15 @@ export default function CreatorSettings() {
           setDisplayName(name);
           setOriginalDisplayName(name);
           setSlug(creatorRes.data.slug || '');
+          if (creatorRes.data.social_links) {
+            // Migrate legacy twitter to x
+            const legacyLinks = creatorRes.data.social_links;
+            setSocialLinks({
+              x: legacyLinks.x || legacyLinks.twitter || '',
+              instagram: legacyLinks.instagram || '',
+              youtube: legacyLinks.youtube || ''
+            });
+          }
           setIsVerified(creatorRes.data.is_verified);
           setBankCode(creatorRes.data.bank_code || '');
           setAccountNumber(creatorRes.data.bank_account_number || '');
@@ -257,6 +292,7 @@ export default function CreatorSettings() {
           bio,
           displayName,
           slug: slug.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          socialLinks,
           bankCode: isVerified ? undefined : bankCode, 
           accountNumber: isVerified ? undefined : accountNumber
         })
@@ -271,6 +307,7 @@ export default function CreatorSettings() {
         setIsVerified(true);
         setPersistedBankName(resolvedName);
       }
+      router.refresh();
     } catch (err: any) {
       setMsg({ text: err.message, type: 'error' });
     } finally {
@@ -310,21 +347,23 @@ export default function CreatorSettings() {
   }
 
   async function handleDeleteAccount() {
-    if (!confirm('Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all data, posts, and subscriptions.')) {
-      return;
-    }
-    
-    try {
-      const res = await fetch('/api/auth/delete-account', {
-        method: 'POST'
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      
-      window.location.href = '/login';
-    } catch (err: any) {
-      alert('Failed to delete account: ' + err.message);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Account',
+      message: 'Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all data, posts, and subscriptions.',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          const res = await fetch('/api/auth/delete-account', { method: 'POST' });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          window.location.href = '/login';
+        } catch (err: any) {
+          alert('Failed to delete account: ' + err.message);
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   }
 
   if (initialFetchLoading) {
@@ -458,6 +497,35 @@ export default function CreatorSettings() {
                 />
                 <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--v2-text-variant)', marginTop: '4px' }}>
                   {bio.length} / 250
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Social Links (Optional)</h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--v2-outline)', borderRadius: '8px', overflow: 'hidden', background: 'var(--v2-surface)' }}>
+                    <span style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid var(--v2-outline)' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                    </span>
+                    <input type="text" placeholder="https://x.com/yourhandle" value={socialLinks.x || ''} onChange={e => setSocialLinks({...socialLinks, x: e.target.value})} style={{ flex: 1, padding: '12px 16px', border: 'none', background: 'transparent', fontSize: '16px', outline: 'none' }} />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--v2-outline)', borderRadius: '8px', overflow: 'hidden', background: 'var(--v2-surface)' }}>
+                    <span style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid var(--v2-outline)' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                    </span>
+                    <input type="text" placeholder="https://instagram.com/yourhandle" value={socialLinks.instagram || ''} onChange={e => setSocialLinks({...socialLinks, instagram: e.target.value})} style={{ flex: 1, padding: '12px 16px', border: 'none', background: 'transparent', fontSize: '16px', outline: 'none' }} />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--v2-outline)', borderRadius: '8px', overflow: 'hidden', background: 'var(--v2-surface)' }}>
+                    <span style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid var(--v2-outline)' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </span>
+                    <input type="text" placeholder="https://youtube.com/@yourchannel" value={socialLinks.youtube || ''} onChange={e => setSocialLinks({...socialLinks, youtube: e.target.value})} style={{ flex: 1, padding: '12px 16px', border: 'none', background: 'transparent', fontSize: '16px', outline: 'none' }} />
+                  </div>
                 </div>
               </div>
 
@@ -828,6 +896,15 @@ export default function CreatorSettings() {
           )}
 
         </form>
+        
+        <ConfirmModal 
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          isDestructive={confirmModal.isDestructive}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        />
     </main>
   );
 }

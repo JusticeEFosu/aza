@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'home';
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string>('A');
 
@@ -35,15 +37,15 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   const creatorLinks = [
     { href: '/creator', icon: 'home', label: 'Dashboard' },
     { href: '/creator/posts', icon: 'list_alt', label: 'Posts' },
-    { href: '/creator/earnings', icon: 'payments', label: 'Earnings' },
+    { href: '/creator/payouts', icon: 'payments', label: 'Earnings' },
     { href: '/creator/analytics', icon: 'monitoring', label: 'Analytics' },
     { href: '/creator/settings', icon: 'settings', label: 'Settings' }
   ];
 
   const fanLinks = [
-    { href: '/fan', icon: 'home', label: 'Dashboard' },
+    { href: '/fan?tab=home', icon: 'home', label: 'Dashboard' },
     { href: '/fan/discover', icon: 'group', label: 'Discover Creators' },
-    { href: '/fan#feed', icon: 'dynamic_feed', label: 'Feed' },
+    { href: '/fan?tab=feed', icon: 'dynamic_feed', label: 'Feed' },
     { href: '/fan/settings', icon: 'settings', label: 'Settings' }
   ];
 
@@ -140,7 +142,14 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
 
         <div className="v2-nav-list" style={{ marginTop: '16px', padding: '0 16px', flex: 1 }}>
           {links.map(link => {
-            const isActive = link.href === '/fan#feed' ? false : pathname === link.href;
+            let isActive = false;
+            if (link.href === '/fan?tab=feed') {
+              isActive = pathname === '/fan' && currentTab === 'feed';
+            } else if (link.href === '/fan?tab=home') {
+              isActive = pathname === '/fan' && currentTab === 'home';
+            } else {
+              isActive = pathname === link.href;
+            }
             return (
               <Link
                 key={link.href}
@@ -202,8 +211,8 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           </>
         ) : (
           <>
-            <Link href="/fan" className={`v2-bottom-nav-item ${pathname === '/fan' ? 'active' : ''}`}>
-              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
+            <Link href="/fan?tab=home" className={`v2-bottom-nav-item ${pathname === '/fan' && currentTab === 'home' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' && currentTab === 'home' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
               <span className="v2-bottom-nav-label">Home</span>
             </Link>
             <Link href="/fan/discover" className={`v2-bottom-nav-item ${pathname === '/fan/discover' ? 'active' : ''}`}>
@@ -213,8 +222,8 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
             <Link href="/fan/discover" className="v2-bottom-fab">
               <span className="material-symbols-outlined">search</span>
             </Link>
-            <Link href="/fan#feed" className={`v2-bottom-nav-item ${pathname === '/fan#feed' ? 'active' : ''}`}>
-              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan#feed' ? "'FILL' 1" : "'FILL' 0" }}>dynamic_feed</span>
+            <Link href="/fan?tab=feed" className={`v2-bottom-nav-item ${pathname === '/fan' && currentTab === 'feed' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' && currentTab === 'feed' ? "'FILL' 1" : "'FILL' 0" }}>dynamic_feed</span>
               <span className="v2-bottom-nav-label">Feed</span>
             </Link>
             <Link href="/fan/settings" className={`v2-bottom-nav-item ${pathname === '/fan/settings' ? 'active' : ''}`}>

@@ -5,8 +5,12 @@ import Link from 'next/link';
 import SubscriptionCardActions from '@/components/SubscriptionCardActions';
 import PostActions from '@/components/PostActions';
 import MobileNav from '@/components/MobileNav';
+import ExpandableText from '@/components/ExpandableText';
 
-export default async function FanDashboard() {
+export default async function FanDashboard({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
+  const currentTab = tab || 'home';
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -87,11 +91,26 @@ export default async function FanDashboard() {
     posts = (rawPosts || []).map((post: any) => {
       const maxFanTierAmount = maxTierPerCreator[post.creator_id] || 0;
       const hasAccess = post.is_public || maxFanTierAmount >= post.minimum_tier_amount;
+      
+      const isVideo = post.image_url?.includes('/video/');
+      let secureImageUrl = post.image_url;
+      let secureThumbnailUrl = post.thumbnail_url;
+
+      if (!hasAccess) {
+        if (isVideo) {
+          secureImageUrl = null;
+        } else if (post.image_url) {
+          secureImageUrl = post.image_url.replace('/upload/', '/upload/e_blur:1000/');
+        }
+      }
+      
       return {
         ...post,
         hasAccess,
         requiredTierName: tierNamesByAmount[post.minimum_tier_amount] || 'Higher Tier',
-        content: hasAccess ? post.content : post.content.substring(0, 50) + '...'
+        content: hasAccess ? post.content : '',
+        image_url: secureImageUrl,
+        thumbnail_url: secureThumbnailUrl
       };
     });
   } else {
@@ -129,7 +148,8 @@ export default async function FanDashboard() {
           </section>
 
           {/* Active Subscriptions Section */}
-          <section style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className={`v2-tab-section ${currentTab === 'home' ? 'active' : ''}`}>
+            <section style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--v2-outline)', paddingBottom: '8px' }}>
               <h3 className="v2-dash-title" style={{ fontSize: '20px' }}>Active Subscriptions</h3>
               <span style={{ fontSize: '14px', background: 'var(--v2-surface-low)', padding: '4px 12px', borderRadius: '99px', fontWeight: 600 }}>
@@ -195,8 +215,10 @@ export default async function FanDashboard() {
               })}
             </div>
           </section>
+        </div>
 
-          {/* User Feed */}
+        {/* User Feed */}
+        <div className={`v2-tab-section ${currentTab === 'feed' ? 'active' : ''}`}>
           <section id="feed" style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--v2-outline)' }}>
             <h2 className="v2-dash-title" style={{ fontSize: '24px', marginBottom: '24px' }}>
               {posts.length === 0 ? 'Start Following Creators' : 'Your Feed'}
@@ -299,38 +321,53 @@ export default async function FanDashboard() {
                               )}
                             </div>
                           )}
-                          <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, margin: 0 }}>
-                            {post.content}
-                          </p>
+                          <ExpandableText text={post.content || ''} maxLength={250} />
                           <PostActions postId={post.id} initialLikes={0} />
                         </>
                       ) : (
                         <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
-                          {post.image_url && (
+                          {(post.image_url || post.thumbnail_url) && (
                             <div style={{ 
                               marginBottom: '16px', 
-                              borderRadius: '8px', 
-                              height: '240px',
-                              background: 'linear-gradient(45deg, #1f2937, #111827)',
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              position: 'relative',
+                              background: '#000',
+                              aspectRatio: post.thumbnail_url ? '16/9' : 'auto',
+                              minHeight: '240px',
                               display: 'flex',
-                              flexDirection: 'column',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '16px',
-                              color: '#fbbf24',
-                              border: '1px solid rgba(251, 191, 36, 0.2)'
+                              justifyContent: 'center'
                             }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--v2-text-variant)' }}>lock</span>
-                              <div style={{ textAlign: 'center' }}>
-                                 <p style={{ fontWeight: 600, margin: 0, color: 'white', fontSize: '16px' }}>Exclusive {post.image_url.includes('/video/') ? 'Video' : 'Photo'}</p>
-                                 <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.8 }}>Upgrade to {post.requiredTierName} to view</p>
+                              {post.thumbnail_url ? (
+                                <img src={post.thumbnail_url} alt="Locked Video" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
+                              ) : (
+                                <img src={post.image_url} alt="Locked Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              )}
+                              <div style={{ 
+                                position: 'absolute',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                color: 'white',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                              }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '48px' }}>lock</span>
+                                <div style={{ textAlign: 'center' }}>
+                                   <p style={{ fontWeight: 600, margin: 0, fontSize: '16px' }}>Exclusive {post.thumbnail_url ? 'Video' : 'Photo'}</p>
+                                   <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.9 }}>Upgrade to {post.requiredTierName} to view</p>
+                                </div>
                               </div>
                             </div>
                           )}
                           
                           <div style={{ position: 'relative' }}>
                             <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, filter: 'blur(8px)', opacity: 0.3, userSelect: 'none', margin: 0 }}>
-                              {post.content || "This post is exclusive to members of the " + post.requiredTierName + ". Upgrade your membership to access this content and all other benefits for this creator."}
+                              ██████████ █████ ███████
+                              █████ ██████████ ████
+                              ██████████ █████ ███████
                             </p>
                             <div style={{ 
                               position: 'absolute', 
@@ -359,8 +396,17 @@ export default async function FanDashboard() {
               </div>
             )}
           </section>
-
         </div>
-      </main>
+
+      </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @media (max-width: 767px) {
+          .v2-tab-section { display: none; }
+          .v2-tab-section.active { display: block; }
+        }
+      `}} />
+    </main>
   );
 }

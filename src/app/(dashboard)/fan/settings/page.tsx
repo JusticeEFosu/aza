@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import AvatarUpload from '@/components/ui/AvatarUpload';
 import Link from 'next/link';
 import MobileNav from '@/components/MobileNav';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function FanSettings() {
   const [activeTab, setActiveTab] = useState<'profile' | 'account'>('profile');
@@ -20,6 +21,7 @@ export default function FanSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   
   const router = useRouter();
   const supabase = createClient();
@@ -107,9 +109,10 @@ export default function FanSettings() {
   }
 
   async function handleDeleteAccount() {
-    if (!confirm('Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all subscriptions.')) {
-      return;
-    }
+    setShowDeleteModal(true);
+  }
+
+  async function executeDeleteAccount() {
     try {
       const res = await fetch('/api/auth/delete-account', { method: 'POST' });
       const data = await res.json();
@@ -117,6 +120,8 @@ export default function FanSettings() {
       window.location.href = '/login';
     } catch (err: any) {
       alert('Failed to delete account: ' + err.message);
+    } finally {
+      setShowDeleteModal(false);
     }
   }
 
@@ -283,6 +288,15 @@ export default function FanSettings() {
           )}
 
         </div>
+        
+        <ConfirmModal 
+          isOpen={showDeleteModal}
+          title="Delete Account"
+          message="Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all subscriptions."
+          isDestructive={true}
+          onConfirm={executeDeleteAccount}
+          onCancel={() => setShowDeleteModal(false)}
+        />
       </main>
   );
 }

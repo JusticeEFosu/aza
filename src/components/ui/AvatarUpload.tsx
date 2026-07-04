@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 interface AvatarUploadProps {
   currentUrl?: string;
@@ -14,6 +15,7 @@ export default function AvatarUpload({ currentUrl, onUploadComplete, userId }: A
   const [previewUrl, setPreviewUrl] = useState(currentUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
+  const router = useRouter();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,6 +51,7 @@ export default function AvatarUpload({ currentUrl, onUploadComplete, userId }: A
 
       setPreviewUrl(newUrl);
       if (onUploadComplete) onUploadComplete(newUrl);
+      router.refresh();
     } catch (error) {
       console.error('Avatar upload failed:', error);
       alert('Failed to upload profile picture. Please try again.');

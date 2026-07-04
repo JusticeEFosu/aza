@@ -4,6 +4,7 @@ import SubscribeButton from '@/components/SubscribeButton';
 import ManageSubscription from '@/components/ManageSubscription';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
+import ExpandableText from '@/components/ExpandableText';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
       slug,
       bio,
       display_name,
+      social_links,
       is_verified,
       subscriber_count,
       profiles (
@@ -89,11 +91,25 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
     const hasAccess = post.is_public || maxFanTierAmount >= post.minimum_tier_amount;
     const requiredTier = tiers?.find(t => t.amount === post.minimum_tier_amount);
     
+    const isVideo = post.image_url?.includes('/video/');
+    let secureImageUrl = post.image_url;
+    let secureThumbnailUrl = post.thumbnail_url;
+
+    if (!hasAccess) {
+      if (isVideo) {
+        secureImageUrl = null;
+      } else if (post.image_url) {
+        secureImageUrl = post.image_url.replace('/upload/', '/upload/e_blur:1000/');
+      }
+    }
+
     return {
       ...post,
       hasAccess,
       requiredTierName: requiredTier?.name || 'Subscribers',
-      content: hasAccess ? post.content : post.content.substring(0, 50) + '...'
+      content: hasAccess ? post.content : '',
+      image_url: secureImageUrl,
+      thumbnail_url: secureThumbnailUrl
     };
   });
 
@@ -146,11 +162,32 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
               <p className="v2-profile-bio">
                 {creator.bio || "Welcome to my creator page! Subscribe to get exclusive access to my content."}
               </p>
-              <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <span className="v2-profile-stats">
                   <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>group</span>
                   {creator.subscriber_count?.toLocaleString()} Subscribers
                 </span>
+                
+                {creator.social_links && <div style={{ display: 'flex', gap: '16px' }}>
+                    {(creator.social_links?.x || creator.social_links?.twitter) && (
+                      <a href={creator.social_links.x || creator.social_links.twitter} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--v2-text-variant)', display: 'flex', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#000'} onMouseOut={e => e.currentTarget.style.color = 'var(--v2-text-variant)'}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                      </a>
+                    )}
+                    {creator.social_links.instagram && (
+                      <a href={creator.social_links.instagram} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--v2-text-variant)', display: 'flex', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#E1306C'} onMouseOut={e => e.currentTarget.style.color = 'var(--v2-text-variant)'}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                      </a>
+                    )}
+                    {creator.social_links.youtube && (
+                      <a href={creator.social_links.youtube} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--v2-text-variant)', display: 'flex', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#FF0000'} onMouseOut={e => e.currentTarget.style.color = 'var(--v2-text-variant)'}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -271,37 +308,52 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                               )}
                             </div>
                           )}
-                          <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--v2-primary)', fontSize: '16px', margin: 0 }}>
-                            {post.content}
-                          </p>
+                          <ExpandableText text={post.content || ''} maxLength={250} style={{ color: 'var(--v2-primary)' }} />
                         </>
                       ) : (
                         <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
-                          {post.image_url && (
+                          {(post.image_url || post.thumbnail_url) && (
                             <div style={{ 
                               marginBottom: '16px', 
-                              borderRadius: '8px', 
-                              height: '240px',
-                              background: 'linear-gradient(45deg, #1f2937, #111827)',
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              position: 'relative',
+                              background: '#000',
+                              aspectRatio: post.thumbnail_url ? '16/9' : 'auto',
+                              minHeight: '240px',
                               display: 'flex',
-                              flexDirection: 'column',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '16px',
-                              color: '#fbbf24',
-                              border: '1px solid rgba(251, 191, 36, 0.2)'
+                              justifyContent: 'center'
                             }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--v2-text-variant)' }}>lock</span>
-                              <div style={{ textAlign: 'center' }}>
-                                 <p style={{ fontWeight: 600, margin: 0, color: 'white', fontSize: '16px' }}>Exclusive {post.image_url?.includes('/video/') ? 'Video' : 'Photo'}</p>
-                                 <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.8 }}>Available for {post.requiredTierName}</p>
+                              {post.thumbnail_url ? (
+                                <img src={post.thumbnail_url} alt="Locked Video" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
+                              ) : (
+                                <img src={post.image_url} alt="Locked Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              )}
+                              <div style={{ 
+                                position: 'absolute',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                color: 'white',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                              }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '48px' }}>lock</span>
+                                <div style={{ textAlign: 'center' }}>
+                                   <p style={{ fontWeight: 600, margin: 0, fontSize: '16px' }}>Exclusive {post.thumbnail_url ? 'Video' : 'Photo'}</p>
+                                   <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.9 }}>Available for {post.requiredTierName}</p>
+                                </div>
                               </div>
                             </div>
                           )}
                           
                           <div style={{ position: 'relative' }}>
                             <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, color: 'var(--v2-primary)', fontSize: '16px', margin: 0, filter: 'blur(8px)', opacity: 0.3, userSelect: 'none' }}>
-                              {post.content || "This post contains exclusive content shared only with subscribers. Subscribe today to unlock this and all other member-only posts from this creator."}
+                              ██████████ █████ ███████
+                              █████ ██████████ ████
+                              ██████████ █████ ███████
                             </p>
                             <div style={{ 
                               position: 'absolute', 

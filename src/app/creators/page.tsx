@@ -17,7 +17,8 @@ export default async function CreatorsPage() {
     `)
     .eq('profiles.is_suspended', false)
     .eq('profiles.is_admin', false)
-    .order('subscriber_count', { ascending: false });
+    .order('subscriber_count', { ascending: false })
+    .limit(20);
 
   return (
     <div className="v2-profile-page">
