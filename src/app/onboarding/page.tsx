@@ -40,7 +40,6 @@ export default async function OnboardingPage() {
             userId={user.id} 
             initialName={profile?.display_name || profile?.full_name || ''} 
             initialSlug={cleanSlug}
-            initialBio={creatorProfile?.bio || ''}
           />
         </div>
       </div>
