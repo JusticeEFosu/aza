@@ -44,7 +44,17 @@ function LoginForm() {
         if (profile?.is_admin) {
           router.push('/admin');
         } else if (profile?.role === 'creator') {
-          router.push('/creator');
+          const { data: creatorProfile } = await supabase
+            .from('creator_profiles')
+            .select('display_name')
+            .eq('id', data.user.id)
+            .single();
+
+          if (!creatorProfile?.display_name || creatorProfile.display_name.startsWith('Creator ')) {
+            router.push('/onboarding');
+          } else {
+            router.push('/creator');
+          }
         } else {
           router.push('/fan');
         }

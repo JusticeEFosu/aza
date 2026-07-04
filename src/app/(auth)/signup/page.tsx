@@ -12,7 +12,6 @@ function SignupForm() {
   const initialRole = searchParams.get('role') === 'creator' ? 'creator' : 'fan';
 
   const [fullName, setFullName] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -34,7 +33,6 @@ function SignupForm() {
         options: {
           data: {
             full_name: fullName,
-            display_name: displayName || fullName,
             role: role,
           },
         },
@@ -123,19 +121,6 @@ function SignupForm() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-            />
-          </div>
-
-          {/* Display Name */}
-          <div className="v3-form-group">
-            <label htmlFor="displayName" className="v3-form-label">Display Name / Username</label>
-            <input
-              id="displayName"
-              type="text"
-              className="v3-form-input"
-              placeholder="e.g. SuperFan99"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
             />
           </div>
 

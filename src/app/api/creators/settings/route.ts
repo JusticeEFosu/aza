@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { bankCode, accountNumber, bio, displayName, socialLinks } = body;
+    const { bankCode, accountNumber, bio, displayName, slug, socialLinks } = body;
 
     // We only create a subaccount if bank details are provided
     let paystackSubaccountCode = null;
@@ -67,10 +67,14 @@ export async function POST(request: Request) {
     if (bio !== undefined) updateData.bio = bio;
     if (socialLinks !== undefined) updateData.social_links = socialLinks;
 
-    // Update slug if display name is provided
+    // Update display name
     if (displayName) {
       updateData.display_name = displayName;
-      updateData.slug = slugify(displayName);
+    }
+
+    // Update slug explicitly (not automatically derived)
+    if (slug) {
+      updateData.slug = slug;
     }
 
     if (isVerified) {
@@ -90,6 +94,9 @@ export async function POST(request: Request) {
       .single();
 
     if (updateError) {
+      if (updateError.code === '23505') {
+        return NextResponse.json({ error: 'this name is already taken' }, { status: 400 });
+      }
       console.error('Database update error:', updateError);
       throw updateError;
     }

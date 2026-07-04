@@ -19,6 +19,9 @@ export default function CreatorSettings() {
   const [slug, setSlug] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [userId, setUserId] = useState('');
+  const [checkingName, setCheckingName] = useState(false);
+  const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+  const [originalDisplayName, setOriginalDisplayName] = useState('');
 
   // Account State
   const [accountEmail, setAccountEmail] = useState('');
@@ -155,7 +158,9 @@ export default function CreatorSettings() {
 
         if (user && creatorRes?.data) {
           setBio(creatorRes.data.bio || '');
-          setDisplayName(creatorRes.data.display_name || fallbackName);
+          const name = creatorRes.data.display_name || fallbackName;
+          setDisplayName(name);
+          setOriginalDisplayName(name);
           setSlug(creatorRes.data.slug || '');
           setIsVerified(creatorRes.data.is_verified);
           setBankCode(creatorRes.data.bank_code || '');
@@ -173,6 +178,36 @@ export default function CreatorSettings() {
     loadInitialData();
     fetchTiers();
   }, [supabase]);
+
+  useEffect(() => {
+    if (displayName === originalDisplayName || !displayName) {
+      setNameAvailable(null);
+      setCheckingName(false);
+      return;
+    }
+    
+    if (displayName.length < 3) {
+      setNameAvailable(null);
+      return;
+    }
+
+    setCheckingName(true);
+    setNameAvailable(null);
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/check-name?name=${encodeURIComponent(displayName)}`);
+        const data = await res.json();
+        setNameAvailable(data.available);
+      } catch (err) {
+        setNameAvailable(null);
+      } finally {
+        setCheckingName(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [displayName, originalDisplayName]);
 
   useEffect(() => {
     const resolveAccount = async () => {
@@ -221,6 +256,7 @@ export default function CreatorSettings() {
         body: JSON.stringify({
           bio,
           displayName,
+          slug: slug.toLowerCase().replace(/[^a-z0-9]/g, ''),
           bankCode: isVerified ? undefined : bankCode, 
           accountNumber: isVerified ? undefined : accountNumber
         })
@@ -361,48 +397,76 @@ export default function CreatorSettings() {
               </div>
 
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Creator / Display Name (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="E.g. Chef Boma"
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                />
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Creator / Display Name</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="E.g. Chef Boma"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  {checkingName && (
+                    <span className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px', color: 'var(--v2-primary)', flexShrink: 0 }} />
+                  )}
+                  {!checkingName && nameAvailable === true && (
+                    <span className="material-symbols-outlined" style={{ color: 'var(--v2-green)', fontSize: '24px', flexShrink: 0 }} title="Available">check_circle</span>
+                  )}
+                  {!checkingName && nameAvailable === false && (
+                    <span className="material-symbols-outlined" style={{ color: '#dc2626', fontSize: '24px', flexShrink: 0 }} title="Taken">cancel</span>
+                  )}
+                </div>
                 
                 {displayName && (
-                  <div style={{ marginTop: '16px', padding: '16px', background: 'var(--v2-surface-low)', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Your Profile URL</div>
-                    <div style={{ fontSize: '16px', color: 'var(--v2-primary)', fontWeight: 600 }}>
-                      aza-chi.vercel.app/c/<span style={{ textDecoration: 'underline' }}>{slugify(displayName)}</span>
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Fans will see this name instead of your legal name if provided.</span>
+                )}
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Your Profile URL</label>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--v2-outline)', borderRadius: '8px', overflow: 'hidden', background: 'var(--v2-surface)' }}>
+                  <span style={{ padding: '12px 16px', background: 'var(--v2-surface-low)', color: 'var(--v2-text-variant)', borderRight: '1px solid var(--v2-outline)', fontSize: '16px' }}>
+                    azaa.com/
+                  </span>
+                  <input 
+                    type="text"
+                    value={slug}
+                    onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+                    placeholder="chefboma"
+                    style={{ flex: 1, padding: '12px 16px', border: 'none', background: 'transparent', fontSize: '16px', outline: 'none' }}
+                  />
+                </div>
+                {slug && (
+                  <div style={{ padding: '12px', background: '#fffbeb', color: '#b45309', borderRadius: '8px', border: '1px solid #fde68a', marginTop: '12px', fontSize: '13px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>warning</span>
+                    <div>
+                      <strong>Warning:</strong> Changing your URL will immediately break any existing links you have shared on social media!
                     </div>
-                    {slugify(displayName) !== slug && slug && (
-                      <div style={{ fontSize: '12px', color: '#dc2626', marginTop: '8px', fontWeight: 500 }}>
-                        ⚠️ Changing this will break your current link!
-                      </div>
-                    )}
                   </div>
                 )}
-                <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Fans will see this name instead of your legal name if provided.</span>
               </div>
 
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Bio / Description</label>
                 <textarea
                   rows={4}
+                  maxLength={250}
                   placeholder="Tell fans what you create..."
                   value={bio}
                   onChange={e => setBio(e.target.value)}
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px', resize: 'vertical' }}
                 />
+                <div style={{ textAlign: 'right', fontSize: '12px', color: 'var(--v2-text-variant)', marginTop: '4px' }}>
+                  {bio.length} / 250
+                </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
                 <button 
                   type="submit" 
-                  disabled={loading}
+                  disabled={loading || nameAvailable === false}
                   className="v2-sub-btn v2-sub-btn-primary" 
-                  style={{ padding: '12px 32px', width: 'auto' }}
+                  style={{ padding: '12px 32px', width: 'auto', opacity: (loading || nameAvailable === false) ? 0.5 : 1 }}
                 >
                   {loading ? 'Saving...' : 'Save Profile'}
                 </button>

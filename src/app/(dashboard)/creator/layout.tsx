@@ -22,6 +22,16 @@ export default async function CreatorLayout({
         redirect('/admin');
     } else if (profile?.role !== 'creator') {
         redirect('/fan');
+    } else {
+        const { data: creatorProfile } = await supabase
+          .from('creator_profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single();
+          
+        if (!creatorProfile?.display_name || creatorProfile.display_name.startsWith('Creator ')) {
+            redirect('/onboarding');
+        }
     }
   }
 

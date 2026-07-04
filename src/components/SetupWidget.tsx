@@ -186,242 +186,280 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
     }
   };
 
-  const closeDrawer = () => {
-    setActiveModal(null);
-    setError(null);
-    setTierStep(1);
-  };
-
   return (
     <>
-      {/* Checklist Widget */}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+      {/* Sleek Vertical Timeline Widget */}
       <div style={{ 
         background: 'var(--v2-surface-lowest)', 
-        borderRadius: '12px', 
+        borderRadius: '16px', 
         border: '1px solid var(--v2-outline)', 
-        marginBottom: '32px', 
-        position: 'relative', 
-        overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+        marginBottom: '40px', 
+        boxShadow: '0 8px 24px rgba(0,0,0,0.02)',
+        overflow: 'hidden'
       }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, height: '4px', background: 'var(--v2-primary)', width: `${progressPercent}%`, transition: 'width 0.5s ease' }} />
-
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--v2-outline)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 8px 0', color: 'var(--v2-primary)' }}>Setup your Page</h2>
-          <p style={{ color: 'var(--v2-text-variant)', fontSize: '14px', margin: 0 }}>
-            <span style={{ fontWeight: 700, color: 'var(--v2-primary)' }}>{completedCount} of {steps.length} complete</span>
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0' }}>
-          {steps.map((step, index) => (
-            <div 
-              key={step.id}
-              onClick={() => {
-                if (step.completed) return;
-                if (step.id === 'publish') handlePublish();
-                else setActiveModal(step.id);
-              }}
-              style={{
-                padding: '24px',
-                background: step.completed ? 'var(--v2-surface-bright, #f8f9ff)' : 'transparent',
-                borderRight: index < steps.length - 1 ? '1px solid var(--v2-outline)' : 'none',
-                borderBottom: 'none',
-                cursor: step.completed ? 'default' : 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: step.completed ? 'var(--v2-green, #096c4b)' : 'var(--v2-text-variant)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
-                    {step.completed ? 'check_circle' : 'radio_button_unchecked'}
-                  </span>
-                </span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: step.completed ? 'var(--v2-green, #096c4b)' : 'var(--v2-text-variant)', textTransform: 'uppercase' }}>
-                  {step.completed ? 'Completed' : 'Pending'}
-                </span>
-              </div>
-              <div>
-                <h4 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: 600, color: 'var(--v2-primary)', textDecoration: step.completed ? 'line-through' : 'none', opacity: step.completed ? 0.6 : 1 }}>
-                  {step.title}
-                </h4>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--v2-text-variant)', lineHeight: 1.5, opacity: step.completed ? 0.6 : 1 }}>
-                  {step.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Slide-Over Drawer */}
-      {activeModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, display: 'flex', justifyContent: 'flex-end' }}>
-          {/* Backdrop */}
-          <div 
-            onClick={closeDrawer} 
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', animation: 'fadeIn 0.3s ease' }} 
-          />
-          
-          {/* Drawer Panel */}
-          <div style={{ 
-            width: '100%', 
-            maxWidth: '500px', 
-            background: 'var(--v2-surface-lowest)', 
-            height: '100%', 
-            position: 'relative', 
-            zIndex: 1001, 
-            display: 'flex', 
-            flexDirection: 'column',
-            boxShadow: '-8px 0 32px rgba(0,0,0,0.1)',
-            animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-          }}>
-            <style>{`
-              @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
-              @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-            `}</style>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderBottom: '1px solid var(--v2-outline)' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--v2-primary)' }}>
-                {activeModal === 'profile' && 'Complete Profile'}
-                {activeModal === 'bank' && 'Set up Payouts'}
-                {activeModal === 'tier' && 'Create a Tier'}
-              </h3>
-              <button onClick={closeDrawer} style={{ background: 'var(--v2-surface-low)', border: 'none', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--v2-text-variant)' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>close</span>
-              </button>
-            </div>
-
-            <div style={{ flex: 1, overflowY: 'auto', padding: '32px 24px' }}>
-              {error && <div style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '14px', fontWeight: 500 }}>{error}</div>}
-
-              {activeModal === 'profile' && (
-                <div>
-                  <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px', lineHeight: 1.6 }}>Your public profile is where fans come to subscribe. To complete it, you should upload a profile picture and set a cover banner so it looks premium.</p>
-                  <button onClick={() => router.push('/creator/settings')} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                    Open Profile Settings
-                  </button>
-                </div>
-              )}
-
-              {activeModal === 'bank' && (
-                <form onSubmit={saveBank}>
-                  <p style={{ color: 'var(--v2-text-variant)', marginBottom: '32px', lineHeight: 1.6 }}>Connect your Nigerian bank account to receive automatic weekly payouts.</p>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Select Bank</label>
-                      <select 
-                        required 
-                        value={bankCode} 
-                        onChange={e => setBankCode(e.target.value)} 
-                        disabled={banksLoading}
-                        style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px', color: 'var(--v2-primary)' }}
-                      >
-                        <option value="" disabled>{banksLoading ? 'Loading banks...' : 'Select your bank...'}</option>
-                        {availableBanks.map(b => (
-                          <option key={b.code} value={b.code}>{b.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Account Number</label>
-                      <input 
-                        required 
-                        maxLength={10}
-                        value={bankAccount} 
-                        onChange={e => setBankAccount(e.target.value)} 
-                        placeholder="0123456789"
-                        style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px', color: 'var(--v2-primary)' }} 
-                      />
-                    </div>
-
-                    <div style={{ minHeight: '48px' }}>
-                      {resolvingBank && (
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--v2-text-variant)', fontSize: '14px' }}>
-                          <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                          Resolving account name...
-                        </div>
-                      )}
-                      
-                      {resolveError && !resolvingBank && (
-                        <div style={{ color: '#dc2626', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>error</span>
-                          {resolveError}
-                        </div>
-                      )}
-
-                      {resolvedName && !resolvingBank && (
-                        <div style={{ color: '#059669', fontWeight: 600, fontSize: '15px', background: '#ecfdf5', padding: '12px 16px', borderRadius: '8px', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>verified</span> 
-                          {resolvedName}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button type="submit" disabled={loading || !resolvedName} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: (loading || !resolvedName) ? 0.5 : 1 }}>
-                    {loading ? 'Saving...' : 'Save Bank Details'}
-                  </button>
-                </form>
-              )}
-
-              {activeModal === 'tier' && (
-                <form onSubmit={saveTier}>
-                  {tierStep === 1 ? (
-                    <div>
-                      <p style={{ color: 'var(--v2-text-variant)', marginBottom: '32px', lineHeight: 1.6 }}>Give your fans a way to support you by creating a subscription tier.</p>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Tier Name</label>
-                          <input required value={tierName} onChange={e => setTierName(e.target.value)} placeholder="e.g. Super Fan, Inner Circle" style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px' }} />
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Description</label>
-                          <textarea required value={tierDesc} onChange={e => setTierDesc(e.target.value)} rows={3} placeholder="What is this tier about?" style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px' }} />
-                        </div>
-                        <button type="button" onClick={() => setTierStep(2)} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                          Continue
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px', cursor: 'pointer', color: 'var(--v2-text-variant)' }} onClick={() => setTierStep(1)}>
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        <span style={{ fontSize: '14px', fontWeight: 600 }}>Back to Details</span>
-                      </div>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px' }}>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Monthly Price (₦)</label>
-                          <input type="number" required min="100" step="100" value={tierPrice} onChange={e => setTierPrice(e.target.value)} placeholder="e.g. 5000" style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px' }} />
-                          <span style={{ display: 'block', marginTop: '8px', fontSize: '13px', color: 'var(--v2-text-variant)' }}>Minimum price is ₦100.</span>
-                        </div>
-                        <div>
-                          <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-primary)' }}>Perks (One per line)</label>
-                          <textarea 
-                            value={tierPerksText} 
-                            onChange={e => setTierPerksText(e.target.value)} 
-                            rows={4} 
-                            placeholder={"Exclusive videos\nPrivate Discord\nMonthly Q&A"} 
-                            style={{ width: '100%', padding: '14px 16px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface)', fontSize: '16px', lineHeight: 1.6 }} 
-                          />
-                        </div>
-                        <button type="submit" disabled={loading} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                          {loading ? 'Publishing Tier...' : 'Create Tier'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </form>
-              )}
+        {/* Header with Circular Progress */}
+        <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--v2-outline)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: 800, margin: '0 0 4px 0', color: 'var(--v2-primary)' }}>Setup your Page</h2>
+            <p style={{ color: 'var(--v2-text-variant)', fontSize: '15px', margin: 0, fontWeight: 500 }}>
+              Complete these steps to start earning.
+            </p>
+          </div>
+          <div style={{ position: 'relative', width: '56px', height: '56px' }}>
+            <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%' }}>
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--v2-surface-low)" strokeWidth="3" />
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--v2-green)" strokeWidth="3" strokeDasharray={`${progressPercent}, 100`} style={{ transition: 'stroke-dasharray 0.5s ease' }} />
+            </svg>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: 'var(--v2-primary)' }}>
+              {completedCount}/{steps.length}
             </div>
           </div>
         </div>
-      )}
+
+        {/* Vertical Timeline Body */}
+        <div style={{ padding: '16px 0', position: 'relative' }}>
+          {/* Vertical Connecting Line Background */}
+          <div style={{ position: 'absolute', left: '44px', top: '48px', bottom: '48px', width: '2px', background: 'var(--v2-outline)', zIndex: 0 }}></div>
+          
+          {/* Active Connector Line overlay (green) */}
+          <div style={{ position: 'absolute', left: '44px', top: '48px', height: `calc(${Math.max(0, completedCount - 1)} * 100px)`, width: '2px', background: 'var(--v2-green)', zIndex: 1, transition: 'height 0.5s ease' }}></div>
+
+          {steps.map((step, index) => {
+            const isNextPending = !step.completed && (index === 0 || steps[index - 1].completed);
+            const isActive = activeModal === step.id;
+            
+            return (
+              <div 
+                key={step.id}
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '24px 32px',
+                  background: isActive ? 'var(--v2-surface-low)' : 'transparent',
+                  transition: 'background 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!step.completed && !isActive) e.currentTarget.style.background = 'var(--v2-surface-bright, #f8f9ff)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!step.completed && !isActive) e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                {/* Header Row */}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  {/* Timeline Icon Node */}
+                  <div style={{ 
+                    width: '26px', 
+                    height: '26px', 
+                    borderRadius: '50%', 
+                    background: step.completed ? 'var(--v2-green)' : 'var(--v2-surface-lowest)', 
+                    border: step.completed ? '2px solid var(--v2-green)' : (isNextPending ? '2px solid var(--v2-primary)' : '2px solid var(--v2-outline)'),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: '24px',
+                    boxShadow: '0 0 0 8px ' + (isActive ? 'var(--v2-surface-low)' : 'var(--v2-surface-lowest)'), 
+                    flexShrink: 0,
+                    transition: 'box-shadow 0.2s ease'
+                  }}>
+                    {step.completed && (
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'white', fontWeight: 800 }}>check</span>
+                    )}
+                    {isNextPending && (
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--v2-primary)' }}></div>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex: 1, cursor: step.completed ? 'default' : 'pointer' }} onClick={() => {
+                    if (step.completed) return;
+                    if (step.id === 'publish') handlePublish();
+                    else setActiveModal(isActive ? null : step.id);
+                  }}>
+                    <h4 style={{ 
+                      margin: '0 0 4px 0', 
+                      fontSize: '17px', 
+                      fontWeight: 700, 
+                      color: step.completed ? 'var(--v2-text-variant)' : 'var(--v2-primary)'
+                    }}>
+                      {step.title}
+                    </h4>
+                    <p style={{ 
+                      margin: 0, 
+                      fontSize: '14px', 
+                      color: 'var(--v2-text-variant)', 
+                      lineHeight: 1.5, 
+                    }}>
+                      {step.description}
+                    </p>
+                  </div>
+
+                  {/* Action Button */}
+                  <div style={{ marginLeft: '24px' }}>
+                    {step.completed ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--v2-green)', fontSize: '13px', fontWeight: 700, padding: '8px 16px', borderRadius: '999px', background: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>verified</span>
+                        Completed
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => {
+                          if (step.id === 'publish') handlePublish();
+                          else setActiveModal(isActive ? null : step.id);
+                        }}
+                        style={{ 
+                          background: 'var(--v2-primary)', 
+                          color: 'white', 
+                          border: 'none', 
+                          padding: '10px 24px', 
+                          borderRadius: '999px', 
+                          fontSize: '14px', 
+                          fontWeight: 600, 
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          opacity: isNextPending ? 1 : 0.6
+                        }}>
+                        {step.id === 'publish' ? 'Publish' : (isActive ? 'Close' : 'Start')}
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{isActive ? 'expand_less' : 'arrow_forward'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Inline Expansion Form */}
+                {isActive && (
+                  <div style={{ marginLeft: '50px', marginTop: '24px', animation: 'fadeIn 0.2s ease' }}>
+                    {error && <div style={{ color: 'red', marginBottom: '16px', fontSize: '14px' }}>{error}</div>}
+
+                    {step.id === 'profile' && (
+                      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
+                        <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px' }}>Your public profile is where fans come to subscribe. To complete it, you should upload a profile picture and set a cover banner so it looks premium.</p>
+                        <button onClick={() => router.push('/creator/settings')} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', border: 'none', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                          Open Profile Settings
+                        </button>
+                      </div>
+                    )}
+
+                    {step.id === 'bank' && (
+                      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
+                        <form onSubmit={saveBank}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Select Bank</label>
+                              <select 
+                                required 
+                                value={bankCode} 
+                                onChange={e => setBankCode(e.target.value)} 
+                                disabled={banksLoading}
+                                style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px', background: 'white', fontSize: '14px' }}
+                              >
+                                <option value="" disabled>{banksLoading ? 'Loading banks...' : 'Select your bank...'}</option>
+                                {availableBanks.map(b => (
+                                  <option key={b.code} value={b.code}>{b.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Account Number</label>
+                              <input 
+                                required 
+                                maxLength={10}
+                                value={bankAccount} 
+                                onChange={e => setBankAccount(e.target.value)} 
+                                placeholder="0123456789"
+                                style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px', background: 'white', fontSize: '14px' }} 
+                              />
+                            </div>
+
+                            <div style={{ minHeight: '24px' }}>
+                              {resolvingBank && (
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--v2-text-variant)', fontSize: '13px' }}>
+                                  <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />
+                                  Resolving account name...
+                                </div>
+                              )}
+                              
+                              {resolveError && !resolvingBank && (
+                                <div style={{ color: 'red', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>error</span>
+                                  {resolveError}
+                                </div>
+                              )}
+
+                              {resolvedName && !resolvingBank && (
+                                <div style={{ color: '#096c4b', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>verified</span> 
+                                  Account Name: {resolvedName}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <button type="submit" disabled={loading || !resolvedName} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', border: 'none', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: (loading || !resolvedName) ? 'not-allowed' : 'pointer', opacity: (loading || !resolvedName) ? 0.5 : 1 }}>
+                            {loading ? 'Saving...' : 'Save Bank Details'}
+                          </button>
+                        </form>
+                      </div>
+                    )}
+
+                    {step.id === 'tier' && (
+                      <div style={{ background: 'white', padding: '24px', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
+                        <form onSubmit={saveTier}>
+                          {tierStep === 1 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Tier Name</label>
+                                <input required value={tierName} onChange={e => setTierName(e.target.value)} placeholder="e.g. Super Fan" style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px', background: 'white', fontSize: '14px' }} />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Description</label>
+                                <textarea required value={tierDesc} onChange={e => setTierDesc(e.target.value)} rows={3} style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px', background: 'white', fontSize: '14px' }} />
+                              </div>
+                              <button type="button" onClick={() => setTierStep(2)} className="v2-btn-primary" style={{ width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', border: 'none', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                                Next
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Price (in Naira)</label>
+                                <input type="number" required min="100" step="100" value={tierPrice} onChange={e => setTierPrice(e.target.value)} placeholder="5000" style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px', background: 'white', fontSize: '14px' }} />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Perks (One per line)</label>
+                                <textarea 
+                                  value={tierPerksText} 
+                                  onChange={e => setTierPerksText(e.target.value)} 
+                                  rows={4} 
+                                  style={{ width: '100%', padding: '12px', border: '1px solid var(--v2-outline)', borderRadius: '4px', background: 'white', fontSize: '14px' }} 
+                                />
+                              </div>
+                              <div style={{ display: 'flex', gap: '12px' }}>
+                                <button type="button" onClick={() => setTierStep(1)} className="v2-btn-outline" style={{ flex: 1, justifyContent: 'center', border: '1px solid var(--v2-outline)', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', background: 'white', color: 'var(--v2-primary)' }}>
+                                  Back
+                                </button>
+                                <button type="submit" disabled={loading} className="v2-btn-primary" style={{ flex: 1, justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', border: 'none', borderRadius: '4px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}>
+                                  {loading ? 'Saving...' : 'Finish'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }
