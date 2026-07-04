@@ -66,7 +66,9 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
   let featuredCreators: any[] = [];
 
   if (creatorIds.length > 0) {
-    const { data: rawPosts } = await supabase
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const adminSupabase = createAdminClient();
+    const { data: rawPosts } = await adminSupabase
       .from('posts')
       .select(`
         *,

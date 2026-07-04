@@ -44,8 +44,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
     .eq('is_active', true)
     .order('amount', { ascending: true });
 
-  // 3. Fetch Posts
-  const { data: rawPosts } = await supabase
+  // 3. Fetch Posts using Admin client to bypass RLS and show locked teasers
+  const { createAdminClient } = await import('@/lib/supabase/admin');
+  const adminSupabase = createAdminClient();
+  const { data: rawPosts } = await adminSupabase
     .from('posts')
     .select('*')
     .eq('creator_id', creator.id)
