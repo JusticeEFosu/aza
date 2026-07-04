@@ -37,7 +37,7 @@ export default async function FanDiscoverPage() {
             <p className="v2-dash-desc">Find your next favorite creator on MyAzaa.</p>
           </header>
 
-          <CreatorsGrid creators={creators || []} />
+          <CreatorsGrid initialCreators={creators || []} />
         </div>
       </main>
   );
