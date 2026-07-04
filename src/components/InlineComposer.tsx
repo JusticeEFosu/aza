@@ -78,17 +78,38 @@ export default function InlineComposer({
     finally { setLoading(false); }
   };
 
-  const uploadWithProgress = (fileToUpload: File, folder: string) => {
+  const uploadWithProgress = async (fileToUpload: File, folder: string) => {
+    // 1. Fetch signature
+    const sigRes = await fetch(`/api/upload/signature?folder=${folder}`);
+    if (!sigRes.ok) throw new Error('Could not get upload signature');
+    const { signature, timestamp, apiKey, cloudName } = await sigRes.json();
+
     return new Promise<any>((resolve, reject) => {
       const formData = new FormData();
       formData.append('file', fileToUpload);
       formData.append('folder', folder);
+      formData.append('signature', signature);
+      formData.append('timestamp', timestamp);
+      formData.append('api_key', apiKey);
+
       const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/upload', true);
-      xhr.upload.onprogress = (event) => { if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100)); };
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, true);
+      
+      xhr.upload.onprogress = (event) => { 
+        if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100)); 
+      };
+      
       xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) { try { resolve(JSON.parse(xhr.responseText)); } catch (e) { reject(new Error('Invalid response')); } }
-        else { let msg = 'Upload failed'; try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) { } reject(new Error(msg)); }
+        if (xhr.status >= 200 && xhr.status < 300) { 
+          try { 
+            const data = JSON.parse(xhr.responseText);
+            resolve({ url: data.secure_url, publicId: data.public_id, resourceType: data.resource_type }); 
+          } catch (e) { reject(new Error('Invalid response')); } 
+        } else { 
+          let msg = 'Upload failed'; 
+          try { msg = JSON.parse(xhr.responseText).error?.message || msg; } catch (e) { } 
+          reject(new Error(msg)); 
+        }
       };
       xhr.onerror = () => reject(new Error('Network error'));
       xhr.send(formData);

@@ -27,19 +27,28 @@ export default function AvatarUpload({ currentUrl, onUploadComplete, userId }: A
     setUploading(true);
 
     try {
+      // 1. Fetch signature
+      const sigRes = await fetch('/api/upload/signature?folder=avatars');
+      if (!sigRes.ok) throw new Error('Could not get upload signature');
+      const { signature, timestamp, apiKey, cloudName } = await sigRes.json();
+
+      // 2. Direct upload to Cloudinary
       const formData = new FormData();
       formData.append('file', file);
       formData.append('folder', 'avatars');
+      formData.append('signature', signature);
+      formData.append('timestamp', timestamp);
+      formData.append('api_key', apiKey);
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
         method: 'POST',
         body: formData,
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
+      if (!response.ok) throw new Error(data.error?.message || 'Upload failed');
 
-      const newUrl = data.url;
+      const newUrl = data.secure_url;
 
       // Update the profile in Supabase
       const { error: updateError } = await supabase

@@ -168,7 +168,8 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                   {creator.subscriber_count?.toLocaleString()} Subscribers
                 </span>
                 
-                {creator.social_links && <div style={{ display: 'flex', gap: '16px' }}>
+                {creator.social_links && (
+                  <div style={{ display: 'flex', gap: '16px' }}>
                     {(creator.social_links?.x || creator.social_links?.twitter) && (
                       <a href={creator.social_links.x || creator.social_links.twitter} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--v2-text-variant)', display: 'flex', transition: 'color 0.2s' }} onMouseOver={e => e.currentTarget.style.color = '#000'} onMouseOut={e => e.currentTarget.style.color = 'var(--v2-text-variant)'}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
