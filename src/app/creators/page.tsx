@@ -55,7 +55,7 @@ export default async function CreatorsPage() {
             </p>
           </header>
 
-          <CreatorsGrid creators={creators || []} />
+          <CreatorsGrid initialCreators={creators || []} />
 
         </div>
       </main>
