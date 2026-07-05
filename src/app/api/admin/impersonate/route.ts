@@ -23,6 +23,17 @@ export async function POST(request: Request) {
     // 2. Get target user details
     const { userId, email, returnUrl } = await request.json();
 
+    // Prevent impersonating other admin accounts
+    const { data: targetProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .single();
+
+    if (targetProfile?.is_admin) {
+      return NextResponse.json({ error: 'Cannot impersonate an admin account' }, { status: 403 });
+    }
+
     // 3. Create impersonation token to allow returning
     const { data: tokenData, error: tokenError } = await supabaseAdmin
       .from('admin_impersonation_tokens')

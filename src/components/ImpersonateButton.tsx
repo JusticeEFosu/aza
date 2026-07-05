@@ -21,8 +21,10 @@ export default function ImpersonateButton({ userId, email }: { userId: string, e
       const data = await res.json();
       
       if (data.action_link) {
-        // Redirect to the magic link to swap the session
-        window.location.href = data.action_link;
+        // Append redirect_to so Supabase returns us to the same environment (localhost vs vercel)
+        const url = new URL(data.action_link);
+        url.searchParams.set('redirect_to', window.location.origin + '/');
+        window.location.href = url.toString();
       } else {
         alert(data.error || 'Failed to impersonate user');
         setLoading(false);

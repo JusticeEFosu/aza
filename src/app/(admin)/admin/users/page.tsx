@@ -100,7 +100,7 @@ export default async function AdminUsersPage({
                   </div>
 
                   <div style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <ImpersonateButton userId={user.id} email={user.email} />
+                    {!user.is_admin && <ImpersonateButton userId={user.id} email={user.email} />}
                     <SuspendUserButton userId={user.id} isSuspended={user.is_suspended} />
                   </div>
                 </div>
