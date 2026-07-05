@@ -64,7 +64,7 @@ export default async function AdminAnalyticsPage() {
     .sort((a, b) => creatorEarnings[b] - creatorEarnings[a])
     .slice(0, 10);
 
-  let topCreators = [];
+  let topCreators: any[] = [];
   if (topCreatorIds.length > 0) {
     const { data: creatorProfiles } = await supabase
       .from('creator_profiles')
@@ -80,11 +80,13 @@ export default async function AdminAnalyticsPage() {
     if (creatorProfiles) {
       topCreators = topCreatorIds.map(id => {
         const cp = creatorProfiles.find((c: any) => c.id === id);
+        const profileInfo: any = Array.isArray(cp?.profiles) ? cp.profiles[0] : cp?.profiles;
+        
         return {
           id,
-          display_name: cp?.display_name || cp?.profiles?.full_name || 'Unknown',
+          display_name: cp?.display_name || profileInfo?.full_name || 'Unknown',
           slug: cp?.slug,
-          avatar_url: cp?.profiles?.avatar_url,
+          avatar_url: profileInfo?.avatar_url,
           subscriber_count: cp?.subscriber_count || 0,
           earnings: creatorEarnings[id]
         };

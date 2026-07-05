@@ -3,9 +3,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: payoutId } = await params;
     const supabase = createAdminClient();
     
     const { data: transactions, error } = await supabase
@@ -16,7 +17,7 @@ export async function GET(
         creator_share,
         profiles!transactions_fan_id_fkey ( full_name, display_name )
       `)
-      .eq('payout_id', params.id)
+      .eq('payout_id', payoutId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

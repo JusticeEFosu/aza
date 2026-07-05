@@ -22,7 +22,10 @@ export default async function ModerationPage() {
     .order('created_at', { ascending: false });
 
   // Get the creator info for the posts
-  const creatorIds = reports?.map(r => r.posts?.creator_id).filter(Boolean) || [];
+  const creatorIds = reports?.map(r => {
+    const post: any = Array.isArray(r.posts) ? r.posts[0] : r.posts;
+    return post?.creator_id;
+  }).filter(Boolean) || [];
   
   let creatorsMap: Record<string, any> = {};
   if (creatorIds.length > 0) {
