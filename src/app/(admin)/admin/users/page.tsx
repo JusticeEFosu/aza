@@ -1,28 +1,43 @@
 import { createClient } from '@/lib/supabase/server';
 import SuspendUserButton from '@/components/SuspendUserButton';
+import AdminUserSearch from '@/components/AdminUserSearch';
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const supabase = await createClient();
+  const sp = await searchParams;
+  const query = typeof sp?.q === 'string' ? sp.q : '';
 
   // Fetch all users with creator info if they have it
-  const { data: users } = await supabase
+  let queryBuilder = supabase
     .from('profiles')
     .select(`
       id,
       email,
       full_name,
+      display_name,
       role,
       is_admin,
       is_suspended,
       created_at,
       creator_profiles ( slug, total_earnings, subscriber_count )
-    `)
-    .order('created_at', { ascending: false });
+    `);
+    
+  if (query) {
+    queryBuilder = queryBuilder.or(`email.ilike.%${query}%,full_name.ilike.%${query}%,display_name.ilike.%${query}%`);
+  }
+
+  const { data: users } = await queryBuilder.order('created_at', { ascending: false });
 
   return (
     <div>
       <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>User Management</h1>
-      <p style={{ color: 'var(--v2-text-variant)', marginBottom: '40px', fontSize: '16px' }}>View and manage all accounts on the platform.</p>
+      <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px', fontSize: '16px' }}>View and manage all accounts on the platform.</p>
+
+      <AdminUserSearch />
 
       <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>

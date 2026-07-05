@@ -23,8 +23,11 @@ function LoginForm() {
         if (redirect) {
           router.push(redirect);
         } else {
-          const { data: profile } = await supabase.from('profiles').select('role, is_admin').eq('id', user.id).single();
-          if (profile?.is_admin) router.push('/admin');
+          const { data: profile } = await supabase.from('profiles').select('role, is_admin, is_suspended').eq('id', user.id).single();
+          if (profile?.is_suspended) {
+            await supabase.auth.signOut();
+            setError('Your account has been suspended. Please contact support.');
+          } else if (profile?.is_admin) router.push('/admin');
           else if (profile?.role === 'creator') router.push('/creator');
           else router.push('/fan');
         }
@@ -54,9 +57,16 @@ function LoginForm() {
       } else {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role, is_admin')
+          .select('role, is_admin, is_suspended')
           .eq('id', data.user.id)
           .single();
+
+        if (profile?.is_suspended) {
+          await supabase.auth.signOut();
+          setError('Your account has been suspended. Please contact support.');
+          setLoading(false);
+          return;
+        }
 
         if (profile?.is_admin) {
           router.push('/admin');

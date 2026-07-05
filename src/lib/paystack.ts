@@ -133,6 +133,65 @@ export async function resolveAccountNumber(
   );
 }
 
+// ─── Transfers & Payouts ──────────────────────────────────────────
+
+interface CreateTransferRecipientData {
+  type: 'nuban';
+  name: string;
+  account_number: string;
+  bank_code: string;
+  currency: 'NGN';
+  email?: string;
+}
+
+interface TransferRecipientResponse {
+  recipient_code: string;
+  details: {
+    account_number: string;
+    account_name: string;
+    bank_code: string;
+    bank_name: string;
+  };
+}
+
+export async function createTransferRecipient(data: CreateTransferRecipientData) {
+  return paystackRequest<TransferRecipientResponse>('/transferrecipient', 'POST', data);
+}
+
+interface InitiateTransferData {
+  source: 'balance';
+  amount: number; // in kobo
+  recipient: string; // recipient_code
+  reason?: string;
+  reference?: string;
+}
+
+interface TransferResponse {
+  transfer_code: string;
+  id: number;
+  status: string;
+  reference: string;
+}
+
+export async function initiateTransfer(data: InitiateTransferData) {
+  return paystackRequest<TransferResponse>('/transfer', 'POST', data);
+}
+
+interface BulkTransferInstruction {
+  amount: number;
+  recipient: string;
+  reference?: string;
+  reason?: string;
+}
+
+export async function initiateBulkTransfer(transfers: BulkTransferInstruction[]) {
+  return paystackRequest<{ message: string }>('/transfer/bulk', 'POST', {
+    currency: 'NGN',
+    source: 'balance',
+    transfers
+  });
+}
+
 // ─── Webhook Verification ─────────────────────────────────────────
 
 export function verifyWebhookSignature(

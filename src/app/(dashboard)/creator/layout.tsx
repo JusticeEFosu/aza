@@ -14,11 +14,13 @@ export default async function CreatorLayout({
   if (user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, is_admin')
+      .select('role, is_admin, is_suspended')
       .eq('id', user.id)
       .single();
       
-    if (profile?.is_admin) {
+    if (profile?.is_suspended) {
+        redirect('/suspended');
+    } else if (profile?.is_admin) {
         redirect('/admin');
     } else if (profile?.role !== 'creator') {
         redirect('/fan');
