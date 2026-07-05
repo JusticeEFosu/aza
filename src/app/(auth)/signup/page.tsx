@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -20,6 +20,23 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   
   const supabase = createClient();
+
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        if (redirect) {
+          router.push(redirect);
+        } else {
+          const { data: profile } = await supabase.from('profiles').select('role, is_admin').eq('id', user.id).single();
+          if (profile?.is_admin) router.push('/admin');
+          else if (profile?.role === 'creator') router.push('/creator');
+          else router.push('/fan');
+        }
+      }
+    }
+    checkUser();
+  }, [supabase, router, redirect]);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();

@@ -2778,3 +2778,14 @@ h4 {
   font-size: 12px;
   color: #4c4546;
 }
+
+/* ─── Mobile Tab Sections (Fan Dashboard) ──────── */
+@media (max-width: 767px) {
+  .v2-tab-section {
+    display: none;
+  }
+  .v2-tab-section.active {
+    display: block;
+  }
+}
+

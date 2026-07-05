@@ -221,7 +221,7 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
 
         {/* User Feed */}
         <div className={`v2-tab-section ${currentTab === 'feed' ? 'active' : ''}`}>
-          <section id="feed" style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--v2-outline)' }}>
+          <section style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--v2-outline)' }}>
             <h2 className="v2-dash-title" style={{ fontSize: '24px', marginBottom: '24px' }}>
               {posts.length === 0 ? 'Start Following Creators' : 'Your Feed'}
             </h2>

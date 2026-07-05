@@ -657,13 +657,16 @@ export default function CreatorSettings() {
                     <div style={{ borderTop: '1px solid var(--v2-outline)', margin: '8px 0' }}></div>
                     
                     {/* Mockup Setting: Email Notifications */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h4 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Email Notifications</h4>
-                        <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)', margin: 0 }}>Receive an email summary when a payout is initiated.</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.5, pointerEvents: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div>
+                          <h4 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Email Notifications</h4>
+                          <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)', margin: 0 }}>Receive an email summary when a payout is initiated.</p>
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', padding: '2px 8px', borderRadius: '4px', color: 'var(--v2-text-variant)' }}>Coming Soon</span>
                       </div>
-                      <div style={{ width: '44px', height: '24px', background: 'var(--v2-primary)', borderRadius: '999px', position: 'relative', cursor: 'pointer' }}>
-                        <div style={{ width: '20px', height: '20px', background: 'white', borderRadius: '50%', position: 'absolute', top: '2px', right: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}></div>
+                      <div style={{ width: '44px', height: '24px', background: 'var(--v2-outline)', borderRadius: '999px', position: 'relative' }}>
+                        <div style={{ width: '20px', height: '20px', background: 'var(--v2-surface-low)', borderRadius: '50%', position: 'absolute', top: '2px', left: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}></div>
                       </div>
                     </div>
 
