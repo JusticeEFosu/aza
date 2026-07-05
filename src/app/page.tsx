@@ -191,9 +191,9 @@ export default async function HomePage() {
             <p style={{ fontSize: '13px', color: 'var(--v2-text-variant)', fontWeight: 500, margin: 0 }}>Developed by Justice Fosu (In Active Development)</p>
           </div>
           <div className="v2-footer-links">
-            <Link href="#" className="v2-footer-link">Privacy</Link>
-            <Link href="#" className="v2-footer-link">Terms</Link>
-            <Link href="#" className="v2-footer-link">Support</Link>
+            <Link href="/legal/privacy" className="v2-footer-link">Privacy</Link>
+            <Link href="/legal/terms-of-service" className="v2-footer-link">Terms</Link>
+            <Link href="mailto:support@myazaa.com" className="v2-footer-link">Support</Link>
             <span className="v2-secure">
               <span className="material-symbols-outlined">lock</span> Secured by Paystack
             </span>
