@@ -42,6 +42,10 @@ export default async function AdminLayout({
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>group</span>
             Users
           </Link>
+          <Link href="/admin/analytics" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>insights</span>
+            Analytics
+          </Link>
           <Link href="/admin/payouts" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>account_balance</span>
             Payouts
@@ -49,6 +53,10 @@ export default async function AdminLayout({
           <Link href="/admin/content" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>flag</span>
             Content
+          </Link>
+          <Link href="/admin/moderation" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>shield</span>
+            Moderation
           </Link>
         </nav>
 

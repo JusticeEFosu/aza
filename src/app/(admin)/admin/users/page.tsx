@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import SuspendUserButton from '@/components/SuspendUserButton';
 import AdminUserSearch from '@/components/AdminUserSearch';
+import ImpersonateButton from '@/components/ImpersonateButton';
 
 export default async function AdminUsersPage({
   searchParams,
@@ -98,7 +99,8 @@ export default async function AdminUsersPage({
                     {cProfile ? `₦${((cProfile.total_earnings || 0) / 100).toLocaleString()}` : '-'}
                   </div>
 
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <ImpersonateButton userId={user.id} email={user.email} />
                     <SuspendUserButton userId={user.id} isSuspended={user.is_suspended} />
                   </div>
                 </div>

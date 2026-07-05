@@ -6,6 +6,7 @@ import SubscriptionCardActions from '@/components/SubscriptionCardActions';
 import PostActions from '@/components/PostActions';
 import MobileNav from '@/components/MobileNav';
 import ExpandableText from '@/components/ExpandableText';
+import ReportPostButton from '@/components/ReportPostButton';
 
 export default async function FanDashboard({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab } = await searchParams;
@@ -392,6 +393,10 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
                           </div>
                         </div>
                       )}
+                      
+                      <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid var(--v2-outline)' }}>
+                        <ReportPostButton postId={post.id} />
+                      </div>
                     </div>
                   );
                 })}

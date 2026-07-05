@@ -5,6 +5,7 @@ import ManageSubscription from '@/components/ManageSubscription';
 import VideoPlayer from '@/components/VideoPlayer';
 import Link from 'next/link';
 import ExpandableText from '@/components/ExpandableText';
+import ReportPostButton from '@/components/ReportPostButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -376,6 +377,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                           </div>
                         </div>
                       )}
+                      
+                      <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid var(--v2-outline)' }}>
+                        <ReportPostButton postId={post.id} />
+                      </div>
                     </div>
                   );
                 })}

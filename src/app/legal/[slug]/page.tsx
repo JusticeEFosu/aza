@@ -34,7 +34,8 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
   }
 
   // Get user to determine dashboard URL
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
   let dashboardUrl = '/login';
   if (user) {
     const { data: profile } = await supabase

@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AnnouncementManager } from '@/components/AnnouncementManager';
 import Link from 'next/link';
 
 export default async function AdminContentPage() {
@@ -9,18 +10,27 @@ export default async function AdminContentPage() {
     .select('*')
     .order('created_at', { ascending: false });
 
+  // Fetch the current global announcement
+  const { data: announcement } = await supabase
+    .from('platform_announcements')
+    .select('*')
+    .limit(1)
+    .single();
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
         <div>
           <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Content Hub</h1>
-          <p style={{ color: 'var(--v2-text-variant)', fontSize: '16px' }}>Manage your Terms of Service, Privacy Policy, and other legal pages.</p>
+          <p style={{ color: 'var(--v2-text-variant)', fontSize: '16px' }}>Manage global announcements and legal pages.</p>
         </div>
         <Link href="/admin/content/new" className="v2-btn v2-btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span className="material-symbols-outlined">add</span>
           Create New Page
         </Link>
       </div>
+
+      <AnnouncementManager initialAnnouncement={announcement} />
 
       <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden' }}>
         <div style={{ padding: '24px', borderBottom: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)' }}>
