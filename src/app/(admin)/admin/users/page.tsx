@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import SuspendUserButton from '@/components/SuspendUserButton';
 import AdminUserSearch from '@/components/AdminUserSearch';
-import ImpersonateButton from '@/components/ImpersonateButton';
 export default async function AdminUsersPage({
   searchParams,
 }: {
