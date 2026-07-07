@@ -17,6 +17,24 @@ function LoginForm() {
   const supabase = createClient();
 
   useEffect(() => {
+    // 1. Listen for instant auth state changes (catches magic links and #access_token instantly)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        if (redirect) {
+          router.push(redirect);
+        } else {
+          const { data: profile } = await supabase.from('profiles').select('role, is_admin, is_suspended').eq('id', session.user.id).single();
+          if (profile?.is_suspended) {
+            await supabase.auth.signOut();
+            setError('Your account has been suspended. Please contact support.');
+          } else if (profile?.is_admin) router.push('/admin');
+          else if (profile?.role === 'creator') router.push('/creator');
+          else router.push('/fan');
+        }
+      }
+    });
+
+    // 2. Fallback: check if already logged in (for standard page loads)
     async function checkUser() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -34,6 +52,10 @@ function LoginForm() {
       }
     }
     checkUser();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [supabase, router, redirect]);
 
   async function handleLogin(e: React.FormEvent) {

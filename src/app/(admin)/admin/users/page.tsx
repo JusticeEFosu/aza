@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import SuspendUserButton from '@/components/SuspendUserButton';
 import AdminUserSearch from '@/components/AdminUserSearch';
 import ImpersonateButton from '@/components/ImpersonateButton';
-
 export default async function AdminUsersPage({
   searchParams,
 }: {
@@ -100,7 +99,6 @@ export default async function AdminUsersPage({
                   </div>
 
                   <div style={{ textAlign: 'right', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    {!user.is_admin && <ImpersonateButton userId={user.id} email={user.email} />}
                     <SuspendUserButton userId={user.id} isSuspended={user.is_suspended} />
                   </div>
                 </div>
