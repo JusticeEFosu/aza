@@ -32,7 +32,6 @@ export default function ManageSubscription({
   maxFanTierAmount
 }: ManageSubscriptionProps) {
   const [cancelling, setCancelling] = useState(false);
-  const [showTiers, setShowTiers] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -68,111 +67,103 @@ export default function ManageSubscription({
   const higherTiers = tiers.filter(t => t.amount > currentTierAmount);
 
   return (
-    <div>
-      {/* Current Subscription Card */}
-      <div className="glass-card" style={{ 
-        padding: '2rem', 
-        marginBottom: '1.5rem',
-        border: '1px solid rgba(212, 175, 55, 0.3)',
-        background: 'rgba(212, 175, 55, 0.05)'
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px', alignItems: 'start' }}>
+      
+      {/* Left Column: Current Plan */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #111 0%, #000 100%)', 
+        borderRadius: '24px', 
+        padding: '32px', 
+        color: '#D4AF37',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: '0 20px 40px -10px rgba(212, 175, 55, 0.15)',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '300px',
+        border: '1px solid rgba(212, 175, 55, 0.2)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-          <div>
-            <p style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent-primary)', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Your Current Plan
-            </p>
-            <h3 style={{ margin: 0, fontSize: '1.5rem' }}>{currentTierName}</h3>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              ₦{(currentTierAmount / 100).toLocaleString()}<span style={{ fontSize: '0.875rem', fontWeight: 400, color: 'var(--text-muted)' }}>/mo</span>
-            </p>
-          </div>
-          <span style={{
-            fontSize: '0.75rem',
-            padding: '0.375rem 0.75rem',
-            borderRadius: '1rem',
-            background: 'rgba(34, 197, 94, 0.1)',
-            color: 'var(--success)',
-            fontWeight: 600,
-            border: '1px solid rgba(34, 197, 94, 0.2)'
-          }}>
+        {/* Subtle decorative glow */}
+        <div style={{ position: 'absolute', top: '-50%', right: '-20%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px', position: 'relative', zIndex: 1 }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8 }}>
+            Current Plan
+          </span>
+          <span style={{ fontSize: '12px', fontWeight: 600, background: 'rgba(212, 175, 55, 0.1)', padding: '4px 12px', borderRadius: '999px', border: '1px solid rgba(212, 175, 55, 0.3)', color: '#D4AF37' }}>
             Active
           </span>
         </div>
 
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-          Renews on {new Date(renewalDate).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h3 style={{ fontSize: '32px', fontWeight: 700, margin: '0 0 8px 0', letterSpacing: '-0.02em', color: '#FFF' }}>{currentTierName}</h3>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '24px' }}>
+            <span style={{ fontSize: '24px', fontWeight: 600 }}>₦{(currentTierAmount / 100).toLocaleString()}</span>
+            <span style={{ fontSize: '14px', opacity: 0.8 }}>/mo</span>
+          </div>
+        </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {(higherTiers.length > 0 || lowerTiers.length > 0) && (
-            <button 
-              className="btn btn-primary btn-sm"
-              onClick={() => setShowTiers(!showTiers)}
-            >
-              {showTiers ? 'Hide Plans' : 'Change Plan'}
-            </button>
-          )}
+        <div style={{ marginTop: 'auto', paddingTop: '32px', borderTop: '1px solid rgba(212, 175, 55, 0.2)', position: 'relative', zIndex: 1 }}>
+          <p style={{ fontSize: '14px', opacity: 0.8, margin: '0 0 16px 0' }}>
+            Renews on {new Date(renewalDate).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
           <button 
-            className="btn btn-secondary btn-sm"
             onClick={handleCancel}
             disabled={cancelling}
             style={{ 
-              color: 'var(--danger)', 
-              borderColor: 'rgba(239, 68, 68, 0.3)',
-              backgroundColor: 'rgba(239, 68, 68, 0.05)'
+              background: 'none', border: 'none', color: 'rgba(212, 175, 55, 0.6)', 
+              fontSize: '14px', fontWeight: 500, padding: 0, cursor: 'pointer',
+              textDecoration: 'underline', textUnderlineOffset: '4px', transition: 'color 0.2s'
             }}
+            onMouseOver={e => e.currentTarget.style.color = '#ff4444'}
+            onMouseOut={e => e.currentTarget.style.color = 'rgba(212, 175, 55, 0.6)'}
           >
-            {cancelling ? <span className="spinner" /> : 'Cancel Subscription'}
+            {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
           </button>
+          {error && <p style={{ color: '#ff4444', fontSize: '14px', margin: '8px 0 0' }}>{error}</p>}
         </div>
-
-        {error && <p className="form-error" style={{ marginTop: '0.75rem' }}>{error}</p>}
       </div>
 
-      {/* Upgrade/Downgrade Tiers */}
-      {showTiers && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {higherTiers.length > 0 && (
-            <>
-              <p style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Upgrade
-              </p>
-              {higherTiers.map(tier => (
-                <div key={tier.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ margin: 0 }}>{tier.name}</h4>
-                    <p style={{ margin: '0.25rem 0 0', fontWeight: 600, color: 'var(--accent-primary)' }}>
-                      ₦{(tier.amount / 100).toLocaleString()}/mo
-                    </p>
+      {/* Right Column: Other Tiers */}
+      {(higherTiers.length > 0 || lowerTiers.length > 0) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--v2-primary)', margin: 0 }}>Available Plans</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[...higherTiers, ...lowerTiers].sort((a, b) => b.amount - a.amount).map(tier => (
+              <div key={tier.id} style={{ 
+                background: 'var(--v2-surface-low)', 
+                border: '1px solid var(--v2-outline)', 
+                borderRadius: '16px', 
+                padding: '20px', 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                cursor: 'default'
+              }}
+              onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 20px -10px rgba(0,0,0,0.1)'; }}
+              onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--v2-primary)' }}>{tier.name}</h4>
+                    {tier.amount > currentTierAmount ? (
+                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', background: 'rgba(34, 197, 94, 0.1)', color: 'var(--v2-green)', borderRadius: '999px', textTransform: 'uppercase' }}>Upgrade</span>
+                    ) : (
+                      <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', background: 'var(--v2-outline)', color: 'var(--v2-text-variant)', borderRadius: '999px', textTransform: 'uppercase' }}>Downgrade</span>
+                    )}
                   </div>
-                  <div style={{ minWidth: '120px' }}>
-                    <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-
-          {lowerTiers.length > 0 && (
-            <>
-              <p style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.5rem' }}>
-                Downgrade
-              </p>
-              {lowerTiers.map(tier => (
-                <div key={tier.id} className="glass-card" style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ margin: 0 }}>{tier.name}</h4>
-                    <p style={{ margin: '0.25rem 0 0', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                      ₦{(tier.amount / 100).toLocaleString()}/mo
-                    </p>
-                  </div>
-                  <div style={{ minWidth: '120px' }}>
-                    <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--v2-primary)', letterSpacing: '-0.02em' }}>₦{(tier.amount / 100).toLocaleString()}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>/mo</span>
                   </div>
                 </div>
-              ))}
-            </>
-          )}
+                <div style={{ minWidth: '100px' }}>
+                  <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

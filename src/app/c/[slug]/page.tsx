@@ -3,9 +3,13 @@ import { notFound } from 'next/navigation';
 import SubscribeButton from '@/components/SubscribeButton';
 import ManageSubscription from '@/components/ManageSubscription';
 import VideoPlayer from '@/components/VideoPlayer';
+import { getEmbedUrl } from '@/lib/utils/embed';
 import Link from 'next/link';
 import ExpandableText from '@/components/ExpandableText';
 import ReportPostButton from '@/components/ReportPostButton';
+import DashboardSidebar from '@/components/DashboardSidebar';
+import MobileNav from '@/components/MobileNav';
+import ProfileContentTabs from '@/components/ProfileContentTabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,17 +62,24 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
   const { data: { user } } = await supabase.auth.getUser();
   let maxFanTierAmount = 0;
   let activeSub: any = null;
+  let userRole: 'fan' | 'creator' | null = null;
   
   if (user) {
+    const { data: profileData } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profileData?.role) {
+      userRole = profileData.role as 'fan' | 'creator';
+    }
+
     if (user.id === creator.id) {
         maxFanTierAmount = Infinity;
     } else {
-        const { data: subs } = await supabase
+          const now = new Date().toISOString();
+          const { data: subs } = await supabase
           .from('subscriptions')
           .select('id, current_period_end, tier_id, tiers ( name, amount )')
           .eq('fan_id', user.id)
           .eq('creator_id', creator.id)
-          .eq('status', 'active');
+          .or(`status.eq.active,and(status.eq.cancelled,current_period_end.gt.${now})`);
           
         if (subs && subs.length > 0) {
             subs.forEach(sub => {
@@ -119,30 +130,34 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
   const displayName = creator.display_name || (creator.profiles as any)?.full_name;
   const avatarUrl = (creator.profiles as any)?.avatar_url;
 
-  return (
-    <div className="v2-profile-page">
+  const isAppView = user && userRole;
+
+  const content = (
+    <div className={`v2-profile-page ${isAppView ? 'v2-profile-app-view' : ''}`}>
       {/* TopNavBar */}
-      <nav className="v2-profile-nav">
-        <div className="v2-profile-nav-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
-            <div className="hidden md:flex items-center" style={{ gap: '24px' }}>
-              <Link href="/creators" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Discover</Link>
-              <Link href="/how-it-works" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>How it Works</Link>
+      {!isAppView && (
+        <nav className="v2-profile-nav">
+          <div className="v2-profile-nav-inner">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
+              <div className="hidden md:flex items-center" style={{ gap: '24px' }}>
+                <Link href="/creators" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Discover</Link>
+                <Link href="/how-it-works" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>How it Works</Link>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              {!user ? (
+                <>
+                  <Link href="/login" className="hidden md:block" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
+                  <Link href="/signup" className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '8px 24px', fontSize: '14px' }}>Start Creating</Link>
+                </>
+              ) : (
+                <Link href="/fan" className="v2-sub-btn v2-sub-btn-secondary" style={{ padding: '8px 24px', fontSize: '14px' }}>Dashboard</Link>
+              )}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {!user ? (
-              <>
-                <Link href="/login" className="hidden md:block" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-                <Link href="/signup" className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '8px 24px', fontSize: '14px' }}>Start Creating</Link>
-              </>
-            ) : (
-              <Link href="/fan" className="v2-sub-btn v2-sub-btn-secondary" style={{ padding: '8px 24px', fontSize: '14px' }}>Dashboard</Link>
-            )}
-          </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       <main style={{ width: '100%', paddingBottom: '64px' }}>
         <div className="v2-profile-container">
@@ -196,16 +211,13 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             </div>
           </div>
 
-          {/* Subscription Section */}
-          <div id="tiers" style={{ marginBottom: '64px' }}>
-            <div style={{ marginBottom: '32px', maxWidth: '768px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '8px' }}>Support my work</h2>
-              <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)' }}>Choose a tier to unlock exclusive content, early access, and join our private community. You can cancel anytime.</p>
-            </div>
-
-            {/* Managed Active Subscription */}
-            {activeSub && maxFanTierAmount > 0 && maxFanTierAmount !== Infinity ? (
-              <div style={{ marginBottom: '40px' }}>
+          {/* Main Content Tabs */}
+          <ProfileContentTabs 
+            defaultTab={activeSub ? 'posts' : 'membership'}
+            membershipContent={
+              <>
+                <div id="tiers" style={{ marginBottom: '64px' }}>
+              {activeSub && maxFanTierAmount > 0 && maxFanTierAmount !== Infinity ? (
                 <ManageSubscription
                   subscriptionId={activeSub.id}
                   currentTierName={currentTierName}
@@ -214,57 +226,63 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                   tiers={tiers || []}
                   maxFanTierAmount={maxFanTierAmount}
                 />
-              </div>
-            ) : null}
-
-            {/* Bento Grid for Pricing */}
-            {!tiers || tiers.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '48px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
-                This creator hasn't set up any membership tiers yet.
-              </div>
-            ) : (
-              <div className="v2-profile-tier-grid">
-                {tiers.map((tier: any) => (
-                  <div key={tier.id} className="profile-tier-card">
-                    <div>
-                      <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '4px' }}>{tier.name}</h3>
-                      <div style={{ fontSize: '40px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '24px', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                        ₦{(tier.amount / 100).toLocaleString()}
-                        <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--v2-text-variant)', letterSpacing: 'normal' }}>/mo</span>
-                      </div>
-                      
-                      {tier.description && (
-                        <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '24px', lineHeight: 1.5 }}>{tier.description}</p>
-                      )}
-
-                      {tier.perks && tier.perks.length > 0 && (
-                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px 0', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px', color: 'var(--v2-text-variant)' }}>
-                          {tier.perks.map((perk: string, i: number) => (
-                            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--v2-primary)', fontWeight: 700, flexShrink: 0 }}>check</span>
-                              <span style={{ lineHeight: 1.4 }}>{perk}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                    
-                    <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-                       <SubscribeButton 
-                         tierId={tier.id} 
-                         planCode={tier.paystack_plan_code} 
-                         isSubscribed={maxFanTierAmount >= tier.amount}
-                       />
-                    </div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: '32px', maxWidth: '768px' }}>
+                    <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '8px' }}>Support my work</h2>
+                    <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)' }}>Choose a tier to unlock exclusive content, early access, and join our private community. You can cancel anytime.</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  
+                  {!tiers || tiers.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '48px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
+                      This creator hasn't set up any membership tiers yet.
+                    </div>
+                  ) : (
+                    <div className="v2-profile-tier-grid">
+                      {tiers.map((tier: any) => (
+                        <div key={tier.id} className="profile-tier-card">
+                          <div>
+                            <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '4px' }}>{tier.name}</h3>
+                            <div style={{ fontSize: '40px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '24px', letterSpacing: '-0.02em', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                              ₦{(tier.amount / 100).toLocaleString()}
+                              <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--v2-text-variant)', letterSpacing: 'normal' }}>/mo</span>
+                            </div>
+                            
+                            {tier.description && (
+                              <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '24px', lineHeight: 1.5 }}>{tier.description}</p>
+                            )}
 
-          {/* Posts Feed */}
-          <div style={{ marginBottom: '64px', paddingTop: '64px', borderTop: '1px solid var(--v2-outline)' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '32px' }}>Recent Posts</h2>
+                            {tier.perks && tier.perks.length > 0 && (
+                              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px 0', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '16px', color: 'var(--v2-text-variant)' }}>
+                                {tier.perks.map((perk: string, i: number) => (
+                                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--v2-primary)', fontWeight: 700, flexShrink: 0 }}>check</span>
+                                    <span style={{ lineHeight: 1.4 }}>{perk}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                          
+                          <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+                            <SubscribeButton 
+                              tierId={tier.id} 
+                              planCode={tier.paystack_plan_code} 
+                              isSubscribed={maxFanTierAmount >= tier.amount}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+              </>
+            }
+            postsContent={
+              <>
+                <div style={{ marginBottom: '64px' }}>
             
             {!posts || posts.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
@@ -300,7 +318,16 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
 
                       {hasAccess ? (
                         <>
-                          {post.image_url && (
+                          {post.embed_url ? (
+                            <div style={{ marginBottom: '24px', borderRadius: '8px', overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
+                              <iframe
+                                src={getEmbedUrl(post.embed_url) || ''}
+                                style={{ width: '100%', height: '100%', border: 'none' }}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : post.image_url ? (
                             <div style={{ marginBottom: '24px', borderRadius: '8px', overflow: 'hidden', background: '#000' }}>
                               {post.image_url?.includes('/video/') ? (
                                 <VideoPlayer
@@ -311,19 +338,19 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                                 <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
                               )}
                             </div>
-                          )}
+                          ) : null}
                           <ExpandableText text={post.content || ''} maxLength={250} style={{ color: 'var(--v2-primary)' }} />
                         </>
                       ) : (
                         <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
-                          {(post.image_url || post.thumbnail_url) && (
+                          {(post.embed_url || post.image_url || post.thumbnail_url) && (
                             <div style={{ 
                               marginBottom: '16px', 
                               borderRadius: '8px',
                               overflow: 'hidden',
                               position: 'relative',
                               background: '#000',
-                              aspectRatio: post.thumbnail_url ? '16/9' : 'auto',
+                              aspectRatio: (post.thumbnail_url || post.embed_url) ? '16/9' : 'auto',
                               minHeight: '240px',
                               display: 'flex',
                               alignItems: 'center',
@@ -331,8 +358,12 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                             }}>
                               {post.thumbnail_url ? (
                                 <img src={post.thumbnail_url} alt="Locked Video" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
-                              ) : (
+                              ) : post.image_url ? (
                                 <img src={post.image_url} alt="Locked Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--v2-text-variant)' }}>
+                                   <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>play_circle</span>
+                                </div>
                               )}
                               <div style={{ 
                                 position: 'absolute',
@@ -387,6 +418,9 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
               </div>
             )}
           </div>
+              </>
+            }
+          />
 
         </div>
       </main>
@@ -409,4 +443,16 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
       </footer>
     </div>
   );
+
+  if (isAppView && userRole) {
+    return (
+      <div className="v2-dashboard-layout">
+        <DashboardSidebar role={userRole} />
+        <MobileNav role={userRole} />
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 }

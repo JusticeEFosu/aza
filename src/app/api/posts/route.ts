@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, content, isPublic, minPrice, imageUrl, thumbnailUrl } = body;
+    const { title, content, isPublic, minPrice, imageUrl, thumbnailUrl, embedUrl } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -27,7 +27,8 @@ export async function POST(request: Request) {
         minimum_tier_amount: isPublic ? 0 : (minPrice || 0),
         is_public: isPublic,
         image_url: imageUrl,
-        thumbnail_url: thumbnailUrl
+        thumbnail_url: thumbnailUrl,
+        embed_url: embedUrl
       })
       .select()
       .single();

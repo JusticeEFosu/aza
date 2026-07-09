@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import VideoPlayer from '@/components/VideoPlayer';
+import { getEmbedUrl } from '@/lib/utils/embed';
 import Link from 'next/link';
 import SubscriptionCardActions from '@/components/SubscriptionCardActions';
 import PostActions from '@/components/PostActions';
@@ -26,6 +27,7 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
   if (profile?.role !== 'fan') redirect('/creator');
 
   // Fetch active subscriptions with joined creator profile and tier data
+  const now = new Date().toISOString();
   const { data: subscriptions } = await supabase
     .from('subscriptions')
     .select(`
@@ -37,7 +39,7 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
       creator_profiles ( slug, bio, display_name, profiles ( full_name, display_name, avatar_url ) )
     `)
     .eq('fan_id', user.id)
-    .eq('status', 'active');
+    .or(`status.eq.active,and(status.eq.cancelled,current_period_end.gt.${now})`);
 
   // Deduplicate subscriptions: keep only the highest-tier subscription per creator
   const subsByCreator: Record<string, any> = {};
@@ -156,7 +158,7 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--v2-outline)', paddingBottom: '8px' }}>
               <h3 className="v2-dash-title" style={{ fontSize: '20px' }}>Active Subscriptions</h3>
               <span style={{ fontSize: '14px', background: 'var(--v2-surface-low)', padding: '4px 12px', borderRadius: '99px', fontWeight: 600 }}>
-                {uniqueSubscriptions.length} Active
+                {uniqueSubscriptions.length} Subscriptions
               </span>
             </div>
 
@@ -176,9 +178,9 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
                 const tierInfo = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
                 
                 return (
-                  <div key={sub.id} className="v2-sub-card">
-                    <div className="v2-sub-badge">
-                      <span className="v2-sub-badge-dot"></span> Active
+                  <Link href={`/c/${creatorProfile?.slug}`} key={sub.id} className="v2-sub-card" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}>
+                    <div className="v2-sub-badge" style={sub.status === 'cancelled' ? { background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' } : {}}>
+                      <span className="v2-sub-badge-dot" style={sub.status === 'cancelled' ? { background: '#991b1b' } : {}}></span> {sub.status === 'cancelled' ? 'Cancelling' : 'Active'}
                     </div>
                     
                     <div className="v2-sub-header">
@@ -205,15 +207,15 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
                         <span className="v2-sub-val">₦{((tierInfo?.amount || 0) / 100).toLocaleString()} / mo</span>
                       </div>
                       <div className="v2-sub-detail-row">
-                        <span className="v2-sub-label">Renews</span>
+                        <span className="v2-sub-label">{sub.status === 'cancelled' ? 'Ends' : 'Renews'}</span>
                         <span className="v2-sub-val" style={{ fontWeight: 500 }}>
                           {sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}) : 'N/A'}
                         </span>
                       </div>
                     </div>
 
-                    <SubscriptionCardActions slug={creatorProfile?.slug} subscriptionId={sub.id} />
-                  </div>
+                    {sub.status === 'active' && <SubscriptionCardActions slug={creatorProfile?.slug} subscriptionId={sub.id} />}
+                  </Link>
                 );
               })}
             </div>
@@ -312,9 +314,18 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
 
                       {hasAccess ? (
                         <>
-                          {post.image_url && (
+                          {post.embed_url ? (
+                            <div style={{ marginBottom: '24px', borderRadius: '8px', overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
+                              <iframe
+                                src={getEmbedUrl(post.embed_url) || ''}
+                                style={{ width: '100%', height: '100%', border: 'none' }}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : post.image_url ? (
                             <div style={{ marginBottom: '24px', borderRadius: '8px', overflow: 'hidden', background: '#000' }}>
-                              {post.image_url.includes('/video/') ? (
+                              {post.image_url?.includes('/video/') ? (
                                 <VideoPlayer 
                                   src={post.image_url} 
                                   poster={post.thumbnail_url}
@@ -323,20 +334,20 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
                                 <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
                               )}
                             </div>
-                          )}
+                          ) : null}
                           <ExpandableText text={post.content || ''} maxLength={250} />
                           <PostActions postId={post.id} initialLikes={0} />
                         </>
                       ) : (
                         <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
-                          {(post.image_url || post.thumbnail_url) && (
+                          {(post.embed_url || post.image_url || post.thumbnail_url) && (
                             <div style={{ 
                               marginBottom: '16px', 
                               borderRadius: '8px',
                               overflow: 'hidden',
                               position: 'relative',
                               background: '#000',
-                              aspectRatio: post.thumbnail_url ? '16/9' : 'auto',
+                              aspectRatio: (post.thumbnail_url || post.embed_url) ? '16/9' : 'auto',
                               minHeight: '240px',
                               display: 'flex',
                               alignItems: 'center',
@@ -344,8 +355,12 @@ export default async function FanDashboard({ searchParams }: { searchParams: Pro
                             }}>
                               {post.thumbnail_url ? (
                                 <img src={post.thumbnail_url} alt="Locked Video" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
-                              ) : (
+                              ) : post.image_url ? (
                                 <img src={post.image_url} alt="Locked Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--v2-text-variant)' }}>
+                                   <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>play_circle</span>
+                                </div>
                               )}
                               <div style={{ 
                                 position: 'absolute',

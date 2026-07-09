@@ -18,13 +18,21 @@ export default function AvatarUpload({ currentUrl, onUploadComplete, userId }: A
   const router = useRouter();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
+
+    setUploading(true);
+
+    try {
+      const { compressImage } = await import('@/lib/utils/imageCompression');
+      file = await compressImage(file, 0.5, 800);
+    } catch (err) {
+      console.error("Failed to compress avatar", err);
+    }
 
     // Local preview
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
-    setUploading(true);
 
     try {
       // 1. Fetch signature

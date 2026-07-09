@@ -32,15 +32,10 @@ export default function SubscriptionCardActions({ slug, subscriptionId }: { slug
   return (
     <>
       <div className="v2-sub-actions">
-        <Link 
-          href={`/c/${slug}`}
-          className="v2-sub-btn v2-sub-btn-primary" 
-        >
-          Manage
-        </Link>
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
           className="v2-sub-btn v2-sub-btn-secondary"
+          style={{ width: '100%' }}
         >
           Cancel
         </button>

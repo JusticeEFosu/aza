@@ -35,8 +35,12 @@ export default function InlineComposer({
 
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const [currentThumbnailUrl, setCurrentThumbnailUrl] = useState<string | null>(null);
+  const [currentEmbedUrl, setCurrentEmbedUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null);
+  
+  const [mediaMode, setMediaMode] = useState<'upload' | 'embed'>('upload');
+  const [embedUrlInput, setEmbedUrlInput] = useState('');
 
   useEffect(() => {
     if (file) {
@@ -73,20 +77,34 @@ export default function InlineComposer({
         setMinPrice(post.minimum_tier_amount || 0);
         setCurrentImageUrl(post.image_url);
         setCurrentThumbnailUrl(post.thumbnail_url);
+        setCurrentEmbedUrl(post.embed_url);
+        if (post.embed_url) {
+          setMediaMode('embed');
+          setEmbedUrlInput(post.embed_url);
+        }
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   const uploadWithProgress = async (fileToUpload: File, folder: string) => {
-    // 1. Fetch signature
+    // 1. Compress image before uploading
+    let finalFile = fileToUpload;
+    try {
+      const { compressImage } = await import('@/lib/utils/imageCompression');
+      finalFile = await compressImage(fileToUpload, 1.5, 1920);
+    } catch (err) {
+      console.error("Failed to compress post media", err);
+    }
+
+    // 2. Fetch signature
     const sigRes = await fetch(`/api/upload/signature?folder=${folder}`);
     if (!sigRes.ok) throw new Error('Could not get upload signature');
     const { signature, timestamp, apiKey, cloudName } = await sigRes.json();
 
     return new Promise<any>((resolve, reject) => {
       const formData = new FormData();
-      formData.append('file', fileToUpload);
+      formData.append('file', finalFile);
       formData.append('folder', folder);
       formData.append('signature', signature);
       formData.append('timestamp', timestamp);
@@ -121,26 +139,27 @@ export default function InlineComposer({
     setIsSubmitting(true);
     setError('');
     try {
-      let imageUrl = currentImageUrl;
-      let thumbnailUrl = currentThumbnailUrl;
+      let imageUrl = mediaMode === 'upload' ? currentImageUrl : null;
+      let thumbnailUrl = mediaMode === 'upload' ? currentThumbnailUrl : null;
+      let embedUrl = mediaMode === 'embed' ? embedUrlInput : null;
       
       // Upload video/image
-      if (file) { 
+      if (mediaMode === 'upload' && file) { 
         setUploadProgress(0); 
         const d = await uploadWithProgress(file, 'posts'); 
         imageUrl = d.url; 
         setUploadProgress(100); 
       }
       
-      const isVideoNow = (file && file.type.startsWith('video/')) || (!file && imageUrl?.includes('/video/'));
+      const isVideoNow = mediaMode === 'upload' && ((file && file.type.startsWith('video/')) || (!file && imageUrl?.includes('/video/')));
 
       // Process thumbnail
-      if (thumbnailFile) { 
+      if (mediaMode === 'upload' && thumbnailFile) { 
         setUploadProgress(0); 
         const d = await uploadWithProgress(thumbnailFile, 'thumbnails'); 
         thumbnailUrl = d.url; 
         setUploadProgress(100); 
-      } else if (isVideoNow && imageUrl) {
+      } else if (mediaMode === 'upload' && isVideoNow && imageUrl) {
         // Auto-generate thumbnail via Cloudinary by changing extension to .jpg
         thumbnailUrl = imageUrl.replace(/\.[^/.]+$/, ".jpg");
       }
@@ -156,7 +175,8 @@ export default function InlineComposer({
           isPublic, 
           minPrice: isPublic ? 0 : minPrice, 
           imageUrl, 
-          thumbnailUrl 
+          thumbnailUrl,
+          embedUrl
         }) 
       });
       const json = await res.json();
@@ -172,6 +192,9 @@ export default function InlineComposer({
         setThumbnailPreviewUrl(null);
         setCurrentImageUrl(null);
         setCurrentThumbnailUrl(null);
+        setCurrentEmbedUrl(null);
+        setEmbedUrlInput('');
+        setMediaMode('upload');
         setIsExpanded(false);
       }
       
@@ -181,7 +204,7 @@ export default function InlineComposer({
     finally { setIsSubmitting(false); setUploadProgress(0); }
   };
 
-  const isVideo = ((file && file.type.startsWith('video/')) || (!file && currentImageUrl?.includes('/video/')));
+  const isVideo = mediaMode === 'upload' && ((file && file.type.startsWith('video/')) || (!file && currentImageUrl?.includes('/video/')));
 
   if (loading) {
     return (
@@ -268,8 +291,14 @@ export default function InlineComposer({
         {isExpanded && (
           <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--v2-outline)' }}>
             
-            {/* Media Attachments */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
+            {/* Media Mode Toggle */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+               <button type="button" onClick={() => setMediaMode('upload')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: mediaMode === 'upload' ? 'var(--v2-primary)' : 'transparent', color: mediaMode === 'upload' ? 'var(--v2-on-primary)' : 'var(--v2-text-variant)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>Upload File</button>
+               <button type="button" onClick={() => setMediaMode('embed')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: mediaMode === 'embed' ? 'var(--v2-primary)' : 'transparent', color: mediaMode === 'embed' ? 'var(--v2-on-primary)' : 'var(--v2-text-variant)', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>Embed Video</button>
+            </div>
+
+            {mediaMode === 'upload' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '16px' }}>
               
               {/* Primary Media */}
               <div
@@ -340,7 +369,14 @@ export default function InlineComposer({
                   )}
                 </div>
               )}
-            </div>
+              </div>
+            ) : (
+              <div style={{ marginTop: '16px', padding: '24px', background: 'var(--v2-surface-low)', borderRadius: '8px', border: '1px dashed var(--v2-outline)' }}>
+                <p style={{ margin: '0 0 8px 0', fontWeight: 600, fontSize: '14px', color: 'var(--v2-primary)' }}>Video Link</p>
+                <input type="url" placeholder="Paste video link..." value={embedUrlInput} onChange={e => setEmbedUrlInput(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', color: 'var(--v2-primary)', outline: 'none' }} />
+                <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Supports YouTube</p>
+              </div>
+            )}
 
             {/* Settings Area */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '16px' }}>

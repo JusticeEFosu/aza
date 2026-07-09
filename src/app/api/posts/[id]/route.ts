@@ -12,7 +12,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     }
 
     const body = await request.json();
-    const { title, content, minPrice, isPublic, imageUrl, thumbnailUrl } = body;
+    const { title, content, minPrice, isPublic, imageUrl, thumbnailUrl, embedUrl } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -26,7 +26,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         minimum_tier_amount: isPublic ? 0 : (minPrice || 0),
         is_public: isPublic,
         image_url: imageUrl,
-        thumbnail_url: thumbnailUrl
+        thumbnail_url: thumbnailUrl,
+        embed_url: embedUrl
       })
       .eq('id', id)
       .eq('creator_id', user.id) // Ensure they can only update their own post
