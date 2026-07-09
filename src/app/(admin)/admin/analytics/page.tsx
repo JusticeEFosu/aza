@@ -102,7 +102,7 @@ export default async function AdminAnalyticsPage() {
       </div>
 
       {/* Top Level Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '40px' }}>
+      <div className="v2-grid-3">
         <div style={{ background: 'var(--v2-surface)', padding: '24px', borderRadius: '16px', border: '1px solid var(--v2-outline)' }}>
           <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>30-Day Platform Revenue (10% Cut)</div>
           <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.03em' }}>
@@ -139,7 +139,7 @@ export default async function AdminAnalyticsPage() {
         {topCreators.length === 0 ? (
           <div style={{ padding: '48px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>No creator earnings data available.</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+         <div className="v2-table-wrapper">
             <div style={{ minWidth: '800px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1fr 1fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</span>

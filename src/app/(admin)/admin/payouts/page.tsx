@@ -99,7 +99,7 @@ export default async function AdminPayoutsPage() {
             No pending payouts at this time.
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="v2-table-wrapper">
             <div style={{ minWidth: '800px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
@@ -165,7 +165,7 @@ export default async function AdminPayoutsPage() {
       {/* Historical Payouts */}
       <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '16px' }}>Payout Ledger</h3>
       <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden' }}>
-         <div style={{ overflowX: 'auto' }}>
+         <div className="v2-table-wrapper">
             <div style={{ minWidth: '800px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>

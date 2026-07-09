@@ -43,7 +43,7 @@ export default async function AdminContentPage() {
             <p style={{ margin: 0 }}>You haven't created any pages yet.</p>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+         <div className="v2-table-wrapper">
             <div style={{ minWidth: '600px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Title</span>
