@@ -28,8 +28,8 @@ function SignupForm() {
         if (redirect) {
           router.push(redirect);
         } else {
-          const { data: profile } = await supabase.from('profiles').select('role, is_admin').eq('id', user.id).single();
-          if (profile?.is_admin) router.push('/admin');
+          const { data: profile } = await supabase.from('profiles').select('role, admin_role').eq('id', user.id).single();
+          if (profile?.admin_role) router.push('/admin');
           else if (profile?.role === 'creator') router.push('/creator');
           else router.push('/fan');
         }

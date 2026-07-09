@@ -19,7 +19,7 @@ export default async function AdminUsersPage({
       full_name,
       display_name,
       role,
-      is_admin,
+      admin_role,
       is_suspended,
       created_at,
       creator_profiles ( slug, total_earnings, subscriber_count )
@@ -64,7 +64,7 @@ export default async function AdminUsersPage({
                     <div>
                       <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {user.full_name}
-                        {user.is_admin && <span style={{ fontSize: '10px', background: 'var(--v2-green)', color: '#002116', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Admin</span>}
+                        {user.admin_role && <span style={{ fontSize: '10px', background: 'var(--v2-green)', color: '#002116', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Staff</span>}
                         {user.is_suspended && <span style={{ fontSize: '10px', background: '#ffdad6', color: '#ba1a1a', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Suspended</span>}
                       </div>
                       {cProfile && <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>@{cProfile.slug}</div>}
@@ -81,11 +81,11 @@ export default async function AdminUsersPage({
                       borderRadius: '8px', 
                       fontSize: '12px', 
                       fontWeight: 600,
-                      background: user.is_admin ? '#cce5ff' : user.role === 'creator' ? 'var(--v2-surface-low)' : 'transparent',
-                      color: user.is_admin ? '#004085' : user.role === 'creator' ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
-                      border: user.is_admin ? '1px solid #b8daff' : user.role === 'creator' ? '1px solid var(--v2-outline)' : '1px solid transparent'
+                      background: user.admin_role ? '#cce5ff' : user.role === 'creator' ? 'var(--v2-surface-low)' : 'transparent',
+                      color: user.admin_role ? '#004085' : user.role === 'creator' ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
+                      border: user.admin_role ? '1px solid #b8daff' : user.role === 'creator' ? '1px solid var(--v2-outline)' : '1px solid transparent'
                     }}>
-                      {user.is_admin ? 'Admin' : (user.role.charAt(0).toUpperCase() + user.role.slice(1))}
+                      {user.admin_role ? user.admin_role.replace('_', ' ') : (user.role.charAt(0).toUpperCase() + user.role.slice(1))}
                     </span>
                   </div>
 

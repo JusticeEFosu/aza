@@ -23,11 +23,11 @@ function LoginForm() {
         if (redirect) {
           router.push(redirect);
         } else {
-          const { data: profile } = await supabase.from('profiles').select('role, is_admin, is_suspended').eq('id', session.user.id).single();
+          const { data: profile } = await supabase.from('profiles').select('role, admin_role, is_suspended').eq('id', session.user.id).single();
           if (profile?.is_suspended) {
             await supabase.auth.signOut();
             setError('Your account has been suspended. Please contact support.');
-          } else if (profile?.is_admin) router.push('/admin');
+          } else if (profile?.admin_role) router.push('/admin');
           else if (profile?.role === 'creator') router.push('/creator');
           else router.push('/fan');
         }
@@ -41,11 +41,11 @@ function LoginForm() {
         if (redirect) {
           router.push(redirect);
         } else {
-          const { data: profile } = await supabase.from('profiles').select('role, is_admin, is_suspended').eq('id', user.id).single();
+          const { data: profile } = await supabase.from('profiles').select('role, admin_role, is_suspended').eq('id', user.id).single();
           if (profile?.is_suspended) {
             await supabase.auth.signOut();
             setError('Your account has been suspended. Please contact support.');
-          } else if (profile?.is_admin) router.push('/admin');
+          } else if (profile?.admin_role) router.push('/admin');
           else if (profile?.role === 'creator') router.push('/creator');
           else router.push('/fan');
         }
@@ -79,7 +79,7 @@ function LoginForm() {
       } else {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role, is_admin, is_suspended')
+          .select('role, admin_role, is_suspended')
           .eq('id', data.user.id)
           .single();
 
@@ -90,7 +90,7 @@ function LoginForm() {
           return;
         }
 
-        if (profile?.is_admin) {
+        if (profile?.admin_role) {
           router.push('/admin');
         } else if (profile?.role === 'creator') {
           const { data: creatorProfile } = await supabase

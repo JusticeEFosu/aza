@@ -20,14 +20,15 @@ export default async function HomePage() {
     .from('creator_profiles')
     .select(`
       slug,
+      id,
+      slug,
       bio,
-      display_name,
-      subscriber_count,
-      profiles!inner ( full_name, display_name, avatar_url, is_suspended, is_admin ),
-      tiers ( amount )
+      cover_url,
+      profiles!inner ( full_name, display_name, avatar_url, is_suspended, admin_role ),
+      subscription_tiers ( price )
     `)
     .eq('profiles.is_suspended', false)
-    .eq('profiles.is_admin', false)
+    .is('profiles.admin_role', null)
     .order('subscriber_count', { ascending: false })
     .limit(4);
 

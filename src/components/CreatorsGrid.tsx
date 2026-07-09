@@ -19,14 +19,16 @@ export default function CreatorsGrid({ initialCreators }: { initialCreators: any
       .from('creator_profiles')
       .select(`
         slug,
+        id,
+        slug,
         bio,
         subscriber_count,
         display_name,
-        profiles!inner ( full_name, avatar_url, is_suspended, is_admin )
+        profiles!inner ( full_name, avatar_url, is_suspended, admin_role )
       `)
       .eq('profiles.is_suspended', false)
-      .eq('profiles.is_admin', false)
-      .order('subscriber_count', { ascending: false });
+      .is('profiles.admin_role', null)
+      .order('created_at', { ascending: false });
 
     if (query.trim()) {
       request = request.or(`display_name.ilike.%${query}%,bio.ilike.%${query}%`);

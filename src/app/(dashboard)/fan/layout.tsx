@@ -12,15 +12,16 @@ export default async function FanLayout({
   const { data: { user } } = await supabase.auth.getUser();
   
   if (user) {
+    // Final server-side role check
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, is_admin, is_suspended')
+      .select('role, admin_role, is_suspended')
       .eq('id', user.id)
       .single();
-      
+
     if (profile?.is_suspended) {
         redirect('/suspended');
-    } else if (profile?.is_admin) {
+    } else if (profile?.admin_role) {
         redirect('/admin');
     } else if (profile?.role === 'creator') {
         redirect('/creator');

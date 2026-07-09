@@ -12,12 +12,12 @@ export default async function CreatorsPage() {
       slug,
       bio,
       subscriber_count,
-      display_name,
-      profiles!inner ( full_name, avatar_url, is_suspended, is_admin )
+      id,
+      profiles!inner ( full_name, avatar_url, is_suspended, admin_role )
     `)
     .eq('profiles.is_suspended', false)
-    .eq('profiles.is_admin', false)
-    .order('subscriber_count', { ascending: false })
+    .is('profiles.admin_role', null)
+    .order('created_at', { ascending: false })
     .limit(20);
 
   return (

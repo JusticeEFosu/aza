@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { hasPermission } from '@/lib/permissions';
 
 export default async function AdminLayout({
   children,
@@ -17,13 +18,15 @@ export default async function AdminLayout({
   // Final server-side check (double protection after middleware)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('admin_role')
     .eq('id', user.id)
     .single();
 
-  if (!profile?.is_admin) {
-    redirect('/');
+  if (!profile?.admin_role) {
+    redirect('/login');
   }
+
+  const role = profile.admin_role;
 
   return (
     <div className="v2-dashboard-layout" style={{ display: 'flex', minHeight: '100vh', background: 'var(--v2-bg-lowest)' }}>
@@ -38,26 +41,47 @@ export default async function AdminLayout({
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>dashboard</span>
             Overview
           </Link>
-          <Link href="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>group</span>
-            Users
-          </Link>
-          <Link href="/admin/analytics" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>insights</span>
-            Analytics
-          </Link>
-          <Link href="/admin/payouts" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>account_balance</span>
-            Payouts
-          </Link>
-          <Link href="/admin/content" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>flag</span>
-            Content
-          </Link>
-          <Link href="/admin/moderation" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>shield</span>
-            Moderation
-          </Link>
+          
+          {hasPermission(role, 'canViewUsers' as any) && (
+            <Link href="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>group</span>
+              Users
+            </Link>
+          )}
+
+          {role === 'super_admin' && (
+            <Link href="/admin/team" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>badge</span>
+              Team
+            </Link>
+          )}
+
+          {role === 'super_admin' && (
+            <Link href="/admin/analytics" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>insights</span>
+              Analytics
+            </Link>
+          )}
+
+          {hasPermission(role, 'canViewFinancials' as any) && (
+            <Link href="/admin/payouts" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>account_balance</span>
+              Payouts
+            </Link>
+          )}
+
+          {hasPermission(role, 'canViewReports' as any) && (
+            <>
+              <Link href="/admin/content" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>flag</span>
+                Content
+              </Link>
+              <Link href="/admin/moderation" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', fontWeight: 500 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>shield</span>
+                Moderation
+              </Link>
+            </>
+          )}
         </nav>
 
         <div style={{ borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
