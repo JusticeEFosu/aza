@@ -15,6 +15,8 @@ export function getEmbedUrl(url: string | null | undefined): string | null {
         videoId = urlObj.pathname.slice(1);
       } else if (urlObj.pathname.includes('/embed/')) {
         videoId = urlObj.pathname.split('/embed/')[1];
+      } else if (urlObj.pathname.includes('/shorts/')) {
+        videoId = urlObj.pathname.split('/shorts/')[1].replace(/\/$/, '');
       } else {
         videoId = urlObj.searchParams.get('v') || '';
       }

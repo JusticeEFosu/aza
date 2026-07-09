@@ -8,6 +8,7 @@ import Link from 'next/link';
 import InlineComposer from '@/components/InlineComposer';
 import ConfirmModal from '@/components/ConfirmModal';
 import ExpandableText from '@/components/ExpandableText';
+import { getEmbedUrl } from '@/lib/utils/embed';
 
 export default function CreatorPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -108,9 +109,16 @@ export default function CreatorPostsPage() {
                     </div>
                   </div>
 
-                  {post.image_url && (
-                    <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', maxHeight: '240px', background: '#000' }}>
-                      {post.image_url.includes('/video/') ? (
+                  {(post.image_url || post.embed_url) && (
+                    <div style={{ marginBottom: '12px', borderRadius: '8px', overflow: 'hidden', background: '#000', aspectRatio: post.embed_url ? '16/9' : 'auto' }}>
+                      {post.embed_url ? (
+                        <iframe
+                          src={getEmbedUrl(post.embed_url) || ''}
+                          style={{ width: '100%', height: '100%', border: 'none' }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : post.image_url?.includes('/video/') ? (
                         <VideoPlayer src={post.image_url} poster={post.thumbnail_url} style={{ maxHeight: '240px' }} />
                       ) : (
                         <img src={post.image_url} alt="" style={{ width: '100%', maxHeight: '240px', objectFit: 'cover' }} />
