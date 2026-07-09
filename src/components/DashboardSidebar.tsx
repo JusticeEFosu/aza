@@ -50,7 +50,7 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
   const creatorLinks = [
     { href: '/creator', icon: 'home', label: 'Home' },
     { href: '/creator/tiers', icon: 'group', label: 'Subscribers' },
-    { href: '#', icon: 'mail', label: 'Messages' },
+    { href: '/messages', icon: 'mail', label: 'Messages' },
     { href: '/creator/payouts', icon: 'payments', label: 'Earnings' },
     { href: '/creator/settings', icon: 'settings', label: 'Settings' }
   ];
@@ -59,6 +59,7 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
     { href: '/fan', icon: 'home', label: 'Home' },
     { href: '/fan/discover', icon: 'group', label: 'Discover' },
     { href: '/fan#feed', icon: 'dynamic_feed', label: 'Feed' },
+    { href: '/messages', icon: 'mail', label: 'Messages' },
     { href: '/fan/settings', icon: 'settings', label: 'Settings' }
   ];
 

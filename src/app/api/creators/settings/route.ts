@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { bankCode, accountNumber, bio, displayName, slug, socialLinks } = body;
+    const { bankCode, accountNumber, bio, displayName, slug, socialLinks, minTierIdForDm } = body;
 
     // We only create a subaccount if bank details are provided
     let paystackSubaccountCode = null;
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
 
     if (bio !== undefined) updateData.bio = bio;
     if (socialLinks !== undefined) updateData.social_links = socialLinks;
+    if (minTierIdForDm !== undefined) updateData.min_tier_id_for_dm = minTierIdForDm;
 
     // Update display name
     if (displayName) {

@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 
 export default function CreatorSettings() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'profile' | 'tiers' | 'payouts' | 'account'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'tiers' | 'payouts' | 'messages' | 'account'>('profile');
   
   const [loading, setLoading] = useState(false);
   const [initialFetchLoading, setInitialFetchLoading] = useState(true);
@@ -32,6 +32,9 @@ export default function CreatorSettings() {
   const [newPassword, setNewPassword] = useState('');
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountMsg, setAccountMsg] = useState({ text: '', type: '' });
+  
+  // Messaging State
+  const [minTierIdForDm, setMinTierIdForDm] = useState('');
   
   // Payout State
   const [bankCode, setBankCode] = useState('');
@@ -201,6 +204,7 @@ export default function CreatorSettings() {
           setBankCode(creatorRes.data.bank_code || '');
           setAccountNumber(creatorRes.data.bank_account_number || '');
           setPersistedBankName(creatorRes.data.bank_account_name || '');
+          setMinTierIdForDm(creatorRes.data.min_tier_id_for_dm || '');
           setUserId(user.id);
         }
       } catch (err) {
@@ -293,6 +297,7 @@ export default function CreatorSettings() {
           displayName,
           slug: slug.toLowerCase().replace(/[^a-z0-9]/g, ''),
           socialLinks,
+          minTierIdForDm: minTierIdForDm || null,
           bankCode: isVerified ? undefined : bankCode, 
           accountNumber: isVerified ? undefined : accountNumber
         })
@@ -384,7 +389,7 @@ export default function CreatorSettings() {
         {/* Tab Navigation */}
         <div style={{ borderBottom: '1px solid var(--v2-outline)', marginBottom: '32px' }}>
           <nav style={{ display: 'flex', gap: '24px' }}>
-            {['profile', 'tiers', 'payouts', 'account'].map((tab) => (
+            {['profile', 'tiers', 'payouts', 'messages', 'account'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
@@ -684,6 +689,44 @@ export default function CreatorSettings() {
                   </div>
                 </div>
 
+              </div>
+            </div>
+          )}
+
+          {/* MESSAGES TAB */}
+          {activeTab === 'messages' && (
+            <div className="v2-sub-card" style={{ maxWidth: '800px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Messaging Settings</h2>
+              
+              <div style={{ marginBottom: '32px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Minimum Tier for Direct Messages</label>
+                <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>
+                  Select the lowest subscription tier a fan must have to be able to start a direct message with you.
+                </p>
+                
+                <select
+                  value={minTierIdForDm}
+                  onChange={(e) => setMinTierIdForDm(e.target.value)}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                >
+                  <option value="">Any Active Subscriber</option>
+                  {tiersList.map(tier => (
+                    <option key={tier.id} value={tier.id}>
+                      {tier.name} (₦{(tier.amount / 100).toLocaleString()}/mo)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="v2-sub-btn v2-sub-btn-primary" 
+                  style={{ padding: '12px 32px', width: 'auto', opacity: loading ? 0.5 : 1 }}
+                >
+                  {loading ? 'Saving...' : 'Save Messaging Settings'}
+                </button>
               </div>
             </div>
           )}

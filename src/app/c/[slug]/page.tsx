@@ -10,6 +10,7 @@ import ReportPostButton from '@/components/ReportPostButton';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import MobileNav from '@/components/MobileNav';
 import ProfileContentTabs from '@/components/ProfileContentTabs';
+import InitiateMessageButton from '@/components/messages/InitiateMessageButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -185,6 +186,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                   <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>group</span>
                   {creator.subscriber_count?.toLocaleString()} Subscribers
                 </span>
+                
+                {user && user.id !== creator.id && (
+                  <InitiateMessageButton creatorId={creator.id} creatorName={displayName || 'Creator'} />
+                )}
                 
                 {creator.social_links && (
                   <div style={{ display: 'flex', gap: '16px' }}>
