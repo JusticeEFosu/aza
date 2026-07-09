@@ -49,11 +49,23 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Channel doesn't exist, try to create one
-    // RLS on chat_channels and chat_participants will block this if the fan doesn't meet the min tier requirement
-    
+    // 2. Channel doesn't exist, verify fan meets the minimum tier requirement
+    const { data: meetsReq, error: reqError } = await supabase.rpc('meets_min_tier_requirement', {
+      p_fan_id: user.id,
+      p_creator_id: creator_id
+    });
+
+    if (reqError || !meetsReq) {
+      console.log('Tier check failed', reqError, meetsReq);
+      return NextResponse.json({ error: 'You do not meet the minimum tier requirement to message this creator, or you are not subscribed.' }, { status: 403 });
+    }
+
+    // 3. Admin bypass to create the channel (since RLS prevents fans from inserting channels)
+    const { createAdminClient } = await import('@/lib/supabase/admin');
+    const adminSupabase = createAdminClient();
+
     // The fan creates the channel
-    const { data: newChannel, error: channelError } = await supabase
+    const { data: newChannel, error: channelError } = await adminSupabase
       .from('chat_channels')
       .insert({
         type: 'direct_message',
@@ -64,21 +76,29 @@ export async function POST(request: Request) {
 
     if (channelError) {
       console.error('Failed to create channel:', channelError);
-      return NextResponse.json({ error: 'You do not meet the minimum tier requirement to message this creator, or you are not subscribed.' }, { status: 403 });
+      return NextResponse.json({ error: 'Failed to create channel.' }, { status: 500 });
     }
 
-    // Add the other participant (the creator)
-    const { error: participantError } = await supabase
+    // Add the creator as participant
+    const { error: participantError1 } = await adminSupabase
       .from('chat_participants')
       .insert({
         channel_id: newChannel.id,
         profile_id: creator_id
       });
 
-    if (participantError) {
-      console.error('Failed to add creator to channel:', participantError);
+    // Add the fan as participant
+    const { error: participantError2 } = await adminSupabase
+      .from('chat_participants')
+      .insert({
+        channel_id: newChannel.id,
+        profile_id: user.id
+      });
+
+    if (participantError1 || participantError2) {
+      console.error('Failed to add participants:', participantError1 || participantError2);
       // Rollback channel creation
-      await supabase.from('chat_channels').delete().eq('id', newChannel.id);
+      await adminSupabase.from('chat_channels').delete().eq('id', newChannel.id);
       return NextResponse.json({ error: 'Failed to initiate conversation.' }, { status: 500 });
     }
 
