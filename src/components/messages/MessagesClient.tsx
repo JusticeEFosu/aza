@@ -25,7 +25,7 @@ type Message = {
     display_name?: string | null;
     creator_profiles?: {
       display_name: string | null;
-    }[] | null; // PostgREST returns arrays for reverse relations by default
+    } | null;
   } | null;
 };
 
@@ -372,8 +372,8 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                   let senderName = null;
                   if (activeChannel?.type === 'group_chat' && !isMine && isFirstInGroup) {
                     if (msg.profiles) {
-                      // PostgREST returns arrays for reverse relations by default, so check [0] for creator_profiles
-                      const creatorName = msg.profiles.creator_profiles?.[0]?.display_name;
+                      // PostgREST returns an object for 1-to-1 reverse relations
+                      const creatorName = msg.profiles.creator_profiles?.display_name;
                       senderName = creatorName || msg.profiles.display_name || msg.profiles.full_name || 'User';
                     } else {
                       senderName = 'User';
