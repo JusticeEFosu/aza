@@ -195,7 +195,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
               .single();
               
             if (profileData) {
-              newMsg.profiles = profileData;
+              newMsg.profiles = profileData as any;
             }
           }
           
