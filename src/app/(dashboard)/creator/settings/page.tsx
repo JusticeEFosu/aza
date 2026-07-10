@@ -701,21 +701,27 @@ export default function CreatorSettings() {
               <div style={{ marginBottom: '32px' }}>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Minimum Tier for Direct Messages</label>
                 <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>
-                  Select the lowest subscription tier a fan must have to be able to start a direct message with you.
+                  Fans must be subscribed to this tier (or a higher one) to send you direct messages. Note: Only tiers priced at ₦2,500 or higher are eligible.
                 </p>
                 
-                <select
-                  value={minTierIdForDm}
-                  onChange={(e) => setMinTierIdForDm(e.target.value)}
-                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                >
-                  <option value="">Any Active Subscriber</option>
-                  {tiersList.map(tier => (
-                    <option key={tier.id} value={tier.id}>
-                      {tier.name} (₦{(tier.amount / 100).toLocaleString()}/mo)
-                    </option>
-                  ))}
-                </select>
+                {tiersList.filter(t => t.amount >= 2500).length === 0 ? (
+                  <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--v2-surface-highest)', color: 'var(--v2-text-variant)', fontSize: '14px', border: '1px solid var(--v2-outline)', textAlign: 'center' }}>
+                    Direct Messages are a premium community feature. You must create a tier priced at ₦2,500 or higher to allow fans to message you.
+                  </div>
+                ) : (
+                  <select
+                    value={minTierIdForDm}
+                    onChange={(e) => setMinTierIdForDm(e.target.value)}
+                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  >
+                    <option value="">Any Qualifying Subscriber (₦2,500+)</option>
+                    {tiersList.filter(t => t.amount >= 2500).map(tier => (
+                      <option key={tier.id} value={tier.id}>
+                        {tier.name} (₦{(tier.amount / 100).toLocaleString()}/mo)
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
@@ -916,6 +922,20 @@ export default function CreatorSettings() {
                       <div>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Monthly Price (₦)</label>
                         <input type="number" placeholder="1000" min="100" step="100" value={tierAmountNaira} onChange={e => setTierAmountNaira(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                        
+                        <div style={{ marginTop: '12px', padding: '12px', borderRadius: '8px', fontSize: '13px', lineHeight: 1.5, background: (tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'rgba(52, 211, 153, 0.1)' : 'var(--v2-surface-low)', color: (tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'var(--v2-green)' : 'var(--v2-text-variant)', border: `1px solid ${(tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'var(--v2-green)' : 'var(--v2-outline)'}` }}>
+                          {(tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check_circle</span>
+                              Direct Messaging and Group Chat features unlocked for this tier!
+                            </span>
+                          ) : (
+                            <span style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: '16px', marginTop: '2px' }}>info</span>
+                              <span><strong>Note:</strong> Tiers must be priced at ₦2,500 or higher to include Direct Messaging and Group Chat features for your fans.</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div>

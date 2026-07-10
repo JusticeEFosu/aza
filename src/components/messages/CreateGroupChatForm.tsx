@@ -70,100 +70,149 @@ export default function CreateGroupChatForm({
     }
   };
 
+  // Only show tiers priced at 2500 or higher
+  const premiumTiers = tiers.filter(t => t.amount >= 2500);
+
+  if (premiumTiers.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 24px', background: 'var(--v2-surface-lowest)', borderRadius: '16px', border: '1px solid var(--v2-outline)', textAlign: 'center' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--v2-primary)', marginBottom: '16px' }}>forum</span>
+        <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: 'var(--v2-text)' }}>Community features require a qualifying tier</h2>
+        <p style={{ fontSize: '15px', color: 'var(--v2-text-variant)', maxWidth: '400px', marginBottom: '24px', lineHeight: 1.5 }}>
+          You must have a tier priced at ₦2,500 or higher to create group chat rooms for your fans.
+        </p>
+        <button 
+          onClick={() => window.location.href = '/creator/settings'}
+          className="v2-btn-primary lg"
+        >
+          Manage Tiers
+        </button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {error && (
-        <div style={{ padding: '16px', backgroundColor: 'rgba(255,59,48,0.1)', color: '#ff3b30', borderRadius: '12px', fontSize: '15px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="material-symbols-outlined">error</span>
+        <div style={{ padding: '16px', backgroundColor: 'rgba(255,59,48,0.1)', color: '#ff3b30', borderRadius: '12px', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>error</span>
           {error}
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ fontSize: '15px', fontWeight: 600, color: 'var(--v2-text)' }}>Group Chat Name</label>
+      {/* Name Input */}
+      <div>
+        <label style={{ display: 'block', fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: 'var(--v2-text)' }}>
+          Chat Room Name
+        </label>
         <input
           type="text"
-          placeholder="e.g. The VIP Inner Circle"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. VIP Backstage Pass"
           required
-          style={{
-            width: '100%',
-            padding: '16px 20px',
-            borderRadius: '12px',
-            border: '2px solid var(--v2-outline)',
+          style={{ 
+            width: '100%', 
+            padding: '16px', 
+            borderRadius: '12px', 
+            border: '2px solid var(--v2-outline)', 
+            background: 'var(--v2-surface)', 
             fontSize: '16px',
-            backgroundColor: 'var(--v2-surface)',
             color: 'var(--v2-text)',
             outline: 'none',
-            transition: 'border-color 0.2s',
+            transition: 'border-color 0.2s ease',
           }}
           onFocus={(e) => e.target.style.borderColor = 'var(--v2-primary)'}
           onBlur={(e) => e.target.style.borderColor = 'var(--v2-outline)'}
         />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <label style={{ fontSize: '15px', fontWeight: 600, color: 'var(--v2-text)' }}>Allowed Subscription Tiers</label>
-          <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginTop: '4px' }}>
-            Only fans with an active subscription to one of the selected tiers will be able to view and message in this chat.
-          </p>
-        </div>
+      {/* Tier Selection (Premium Cards) */}
+      <div>
+        <label style={{ display: 'block', fontSize: '15px', fontWeight: 600, marginBottom: '4px', color: 'var(--v2-text)' }}>
+          Who can access this chat?
+        </label>
+        <p style={{ fontSize: '13px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>
+          Select the minimum tier required. Higher tiers are automatically included.
+        </p>
 
-        {tiers.length === 0 ? (
-          <div style={{ padding: '24px', backgroundColor: 'var(--v2-surface-highest)', borderRadius: '16px', fontSize: '15px', color: 'var(--v2-text-variant)', textAlign: 'center', border: '1px solid var(--v2-outline)' }}>
-            You don&apos;t have any active subscription tiers yet. Create a tier first to start a group chat.
-          </div>
-        ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-            gap: '16px' 
-          }}>
-            {tiers.map((tier) => {
-              const isSelected = selectedTiers.includes(tier.id);
-              return (
-                <div 
-                  key={tier.id} 
-                  onClick={() => toggleTier(tier.id)}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '20px', 
-                    padding: '20px', 
-                    border: isSelected ? '2px solid var(--v2-primary)' : '2px solid var(--v2-outline)', 
-                    borderRadius: '16px',
-                    cursor: 'pointer',
-                    backgroundColor: isSelected ? 'rgba(var(--v2-primary-rgb, 0,0,0), 0.02)' : 'var(--v2-surface)',
-                    boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
-                    transition: 'all 0.2s ease',
-                    transform: isSelected ? 'scale(1.01)' : 'scale(1)'
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+          {premiumTiers.map((tier) => {
+            const isSelected = selectedTiers.includes(tier.id);
+            return (
+              <label 
+                key={tier.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  border: isSelected ? '2px solid var(--v2-primary)' : '1px solid var(--v2-outline)',
+                  background: isSelected ? 'rgba(var(--v2-primary-rgb), 0.05)' : 'var(--v2-surface-lowest)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.2, 0, 0, 1)',
+                  transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+                  boxShadow: isSelected ? '0 8px 24px -8px rgba(0,0,0,0.1)' : 'none',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={e => {
+                  if (!isSelected) {
+                    e.currentTarget.style.borderColor = 'var(--v2-text-variant)';
+                    e.currentTarget.style.transform = 'scale(1.01)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isSelected) {
+                    e.currentTarget.style.borderColor = 'var(--v2-outline)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTiers([...selectedTiers, tier.id]);
+                    } else {
+                      setSelectedTiers(selectedTiers.filter(id => id !== tier.id));
+                    }
                   }}
-                >
-                  <div style={{ 
-                    width: '28px', 
-                    height: '28px', 
-                    borderRadius: '50%', 
-                    border: isSelected ? 'none' : '2px solid var(--v2-outline)',
-                    backgroundColor: isSelected ? 'var(--v2-primary)' : 'transparent',
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    transition: 'all 0.2s ease'
-                  }}>
-                    {isSelected && <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '18px', fontWeight: 700 }}>check</span>}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '16px', color: 'var(--v2-text)', marginBottom: '4px' }}>{tier.name}</div>
-                    <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)', fontWeight: 500 }}>₦{(tier.amount / 100).toLocaleString()} / month</div>
-                  </div>
+                  style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
+                />
+                
+                {/* Visual Checkmark */}
+                <div style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: isSelected ? 'var(--v2-primary)' : 'var(--v2-surface)',
+                  border: isSelected ? 'none' : '2px solid var(--v2-outline)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                  transform: isSelected ? 'scale(1)' : 'scale(0.8)',
+                  opacity: isSelected ? 1 : 0.5
+                }}>
+                  {isSelected && <span className="material-symbols-outlined" style={{ color: 'white', fontSize: '14px', fontWeight: 700 }}>check</span>}
                 </div>
-              );
-            })}
-          </div>
-        )}
+
+                <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--v2-text)', paddingRight: '32px', marginBottom: '8px' }}>
+                  {tier.name}
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--v2-primary)' }}>
+                  ₦{tier.amount.toLocaleString()}
+                  <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--v2-text-variant)' }}>/mo</span>
+                </div>
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       <button 
@@ -181,7 +230,7 @@ export default function CreateGroupChatForm({
           alignItems: 'center',
           gap: '8px'
         }}
-        disabled={isLoading || tiers.length === 0}
+        disabled={isLoading || premiumTiers.length === 0}
       >
         {isLoading ? (
           <>

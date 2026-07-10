@@ -49,21 +49,56 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Channel doesn't exist, verify fan meets the minimum tier requirement
-    const { data: meetsReq, error: reqError } = await supabase.rpc('meets_min_tier_requirement', {
-      p_fan_id: user.id,
-      p_creator_id: creator_id
-    });
+    // 2. Fetch the creator's specific DM setting
+    const { data: creatorProfile, error: profileError } = await supabase
+      .from('creator_profiles')
+      .select('min_tier_id_for_dm')
+      .eq('id', creator_id)
+      .single();
 
-    if (reqError || !meetsReq) {
-      console.log('Tier check failed', reqError, meetsReq);
-      return NextResponse.json({ error: 'You do not meet the minimum tier requirement to message this creator, or you are not subscribed.' }, { status: 403 });
+    if (profileError) {
+      return NextResponse.json({ error: 'Could not fetch creator settings.' }, { status: 500 });
     }
 
-    // 3. Admin bypass to create the channel (since RLS prevents fans from inserting channels)
+    // 3. Determine the required minimum price
+    let requiredPrice = 2500; // Platform floor
+    
+    if (creatorProfile.min_tier_id_for_dm) {
+      const { data: tierData } = await supabase
+        .from('tiers')
+        .select('amount')
+        .eq('id', creatorProfile.min_tier_id_for_dm)
+        .single();
+        
+      if (tierData && tierData.amount > requiredPrice) {
+        requiredPrice = tierData.amount;
+      }
+    }
+
+    // 4. Query the fan's active subscriptions to this creator
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const adminSupabase = createAdminClient();
+    
+    const { data: subData, error: subError } = await adminSupabase
+      .from('subscriptions')
+      .select('id, tiers!inner(amount)')
+      .eq('fan_id', user.id)
+      .eq('creator_id', creator_id)
+      .eq('status', 'active');
 
+    const hasQualifyingSubscription = subData && subData.some(sub => {
+      // Handle array or single object depending on relation
+      const tier = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
+      return tier && tier.amount >= requiredPrice;
+    });
+
+    if (subError || !hasQualifyingSubscription) {
+      return NextResponse.json({ 
+        error: `Direct Messages are restricted. You must be subscribed to a tier priced at ₦${(requiredPrice / 100).toLocaleString()} or higher to message this creator.` 
+      }, { status: 403 });
+    }
+
+    // 5. Admin bypass to create the channel (since RLS prevents fans from inserting channels)
     // The fan creates the channel
     const { data: newChannel, error: channelError } = await adminSupabase
       .from('chat_channels')
