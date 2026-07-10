@@ -17,8 +17,9 @@ export default async function NewGroupChatPage() {
     .order('amount', { ascending: true });
 
   return (
-    <div className="v2-container" style={{ maxWidth: '600px', padding: '40px 20px' }}>
-      <h1 className="v2-dash-title">Create Group Chat</h1>
+    <main className="v2-main-content" style={{ padding: '40px 20px' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <h1 className="v2-dash-title">Create Group Chat</h1>
       <p className="v2-dash-subtitle" style={{ marginBottom: '32px' }}>
         Create a new private community chat and select which subscription tiers get access.
       </p>
@@ -26,6 +27,7 @@ export default async function NewGroupChatPage() {
       <div className="v2-card">
         <CreateGroupChatForm creatorId={user.id} tiers={tiers || []} />
       </div>
-    </div>
+      </div>
+    </main>
   );
 }

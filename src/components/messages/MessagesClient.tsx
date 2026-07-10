@@ -19,6 +19,14 @@ type Message = {
   content: string;
   created_at: string;
   is_deleted: boolean;
+  profiles?: {
+    id?: string;
+    full_name?: string | null;
+    display_name?: string | null;
+    creator_profiles?: {
+      display_name: string | null;
+    }[] | null; // PostgREST returns arrays for reverse relations by default
+  } | null;
 };
 
 type Channel = {
@@ -27,6 +35,8 @@ type Channel = {
   type: 'direct_message' | 'group_chat';
   creator_id: string;
   other_participant?: UserProfile; // Derived for DMs
+  avatar_url?: string | null;
+  participants?: { profile_id: string; display_name: string }[];
   last_message?: string;
   unread_count?: number;
 };
@@ -59,6 +69,10 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
         .from('chat_channels')
         .select(`
           id, name, type, creator_id,
+          creator_profiles (
+            display_name,
+            profiles (full_name, avatar_url)
+          ),
           chat_participants (
             profile_id,
             last_read_at,
@@ -76,19 +90,44 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
       // Process channels to format DMs properly
       const formattedChannels: Channel[] = channelsData.map((c: any) => {
         let otherParticipant = undefined;
+        let displayName = c.name;
+        let avatarUrl = null;
+
+        const participants = c.chat_participants?.map((p: any) => {
+          let name = p.profiles?.display_name || p.profiles?.full_name || 'Unknown User';
+          if (p.profile_id === c.creator_id && c.creator_profiles) {
+            name = c.creator_profiles.display_name || c.creator_profiles.profiles?.full_name || name;
+          }
+          return { profile_id: p.profile_id, display_name: name };
+        }) || [];
+
         if (c.type === 'direct_message') {
           // Find the participant that is NOT the current user
           const other = c.chat_participants?.find((p: any) => p.profile_id !== currentUser.id);
+          
           if (other && other.profiles) {
             otherParticipant = other.profiles;
+            
+            // If the other participant is the Creator of the channel, use their Creator Profile name
+            if (other.profile_id === c.creator_id && c.creator_profiles) {
+              displayName = c.creator_profiles.display_name || c.creator_profiles.profiles?.full_name || otherParticipant.display_name || otherParticipant.full_name || 'Creator';
+              avatarUrl = c.creator_profiles.profiles?.avatar_url || otherParticipant.avatar_url;
+            } else {
+              // The other participant is a fan
+              displayName = otherParticipant.display_name || otherParticipant.full_name || 'Fan';
+              avatarUrl = otherParticipant.avatar_url;
+            }
           }
         }
+
         return {
           id: c.id,
-          name: c.name,
+          name: displayName,
           type: c.type,
           creator_id: c.creator_id,
           other_participant: otherParticipant,
+          avatar_url: avatarUrl,
+          participants: participants
         };
       });
 
@@ -108,7 +147,13 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
       // Fetch last 50 messages
       const { data: messagesData, error } = await supabase
         .from('chat_messages')
-        .select('*')
+        .select(`
+          *,
+          profiles:sender_id (
+            id, full_name, display_name,
+            creator_profiles (display_name)
+          )
+        `)
         .eq('channel_id', activeChannelId)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -138,8 +183,22 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
           table: 'chat_messages',
           filter: `channel_id=eq.${activeChannelId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as Message;
+          
+          // If it's a message from someone else, explicitly fetch their profile data so their name shows up
+          if (newMsg.sender_id !== currentUser.id) {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select(`id, full_name, display_name, creator_profiles(display_name)`)
+              .eq('id', newMsg.sender_id)
+              .single();
+              
+            if (profileData) {
+              newMsg.profiles = profileData;
+            }
+          }
+          
           setMessages((prev) => [...prev, newMsg]);
           
           // If we received a message, automatically mark as read since we are in the chat
@@ -223,12 +282,9 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {channels.map((channel) => {
-                const displayName = channel.type === 'direct_message' 
-                  ? (channel.other_participant?.display_name || channel.other_participant?.full_name || 'Unknown User')
-                  : channel.name;
-                
-                const avatar = channel.type === 'direct_message' ? channel.other_participant?.avatar_url : null;
-                const initials = displayName?.charAt(0).toUpperCase() || '?';
+                const displayName = channel.name || 'Unknown User';
+                const avatar = channel.avatar_url || null;
+                const initials = displayName.charAt(0).toUpperCase() || '?';
 
                 return (
                   <button
@@ -294,34 +350,61 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
               </button>
               
               <span style={{ fontSize: '20px', fontWeight: 600 }}>
-                {activeChannel.type === 'direct_message' 
-                  ? (activeChannel.other_participant?.display_name || activeChannel.other_participant?.full_name || 'Unknown User')
-                  : activeChannel.name}
+                {activeChannel.name || 'Unknown User'}
               </span>
             </div>
 
             {/* Chat Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column' }}>
               {messages.length === 0 ? (
                 <div style={{ margin: 'auto', color: 'var(--v2-text-variant)', textAlign: 'center' }}>
                   No messages here yet.<br/>Send a message to start the conversation!
                 </div>
               ) : (
-                messages.map((msg) => {
+                messages.map((msg, index) => {
                   const isMine = msg.sender_id === currentUser.id;
+                  const prevMsg = index > 0 ? messages[index - 1] : null;
+                  const nextMsg = index < messages.length - 1 ? messages[index + 1] : null;
+                  
+                  const isFirstInGroup = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                  const isLastInGroup = !nextMsg || nextMsg.sender_id !== msg.sender_id;
+                  
+                  let senderName = null;
+                  if (activeChannel?.type === 'group_chat' && !isMine && isFirstInGroup) {
+                    if (msg.profiles) {
+                      // PostgREST returns arrays for reverse relations by default, so check [0] for creator_profiles
+                      const creatorName = msg.profiles.creator_profiles?.[0]?.display_name;
+                      senderName = creatorName || msg.profiles.display_name || msg.profiles.full_name || 'User';
+                    } else {
+                      senderName = 'User';
+                    }
+                  }
+
                   return (
-                    <div key={msg.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                    <div key={msg.id} style={{ 
+                      display: 'flex', 
+                      justifyContent: isMine ? 'flex-end' : 'flex-start',
+                      marginTop: isFirstInGroup ? (index === 0 ? '0' : '16px') : '2px',
+                      flexDirection: 'column',
+                      alignItems: isMine ? 'flex-end' : 'flex-start'
+                    }}>
+                      {senderName && (
+                        <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px', marginLeft: '12px', fontWeight: 600 }}>
+                          {senderName}
+                        </div>
+                      )}
                       <div style={{
                         maxWidth: '75%',
-                        padding: '12px 16px',
-                        borderRadius: '20px',
-                        borderBottomRightRadius: isMine ? '4px' : '20px',
-                        borderBottomLeftRadius: !isMine ? '4px' : '20px',
+                        padding: '8px 12px',
+                        borderTopLeftRadius: !isMine ? (isFirstInGroup ? '16px' : '4px') : '16px',
+                        borderBottomLeftRadius: !isMine ? (isLastInGroup ? '16px' : '4px') : '16px',
+                        borderTopRightRadius: isMine ? (isFirstInGroup ? '16px' : '4px') : '16px',
+                        borderBottomRightRadius: isMine ? (isLastInGroup ? '16px' : '4px') : '16px',
                         backgroundColor: isMine ? 'var(--v2-primary)' : 'var(--v2-surface)',
                         color: isMine ? '#ffffff' : 'var(--v2-text)',
                         border: isMine ? 'none' : '1px solid var(--v2-outline)',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                        fontSize: '15px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        fontSize: '14px',
                         lineHeight: '1.4'
                       }}>
                         {msg.content}
@@ -343,7 +426,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
             </div>
 
             {/* Chat Input */}
-            <div style={{ padding: '20px 24px', borderTop: '1px solid var(--v2-outline)', backgroundColor: 'var(--v2-surface)' }}>
+            <div style={{ padding: '12px 24px', borderTop: '1px solid var(--v2-outline)', backgroundColor: 'var(--v2-surface)' }}>
               <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '12px' }}>
                 <input 
                   type="text" 
@@ -353,8 +436,8 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                   disabled={isSending}
                   style={{
                     flex: 1,
-                    padding: '14px 20px',
-                    borderRadius: '30px',
+                    padding: '10px 16px',
+                    borderRadius: '20px',
                     border: '1px solid var(--v2-outline)',
                     backgroundColor: 'var(--v2-surface-lowest)',
                     color: 'var(--v2-text)',
@@ -366,8 +449,8 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                   type="submit" 
                   disabled={isSending || !newMessage.trim()}
                   style={{
-                    width: '48px',
-                    height: '48px',
+                    width: '42px',
+                    height: '42px',
                     borderRadius: '50%',
                     backgroundColor: newMessage.trim() ? 'var(--v2-primary)' : 'var(--v2-surface-highest)',
                     color: newMessage.trim() ? '#ffffff' : 'var(--v2-text-variant)',
