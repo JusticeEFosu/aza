@@ -11,6 +11,7 @@ import DashboardSidebar from '@/components/DashboardSidebar';
 import MobileNav from '@/components/MobileNav';
 import ProfileContentTabs from '@/components/ProfileContentTabs';
 import InitiateMessageButton from '@/components/messages/InitiateMessageButton';
+import PostEngagementBar from '@/components/posts/PostEngagementBar';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,12 +56,21 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
   const adminSupabase = createAdminClient();
   const { data: rawPosts } = await adminSupabase
     .from('posts')
-    .select('*')
+    .select('*, likes:post_likes(count), comments:post_comments(count)')
     .eq('creator_id', creator.id)
     .order('created_at', { ascending: false });
 
-  // 4. Check access
+  // 4. Check access and get user's liked posts
   const { data: { user } } = await supabase.auth.getUser();
+  
+  let userLikedPostIds: string[] = [];
+  if (user) {
+    const { data: likedPosts } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', user.id);
+    userLikedPostIds = likedPosts?.map(p => p.post_id) || [];
+  }
   let maxFanTierAmount = 0;
   let activeSub: any = null;
   let userRole: 'fan' | 'creator' | null = null;
@@ -124,7 +134,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
       requiredTierName: requiredTier?.name || 'Subscribers',
       content: hasAccess ? post.content : '',
       image_url: secureImageUrl,
-      thumbnail_url: secureThumbnailUrl
+      thumbnail_url: secureThumbnailUrl,
+      likesCount: post.likes?.[0]?.count || 0,
+      commentsCount: post.comments?.[0]?.count || 0,
+      userHasLiked: userLikedPostIds.includes(post.id)
     };
   });
 
@@ -414,7 +427,15 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                         </div>
                       )}
                       
-                      <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', paddingTop: '16px', borderTop: '1px solid var(--v2-outline)' }}>
+                      <PostEngagementBar 
+                        postId={post.id} 
+                        initialLikes={post.likesCount}
+                        initialComments={post.commentsCount}
+                        initialUserHasLiked={post.userHasLiked}
+                        hasAccess={post.hasAccess}
+                      />
+                      
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <ReportPostButton postId={post.id} />
                       </div>
                     </div>

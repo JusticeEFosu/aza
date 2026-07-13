@@ -20,11 +20,8 @@ export default function CreateGroupChatForm({
   const [error, setError] = useState('');
 
   const toggleTier = (tierId: string) => {
-    if (selectedTiers.includes(tierId)) {
-      setSelectedTiers(selectedTiers.filter(id => id !== tierId));
-    } else {
-      setSelectedTiers([...selectedTiers, tierId]);
-    }
+    // Only allow one minimum tier to be selected
+    setSelectedTiers([tierId]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,8 +67,8 @@ export default function CreateGroupChatForm({
     }
   };
 
-  // Only show tiers priced at 2500 or higher
-  const premiumTiers = tiers.filter(t => t.amount >= 2500);
+  // Only show tiers priced at 2500 NGN (250000 kobo) or higher
+  const premiumTiers = tiers.filter(t => t.amount >= 250000);
 
   if (premiumTiers.length === 0) {
     return (
@@ -142,6 +139,10 @@ export default function CreateGroupChatForm({
             return (
               <label 
                 key={tier.id}
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleTier(tier.id);
+                }}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -170,15 +171,10 @@ export default function CreateGroupChatForm({
                 }}
               >
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name="min_tier"
                   checked={isSelected}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedTiers([...selectedTiers, tier.id]);
-                    } else {
-                      setSelectedTiers(selectedTiers.filter(id => id !== tier.id));
-                    }
-                  }}
+                  readOnly
                   style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
                 />
                 
@@ -206,7 +202,7 @@ export default function CreateGroupChatForm({
                   {tier.name}
                 </div>
                 <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--v2-primary)' }}>
-                  ₦{tier.amount.toLocaleString()}
+                  ₦{(tier.amount / 100).toLocaleString()}
                   <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--v2-text-variant)' }}>/mo</span>
                 </div>
               </label>

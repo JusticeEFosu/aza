@@ -44,9 +44,9 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   ];
 
   const fanLinks = [
-    { href: '/fan?tab=home', icon: 'home', label: 'Dashboard' },
+    { href: '/fan', icon: 'home', label: 'Feed' },
+    { href: '/fan/subscriptions', icon: 'wallet', label: 'Subscriptions' },
     { href: '/fan/discover', icon: 'group', label: 'Discover Creators' },
-    { href: '/fan?tab=feed', icon: 'dynamic_feed', label: 'Feed' },
     { href: '/messages', icon: 'mail', label: 'Messages' },
     { href: '/fan/settings', icon: 'settings', label: 'Settings' }
   ];
@@ -144,14 +144,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
 
         <div className="v2-nav-list" style={{ marginTop: '16px', padding: '0 16px', flex: 1 }}>
           {links.map(link => {
-            let isActive = false;
-            if (link.href === '/fan?tab=feed') {
-              isActive = pathname === '/fan' && currentTab === 'feed';
-            } else if (link.href === '/fan?tab=home') {
-              isActive = pathname === '/fan' && currentTab === 'home';
-            } else {
-              isActive = pathname === link.href;
-            }
+            const isActive = pathname === link.href;
             return (
               <Link
                 key={link.href}
@@ -213,20 +206,20 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           </>
         ) : (
           <>
-            <Link href="/fan?tab=home" className={`v2-bottom-nav-item ${pathname === '/fan' && currentTab === 'home' ? 'active' : ''}`}>
-              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' && currentTab === 'home' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
-              <span className="v2-bottom-nav-label">Home</span>
+            <Link href="/fan" className={`v2-bottom-nav-item ${pathname === '/fan' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
+              <span className="v2-bottom-nav-label">Feed</span>
             </Link>
-            <Link href="/fan/discover" className={`v2-bottom-nav-item ${pathname === '/fan/discover' ? 'active' : ''}`}>
-              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan/discover' ? "'FILL' 1" : "'FILL' 0" }}>group</span>
-              <span className="v2-bottom-nav-label">Discover</span>
+            <Link href="/fan/subscriptions" className={`v2-bottom-nav-item ${pathname === '/fan/subscriptions' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan/subscriptions' ? "'FILL' 1" : "'FILL' 0" }}>wallet</span>
+              <span className="v2-bottom-nav-label">Subs</span>
             </Link>
             <Link href="/fan/discover" className="v2-bottom-fab">
               <span className="material-symbols-outlined">search</span>
             </Link>
-            <Link href="/fan?tab=feed" className={`v2-bottom-nav-item ${pathname === '/fan' && currentTab === 'feed' ? 'active' : ''}`}>
-              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan' && currentTab === 'feed' ? "'FILL' 1" : "'FILL' 0" }}>dynamic_feed</span>
-              <span className="v2-bottom-nav-label">Feed</span>
+            <Link href="/messages" className={`v2-bottom-nav-item ${pathname === '/messages' ? 'active' : ''}`}>
+              <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/messages' ? "'FILL' 1" : "'FILL' 0" }}>mail</span>
+              <span className="v2-bottom-nav-label">Messages</span>
             </Link>
             <Link href="/fan/settings" className={`v2-bottom-nav-item ${pathname === '/fan/settings' ? 'active' : ''}`}>
               <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan/settings' ? "'FILL' 1" : "'FILL' 0" }}>settings</span>

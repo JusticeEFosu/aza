@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Determine the required minimum price
-    let requiredPrice = 2500; // Platform floor
+    let requiredPrice = 250000; // Platform floor
     
     if (creatorProfile.min_tier_id_for_dm) {
       const { data: tierData } = await supabase

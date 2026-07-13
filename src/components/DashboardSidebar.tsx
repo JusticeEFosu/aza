@@ -56,9 +56,9 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
   ];
 
   const fanLinks = [
-    { href: '/fan', icon: 'home', label: 'Home' },
+    { href: '/fan', icon: 'home', label: 'Feed' },
+    { href: '/fan/subscriptions', icon: 'wallet', label: 'Subscriptions' },
     { href: '/fan/discover', icon: 'group', label: 'Discover' },
-    { href: '/fan#feed', icon: 'dynamic_feed', label: 'Feed' },
     { href: '/messages', icon: 'mail', label: 'Messages' },
     { href: '/fan/settings', icon: 'settings', label: 'Settings' }
   ];
@@ -90,7 +90,7 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
 
       <div className="v2-nav-list">
         {links.map(link => {
-          const isActive = link.href === '/fan#feed' ? false : pathname === link.href;
+          const isActive = pathname === link.href;
           return (
             <Link 
               key={link.href} 

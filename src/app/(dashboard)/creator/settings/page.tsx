@@ -704,7 +704,7 @@ export default function CreatorSettings() {
                   Fans must be subscribed to this tier (or a higher one) to send you direct messages. Note: Only tiers priced at ₦2,500 or higher are eligible.
                 </p>
                 
-                {tiersList.filter(t => t.amount >= 2500).length === 0 ? (
+                {tiersList.filter(t => t.amount >= 250000).length === 0 ? (
                   <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--v2-surface-highest)', color: 'var(--v2-text-variant)', fontSize: '14px', border: '1px solid var(--v2-outline)', textAlign: 'center' }}>
                     Direct Messages are a premium community feature. You must create a tier priced at ₦2,500 or higher to allow fans to message you.
                   </div>
@@ -715,7 +715,7 @@ export default function CreatorSettings() {
                     style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
                   >
                     <option value="">Any Qualifying Subscriber (₦2,500+)</option>
-                    {tiersList.filter(t => t.amount >= 2500).map(tier => (
+                    {tiersList.filter(t => t.amount >= 250000).map(tier => (
                       <option key={tier.id} value={tier.id}>
                         {tier.name} (₦{(tier.amount / 100).toLocaleString()}/mo)
                       </option>
