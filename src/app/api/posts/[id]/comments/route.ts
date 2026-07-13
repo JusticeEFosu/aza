@@ -30,7 +30,9 @@ export async function GET(
       id,
       content,
       created_at,
+      updated_at,
       user_id,
+      parent_id,
       profiles (
         full_name,
         display_name,
@@ -68,7 +70,7 @@ export async function POST(
   }
 
   try {
-    const { content } = await req.json();
+    const { content, parentId } = await req.json();
 
     if (!content || !content.trim()) {
       return NextResponse.json({ error: 'Comment content is required' }, { status: 400 });
@@ -81,13 +83,16 @@ export async function POST(
       .insert({
         post_id: postId,
         user_id: user.id,
-        content: content.trim()
+        content: content.trim(),
+        parent_id: parentId || null
       })
       .select(`
         id,
         content,
         created_at,
+        updated_at,
         user_id,
+        parent_id,
         profiles (
           full_name,
           display_name,

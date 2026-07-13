@@ -20,7 +20,6 @@ export default function PostEngagementBar({
   const [userHasLiked, setUserHasLiked] = useState(initialUserHasLiked);
   const [showComments, setShowComments] = useState(false);
   const [commentsCount, setCommentsCount] = useState(initialComments);
-  const [isLiking, setIsLiking] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
 
   const handleLike = async () => {
@@ -29,9 +28,6 @@ export default function PostEngagementBar({
       setTimeout(() => setShowUpsell(false), 3000);
       return;
     }
-
-    if (isLiking) return;
-    setIsLiking(true);
 
     // Optimistic UI update
     const wasLiked = userHasLiked;
@@ -50,8 +46,6 @@ export default function PostEngagementBar({
       setUserHasLiked(wasLiked);
       setLikes(prev => wasLiked ? prev + 1 : prev - 1);
       console.error(error);
-    } finally {
-      setIsLiking(false);
     }
   };
 
@@ -78,9 +72,8 @@ export default function PostEngagementBar({
             background: 'none', 
             border: 'none', 
             cursor: 'pointer',
-            color: userHasLiked ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
+            color: userHasLiked ? '#ff3b30' : 'var(--v2-text-variant)',
             transition: 'color 0.2s ease, transform 0.1s ease',
-            transform: isLiking ? 'scale(0.95)' : 'scale(1)',
             padding: '4px 8px',
             marginLeft: '-8px',
             borderRadius: '8px'
@@ -88,7 +81,7 @@ export default function PostEngagementBar({
           onMouseEnter={(e) => e.currentTarget.style.background = 'var(--v2-surface-highest)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
-          <span className={userHasLiked ? "material-symbols-rounded" : "material-symbols-outlined"} style={{ fontSize: '24px', fontVariationSettings: userHasLiked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '24px', fontVariationSettings: userHasLiked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
           <span style={{ fontSize: '15px', fontWeight: 600 }}>{likes > 0 ? likes.toLocaleString() : 'Like'}</span>
         </button>
 
