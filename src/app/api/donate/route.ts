@@ -19,11 +19,12 @@ export async function POST(request: Request) {
     // 1. Fetch Creator Details to get Subaccount
     const { data: creator, error: creatorError } = await supabase
       .from('creator_profiles')
-      .select('paystack_subaccount_code, is_verified, profiles(slug)')
+      .select('paystack_subaccount_code, is_verified, slug')
       .eq('id', creatorId)
       .single();
 
     if (creatorError || !creator) {
+      console.error('Failed to fetch creator:', creatorError, 'creatorId:', creatorId);
       return NextResponse.json({ error: 'Creator not found.' }, { status: 404 });
     }
 
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
       email,
       amount, // in kobo
       subaccount: creator.paystack_subaccount_code,
-      callback_url: callbackUrl || `${process.env.NEXT_PUBLIC_APP_URL}/c/${(creator.profiles as any)?.slug}`,
+      callback_url: callbackUrl || `${process.env.NEXT_PUBLIC_APP_URL}/c/${creator.slug}`,
       metadata: {
         donation_id: donation.id,
         creator_id: creatorId,
