@@ -68,7 +68,7 @@ export default async function HomePage() {
               Fund the creators who inspire you.
             </h1>
             <p className="v2-hero-desc">
-              Join the community behind your favorite voices. Empowering Nigerian creativity and the voices that matter most to you.
+              Join the community behind your favourite voices. Empowering Nigerian creativity and the voices that matter most to you.
             </p>
           </div>
           <div className="v2-hero-actions">
