@@ -2907,3 +2907,5 @@ h4 {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+@media (max-width: 768px) { .v2-desktop-only { display: none !important; } }

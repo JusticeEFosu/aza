@@ -182,7 +182,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
           <div className="v2-profile-nav-inner">
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
               <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
-              <div className="hidden md:flex items-center" style={{ gap: '24px' }}>
+              <div className="v2-desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                 <Link href="/creators" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Discover</Link>
                 <Link href="/how-it-works" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>How it Works</Link>
               </div>
@@ -190,7 +190,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               {!user ? (
                 <>
-                  <Link href="/login" className="hidden md:block" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
+                  <Link href="/login" className="v2-desktop-only" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
                   <Link href="/signup" className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '8px 24px', fontSize: '14px' }}>Start Creating</Link>
                 </>
               ) : (
@@ -259,6 +259,20 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
               </div>
             </div>
           </div>
+
+          {/* Fundraisers Section - Always Visible */}
+          {fundraisers && fundraisers.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '800px', marginBottom: '48px' }}>
+              {fundraisers.map(f => (
+                <FundraiserCard 
+                  key={f.id} 
+                  fundraiser={f} 
+                  creatorId={creator.id} 
+                  donations={fundraiserDonations[f.id]} 
+                />
+              ))}
+            </div>
+          )}
 
           {/* Main Content Tabs */}
           <ProfileContentTabs 
@@ -332,20 +346,6 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             postsContent={
               <>
                 <div style={{ marginBottom: '64px' }}>
-            
-            {/* Fundraisers Section */}
-            {fundraisers && fundraisers.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '800px', marginBottom: '48px' }}>
-                {fundraisers.map(f => (
-                  <FundraiserCard 
-                    key={f.id} 
-                    fundraiser={f} 
-                    creatorId={creator.id} 
-                    donations={fundraiserDonations[f.id]} 
-                  />
-                ))}
-              </div>
-            )}
             
             {!posts || posts.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
