@@ -13,7 +13,6 @@ import ProfileContentTabs from '@/components/ProfileContentTabs';
 import InitiateMessageButton from '@/components/messages/InitiateMessageButton';
 import PostEngagementBar from '@/components/posts/PostEngagementBar';
 import PollBlock from '@/components/posts/PollBlock';
-import FundraiserCard from '@/components/FundraiserCard';
 import TipButton from '@/components/TipButton';
 
 export const dynamic = 'force-dynamic';
@@ -155,22 +154,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  let fundraiserDonations: Record<string, any[]> = {};
-  if (fundraisers && fundraisers.length > 0) {
-    const fundraiserIds = fundraisers.map(f => f.id);
-    const { data: topDonations } = await supabase
-      .from('donations')
-      .select('id, fundraiser_id, donor_name, donor_note, amount')
-      .in('fundraiser_id', fundraiserIds)
-      .eq('status', 'success')
-      .order('amount', { ascending: false });
-
-    if (topDonations) {
-      fundraisers.forEach(f => {
-        fundraiserDonations[f.id] = topDonations.filter(d => d.fundraiser_id === f.id).slice(0, 10);
-      });
-    }
-  }
+  // fundraiserDonations fetch removed since teasers do not display the leaderboard
 
   const isAppView = user && userRole;
 
@@ -232,8 +216,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                   <InitiateMessageButton creatorId={creator.id} creatorName={displayName || 'Creator'} />
                 )}
                 
-                {/* Global Tip Button */}
-                <TipButton creatorId={creator.id} creatorName={displayName || 'Creator'} />
+                {/* Global Tip Button (Only if verified) */}
+                {creator.is_verified && (
+                  <TipButton creatorId={creator.id} creatorName={displayName || 'Creator'} />
+                )}
                 
                 {creator.social_links && (
                   <div style={{ display: 'flex', gap: '16px' }}>
@@ -260,19 +246,49 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             </div>
           </div>
 
-          {/* Fundraisers Section - Always Visible */}
-          {fundraisers && fundraisers.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '800px', marginBottom: '48px' }}>
-              {fundraisers.map(f => (
-                <FundraiserCard 
-                  key={f.id} 
-                  fundraiser={f} 
-                  creatorId={creator.id} 
-                  donations={fundraiserDonations[f.id]} 
-                />
-              ))}
-            </div>
-          )}
+            {/* Fundraisers Section (Only if verified) */}
+            {creator.is_verified && fundraisers && fundraisers.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', maxWidth: '800px', marginBottom: '48px' }}>
+                {fundraisers.map((f: any) => {
+                  const targetAmount = f.target_amount / 100;
+                  const currentAmount = f.current_amount / 100;
+                  const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
+                  
+                  return (
+                    <Link 
+                      key={f.id} 
+                      href={`/fundraiser/${f.id}`}
+                      style={{ 
+                        background: 'var(--v2-surface-lowest)', 
+                        border: '1px solid var(--v2-outline)', 
+                        borderRadius: '16px', 
+                        padding: '24px',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        display: 'block',
+                        transition: 'transform 0.2s, box-shadow 0.2s'
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)' }}
+                      onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}
+                    >
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fundraiser Goal</span>
+                      <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 12px 0', color: 'var(--v2-primary)' }}>{f.title}</h3>
+                      <div style={{ marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>
+                          <span style={{ color: 'var(--v2-primary)' }}>₦{currentAmount.toLocaleString()} <span style={{ color: 'var(--v2-text-variant)', fontWeight: 400 }}>raised</span></span>
+                        </div>
+                        <div style={{ height: '8px', background: 'var(--v2-surface-container)', borderRadius: '999px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)' }}></div>
+                        </div>
+                      </div>
+                      <div style={{ color: 'var(--v2-green)', fontSize: '14px', fontWeight: 600, marginTop: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        View Goal <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
 
           {/* Main Content Tabs */}
           <ProfileContentTabs 

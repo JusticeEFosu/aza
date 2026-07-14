@@ -95,7 +95,7 @@ export default function FundraisersPage() {
 
   const copyShareLink = (id: string) => {
     const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
-    const url = `${origin}/c/${creatorSlug}#${id}`;
+    const url = `${origin}/fundraiser/${id}`;
     navigator.clipboard.writeText(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);

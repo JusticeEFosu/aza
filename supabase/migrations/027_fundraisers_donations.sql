@@ -76,5 +76,11 @@ BEGIN
     SET current_amount = current_amount + p_amount, updated_at = NOW()
     WHERE id = p_fundraiser_id;
   END IF;
+
+  -- 3. Increment creator total earnings
+  UPDATE creator_profiles cp
+  SET total_earnings = cp.total_earnings + p_amount
+  FROM donations d
+  WHERE d.id = p_donation_id AND cp.id = d.creator_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
