@@ -7,6 +7,7 @@ import MobileNav from '@/components/MobileNav';
 import ExpandableText from '@/components/ExpandableText';
 import ReportPostButton from '@/components/ReportPostButton';
 import PostEngagementBar from '@/components/posts/PostEngagementBar';
+import PollBlock from '@/components/posts/PollBlock';
 
 export default async function FanFeed() {
   const supabase = await createClient();
@@ -330,6 +331,8 @@ export default async function FanFeed() {
                       initialUserHasLiked={post.userHasLiked}
                       hasAccess={post.hasAccess}
                     />
+                    
+                    {post.has_poll && post.hasAccess && <PollBlock postId={post.id} />}
                     
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                       <ReportPostButton postId={post.id} />

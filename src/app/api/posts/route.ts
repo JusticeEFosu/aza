@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, content, isPublic, minPrice, imageUrl, thumbnailUrl, embedUrl } = body;
+    const { title, content, isPublic, minPrice, imageUrl, thumbnailUrl, embedUrl, pollOptions } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -28,12 +28,24 @@ export async function POST(request: Request) {
         is_public: isPublic,
         image_url: imageUrl,
         thumbnail_url: thumbnailUrl,
-        embed_url: embedUrl
+        embed_url: embedUrl,
+        has_poll: Array.isArray(pollOptions) && pollOptions.length > 0
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    if (Array.isArray(pollOptions) && pollOptions.length > 0) {
+      const optionsToInsert = pollOptions.map((opt: any) => ({
+        post_id: data.id,
+        text: opt.text,
+        image_url: opt.imageUrl || null
+      }));
+      
+      const { error: pollError } = await supabase.from('poll_options').insert(optionsToInsert);
+      if (pollError) console.error('Error inserting poll options:', pollError);
+    }
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
@@ -51,7 +63,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('posts')
-      .select('*, creator_profiles(slug, display_name, profiles(full_name, avatar_url))')
+      .select('*, creator_profiles(slug, display_name, profiles(full_name, avatar_url)), poll_options(*), poll_votes(*)')
       .order('created_at', { ascending: false });
 
     if (creatorId) {

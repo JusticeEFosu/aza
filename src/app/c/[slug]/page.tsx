@@ -12,6 +12,9 @@ import MobileNav from '@/components/MobileNav';
 import ProfileContentTabs from '@/components/ProfileContentTabs';
 import InitiateMessageButton from '@/components/messages/InitiateMessageButton';
 import PostEngagementBar from '@/components/posts/PostEngagementBar';
+import PollBlock from '@/components/posts/PollBlock';
+import FundraiserCard from '@/components/FundraiserCard';
+import TipButton from '@/components/TipButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -144,6 +147,31 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
   const displayName = creator.display_name || (creator.profiles as any)?.full_name;
   const avatarUrl = (creator.profiles as any)?.avatar_url;
 
+  // 6. Fetch Active Fundraisers and their top 10 donations
+  const { data: fundraisers } = await supabase
+    .from('fundraisers')
+    .select('*')
+    .eq('creator_id', creator.id)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+
+  let fundraiserDonations: Record<string, any[]> = {};
+  if (fundraisers && fundraisers.length > 0) {
+    const fundraiserIds = fundraisers.map(f => f.id);
+    const { data: topDonations } = await supabase
+      .from('donations')
+      .select('id, fundraiser_id, donor_name, donor_note, amount')
+      .in('fundraiser_id', fundraiserIds)
+      .eq('status', 'success')
+      .order('amount', { ascending: false });
+
+    if (topDonations) {
+      fundraisers.forEach(f => {
+        fundraiserDonations[f.id] = topDonations.filter(d => d.fundraiser_id === f.id).slice(0, 10);
+      });
+    }
+  }
+
   const isAppView = user && userRole;
 
   const content = (
@@ -203,6 +231,9 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                 {user && user.id !== creator.id && (
                   <InitiateMessageButton creatorId={creator.id} creatorName={displayName || 'Creator'} />
                 )}
+                
+                {/* Global Tip Button */}
+                <TipButton creatorId={creator.id} creatorName={displayName || 'Creator'} />
                 
                 {creator.social_links && (
                   <div style={{ display: 'flex', gap: '16px' }}>
@@ -301,6 +332,20 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             postsContent={
               <>
                 <div style={{ marginBottom: '64px' }}>
+            
+            {/* Fundraisers Section */}
+            {fundraisers && fundraisers.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '800px', marginBottom: '48px' }}>
+                {fundraisers.map(f => (
+                  <FundraiserCard 
+                    key={f.id} 
+                    fundraiser={f} 
+                    creatorId={creator.id} 
+                    donations={fundraiserDonations[f.id]} 
+                  />
+                ))}
+              </div>
+            )}
             
             {!posts || posts.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-outline)', borderRadius: '12px', color: 'var(--v2-text-variant)' }}>
@@ -434,6 +479,8 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                         initialUserHasLiked={post.userHasLiked}
                         hasAccess={post.hasAccess}
                       />
+                      
+                      {post.has_poll && post.hasAccess && <PollBlock postId={post.id} />}
                       
                       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <ReportPostButton postId={post.id} />

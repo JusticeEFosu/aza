@@ -66,6 +66,27 @@ export default async function CreatorDashboard() {
     });
   }
 
+  // Fetch successful donations for Fundraisers vs Tips
+  const { data: donations } = await supabase
+    .from('donations')
+    .select('amount, fundraiser_id, created_at, donor_name, donor_note')
+    .eq('creator_id', user.id)
+    .eq('status', 'success')
+    .order('created_at', { ascending: false });
+
+  let fundraisersTotal = 0;
+  let tipsTotal = 0;
+
+  if (donations) {
+    donations.forEach(d => {
+      if (d.fundraiser_id) {
+        fundraisersTotal += d.amount;
+      } else {
+        tipsTotal += d.amount;
+      }
+    });
+  }
+
   // Format MRR (e.g. 4.2M, 50k, etc.)
   const formatMRR = (amountKobo: number) => {
     const amountNaira = amountKobo / 100;
@@ -98,6 +119,19 @@ export default async function CreatorDashboard() {
     .eq('creator_id', user.id)
     .eq('status', 'success')
     .order('created_at', { ascending: true });
+
+  // Merge transactions and donations for recent activity
+  const allRecentActivity = [
+    ...(transactions || []).map((tx: any) => ({
+      ...tx,
+      _type: 'subscription'
+    })),
+    ...(donations || []).slice(0, 10).map((d: any) => ({
+      ...d,
+      _type: 'donation',
+      id: d.id || Math.random().toString()
+    }))
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
 
   const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
   const avatarUrl = profile?.avatar_url;
@@ -143,7 +177,6 @@ export default async function CreatorDashboard() {
               <p className="v2-stat-label">Total Subscribers</p>
               <h3 className="v2-stat-value">{activeSubsCount.toLocaleString()}</h3>
             </div>
-            {/* Real stats deliberately omitted from sub-text as requested */}
             <div style={{ height: '24px' }}></div>
           </div>
 
@@ -151,11 +184,19 @@ export default async function CreatorDashboard() {
             <AnalyticsChart transactions={allTransactions || []} formattedMRR={formatMRR(mrr)} />
           </div>
 
-          {/* Stat Card 3 */}
           <div className="v2-stat-card">
             <div>
-              <p className="v2-stat-label">New Subscribers (7d)</p>
-              <h3 className="v2-stat-value">{newSubs7d.toLocaleString()}</h3>
+              <p className="v2-stat-label">Tips & Fundraisers (All Time)</p>
+              <div style={{ display: 'flex', gap: '24px', marginTop: '8px' }}>
+                <div>
+                  <h3 className="v2-stat-value" style={{ fontSize: '20px' }}>{formatMRR(tipsTotal)}</h3>
+                  <p className="v2-stat-label" style={{ fontSize: '12px' }}>General Tips</p>
+                </div>
+                <div>
+                  <h3 className="v2-stat-value" style={{ fontSize: '20px' }}>{formatMRR(fundraisersTotal)}</h3>
+                  <p className="v2-stat-label" style={{ fontSize: '12px' }}>Goal Fundraisers</p>
+                </div>
+              </div>
             </div>
             <div style={{ height: '24px' }}></div>
           </div>
@@ -169,25 +210,47 @@ export default async function CreatorDashboard() {
           </div>
           
           <div className="v2-activity-list">
-            {(!transactions || transactions.length === 0) ? (
+            {allRecentActivity.length === 0 ? (
               <div style={{ padding: '24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
                 {isPublished 
-                  ? "No recent activity yet. Share your page to get your first subscriber!"
+                  ? "No recent activity yet. Share your page to get your first subscriber or tip!"
                   : "Complete your setup and publish your page to start getting subscribers!"
                 }
               </div>
             ) : (
-              transactions.map((tx: any) => {
-                const fanName = tx.profiles?.display_name || tx.profiles?.full_name || 'Anonymous Fan';
-                const fanAvatar = tx.profiles?.avatar_url;
+              allRecentActivity.map((item: any) => {
+                if (item._type === 'donation') {
+                  const donorName = item.donor_name || 'Guest Fan';
+                  const activitySubtext = item.fundraiser_id ? `Donated to Fundraiser` : `Sent a Tip`;
+                  return (
+                    <div key={item.id} className="v2-activity-item">
+                      <div className="v2-activity-user">
+                        <div className="v2-activity-avatar">
+                          <span className="material-symbols-outlined">volunteer_activism</span>
+                        </div>
+                        <div>
+                          <p className="v2-activity-name" style={{ fontWeight: 600 }}>{donorName}</p>
+                          <p className="v2-activity-desc">{activitySubtext} {item.donor_note ? ` - "${item.donor_note}"` : ''}</p>
+                        </div>
+                      </div>
+                      <div className="v2-activity-right">
+                        <p className="v2-activity-amount" style={{ color: 'var(--v2-green)' }}>+ ₦ {(item.amount / 100).toLocaleString()}</p>
+                        <p className="v2-activity-time">{formatTimeAgo(item.created_at)}</p>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Subscription logic
+                const fanName = item.profiles?.display_name || item.profiles?.full_name || 'Anonymous Fan';
+                const fanAvatar = item.profiles?.avatar_url;
                 
-                // Extract tier name from nested join
-                const tierInfo = tx.subscriptions?.tiers;
+                const tierInfo = item.subscriptions?.tiers;
                 const tierName = Array.isArray(tierInfo) ? tierInfo[0]?.name : tierInfo?.name;
-                const activitySubtext = tierName ? `Subscribed to ${tierName}` : `Payment Received (${tx.status})`;
+                const activitySubtext = tierName ? `Subscribed to ${tierName}` : `Payment Received (${item.status})`;
                 
                 return (
-                  <div key={tx.id} className="v2-activity-item">
+                  <div key={item.id} className="v2-activity-item">
                     <div className="v2-activity-user">
                       <div className="v2-activity-avatar">
                         {fanAvatar ? (
@@ -202,8 +265,8 @@ export default async function CreatorDashboard() {
                       </div>
                     </div>
                     <div className="v2-activity-right">
-                      <p className="v2-activity-amount">₦ {(tx.amount / 100).toLocaleString()}</p>
-                      <p className="v2-activity-time">{formatTimeAgo(tx.created_at)}</p>
+                      <p className="v2-activity-amount">₦ {(item.amount / 100).toLocaleString()}</p>
+                      <p className="v2-activity-time">{formatTimeAgo(item.created_at)}</p>
                     </div>
                   </div>
                 );

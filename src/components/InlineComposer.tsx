@@ -42,6 +42,21 @@ export default function InlineComposer({
   const [mediaMode, setMediaMode] = useState<'upload' | 'embed'>('upload');
   const [embedUrlInput, setEmbedUrlInput] = useState('');
 
+  // Poll state
+  const [hasPoll, setHasPoll] = useState(false);
+  const [pollOptions, setPollOptions] = useState<{ id: number, text: string, file: File | null, previewUrl: string | null }[]>([
+    { id: 1, text: '', file: null, previewUrl: null },
+    { id: 2, text: '', file: null, previewUrl: null }
+  ]);
+
+  const addPollOption = () => {
+    setPollOptions([...pollOptions, { id: Date.now(), text: '', file: null, previewUrl: null }]);
+  };
+
+  const updatePollOption = (id: number, updates: any) => {
+    setPollOptions(pollOptions.map(opt => opt.id === id ? { ...opt, ...updates } : opt));
+  };
+
   useEffect(() => {
     if (file) {
       const url = URL.createObjectURL(file);
@@ -164,6 +179,23 @@ export default function InlineComposer({
         thumbnailUrl = imageUrl.replace(/\.[^/.]+$/, ".jpg");
       }
 
+      // Process Poll Options
+      let finalPollOptions: any[] = [];
+      if (hasPoll) {
+        for (let i = 0; i < pollOptions.length; i++) {
+          const opt = pollOptions[i];
+          if (!opt.text.trim()) continue; // Skip empty options
+          let optImageUrl = null;
+          if (opt.file) {
+             setUploadProgress(0);
+             const d = await uploadWithProgress(opt.file, 'polls');
+             optImageUrl = d.url;
+             setUploadProgress(100);
+          }
+          finalPollOptions.push({ text: opt.text, imageUrl: optImageUrl });
+        }
+      }
+
       const method = editId ? 'PUT' : 'POST';
       const endpoint = editId ? `/api/posts/${editId}` : '/api/posts';
       const res = await fetch(endpoint, { 
@@ -176,7 +208,8 @@ export default function InlineComposer({
           minPrice: isPublic ? 0 : minPrice, 
           imageUrl, 
           thumbnailUrl,
-          embedUrl
+          embedUrl,
+          pollOptions: finalPollOptions
         }) 
       });
       const json = await res.json();
@@ -195,6 +228,11 @@ export default function InlineComposer({
         setCurrentEmbedUrl(null);
         setEmbedUrlInput('');
         setMediaMode('upload');
+        setHasPoll(false);
+        setPollOptions([
+          { id: 1, text: '', file: null, previewUrl: null },
+          { id: 2, text: '', file: null, previewUrl: null }
+        ]);
         setIsExpanded(false);
       }
       
@@ -377,6 +415,55 @@ export default function InlineComposer({
                 <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Supports YouTube</p>
               </div>
             )}
+
+            {/* Poll Toggle UI */}
+            <div style={{ marginTop: '16px', padding: '16px', background: 'var(--v2-surface-low)', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="material-symbols-outlined" style={{ color: 'var(--v2-primary)', fontSize: '20px' }}>poll</span>
+                  <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--v2-primary)' }}>Attach a Poll</span>
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={hasPoll} onChange={e => setHasPoll(e.target.checked)} style={{ width: '16px', height: '16px', accentColor: 'var(--v2-primary)' }} />
+                </label>
+              </div>
+
+              {hasPoll && (
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {pollOptions.map((opt, index) => (
+                    <div key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--v2-surface-lowest)', padding: '12px', borderRadius: '8px', border: '1px solid var(--v2-outline)' }}>
+                      <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', borderRadius: '8px', border: '1px dashed var(--v2-outline)', cursor: 'pointer', background: 'var(--v2-surface)', overflow: 'hidden' }}>
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          const url = file ? URL.createObjectURL(file) : null;
+                          updatePollOption(opt.id, { file, previewUrl: url });
+                        }} />
+                        {opt.previewUrl ? (
+                          <img src={opt.previewUrl} alt="Poll Opt" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--v2-text-variant)' }}>image</span>
+                        )}
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder={`Option ${index + 1}`} 
+                        value={opt.text} 
+                        onChange={e => updatePollOption(opt.id, { text: e.target.value })} 
+                        style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', color: 'var(--v2-primary)' }} 
+                      />
+                      {pollOptions.length > 2 && (
+                        <button type="button" onClick={() => setPollOptions(pollOptions.filter(o => o.id !== opt.id))} style={{ background: 'transparent', border: 'none', color: 'var(--v2-error)', cursor: 'pointer', display: 'flex' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" onClick={addPollOption} style={{ alignSelf: 'flex-start', background: 'transparent', color: 'var(--v2-primary)', border: 'none', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', marginTop: '4px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>add</span> Add Option
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Settings Area */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '16px' }}>

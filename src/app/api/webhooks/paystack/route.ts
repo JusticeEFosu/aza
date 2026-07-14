@@ -23,7 +23,27 @@ export async function POST(request: Request) {
       } = event.data;
 
       // Ensure we have our custom metadata
-      if (!metadata || !metadata.fan_id || metadata.type !== 'subscription') {
+      if (!metadata || !metadata.type) {
+        return NextResponse.json({ success: true, message: 'Ignored unrelated charge' });
+      }
+
+      if (metadata.type === 'donation') {
+        // Handle Donation Success
+        const { error } = await supabase.rpc('process_donation_success', {
+          p_donation_id: metadata.donation_id,
+          p_fundraiser_id: metadata.fundraiser_id || null,
+          p_amount: amount
+        });
+
+        if (error) {
+          console.error('Donation RPC Error:', error);
+          throw error;
+        }
+
+        return NextResponse.json({ success: true, message: 'Donation Processed via RPC' });
+      }
+
+      if (metadata.type !== 'subscription' || !metadata.fan_id) {
         return NextResponse.json({ success: true, message: 'Ignored unrelated charge' });
       }
 

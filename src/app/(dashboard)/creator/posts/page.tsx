@@ -9,6 +9,7 @@ import InlineComposer from '@/components/InlineComposer';
 import ConfirmModal from '@/components/ConfirmModal';
 import ExpandableText from '@/components/ExpandableText';
 import { getEmbedUrl } from '@/lib/utils/embed';
+import PollBlock from '@/components/posts/PollBlock';
 
 export default function CreatorPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -131,6 +132,9 @@ export default function CreatorPostsPage() {
                     maxLength={250} 
                     style={{ color: 'var(--v2-text-variant)', fontSize: '14px' }} 
                   />
+                  
+                  {post.has_poll && <PollBlock postId={post.id} />}
+                  
                   <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>
                     Published {new Date(post.created_at).toLocaleDateString()}
                   </div>
