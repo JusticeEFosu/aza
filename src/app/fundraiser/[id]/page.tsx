@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import DonationModalWrapper from './DonationModalWrapper'; // A client component to manage modal state
+import InlineDonationForm from './InlineDonationForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,18 +19,11 @@ export default async function FundraiserPage({ params }: { params: Promise<{ id:
 
   const { data: fundraiser, error: fundraiserError } = await supabase
     .from('fundraisers')
-    .select(`
-      *,
-      profiles (
-        avatar_url
-      )
-    `)
+    .select(`*, profiles ( avatar_url )`)
     .eq('id', id)
     .single();
 
-  if (fundraiserError || !fundraiser) {
-    notFound();
-  }
+  if (fundraiserError || !fundraiser) notFound();
 
   const { data: creatorProfile } = await supabase
     .from('creator_profiles')
@@ -38,9 +31,7 @@ export default async function FundraiserPage({ params }: { params: Promise<{ id:
     .eq('id', fundraiser.creator_id)
     .single();
 
-  if (!creatorProfile) {
-    notFound();
-  }
+  if (!creatorProfile) notFound();
 
   const { data: topDonations } = await adminSupabase
     .from('donations')
@@ -52,118 +43,75 @@ export default async function FundraiserPage({ params }: { params: Promise<{ id:
 
   const displayName = creatorProfile.display_name || 'Creator';
   const avatarUrl = (fundraiser.profiles as any)?.avatar_url;
-
   const targetAmount = fundraiser.target_amount / 100;
   const currentAmount = fundraiser.current_amount / 100;
+  const isOverFunded = currentAmount >= targetAmount && targetAmount > 0;
   const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--v2-background)', fontFamily: 'inherit' }}>
-      {/* Immersive Header Backdrop */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        height: '400px', 
-        background: 'linear-gradient(180deg, var(--v2-surface-high) 0%, var(--v2-background) 100%)', 
-        zIndex: 0 
-      }}></div>
+    <div className="v2-profile-page" style={{ minHeight: '100vh' }}>
+      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '40px 20px 80px 20px' }}>
 
-      {/* Navigation */}
-      <nav style={{ position: 'relative', zIndex: 10, padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/" style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
-        <Link href={`/c/${creatorProfile.slug}`} style={{ padding: '10px 24px', fontSize: '14px', fontWeight: 600, color: 'var(--v2-primary)', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '99px', textDecoration: 'none', transition: 'all 0.2s' }}>
-          Visit Creator Profile
-        </Link>
-      </nav>
+        {/* Top bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+          <Link href="/" style={{ fontSize: '20px', fontWeight: 800, color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
+          <Link href={`/c/${creatorProfile.slug}`} style={{ fontSize: '13px', color: 'var(--v2-text-variant)', textDecoration: 'none' }}>View Profile →</Link>
+        </div>
 
-      <main style={{ position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', padding: '40px 24px 120px 24px' }}>
-        
-        {/* Creator Attribution */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--v2-surface-lowest)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+        {/* Creator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', background: 'var(--v2-surface-low)', flexShrink: 0 }}>
             {avatarUrl ? (
               <img src={avatarUrl} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--v2-surface-high)', color: 'var(--v2-text-variant)', fontWeight: 700 }}>
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'var(--v2-text-variant)', fontSize: '14px' }}>{displayName.charAt(0).toUpperCase()}</div>
             )}
           </div>
-          <span style={{ fontSize: '15px', color: 'var(--v2-text-variant)', fontWeight: 500 }}>
-            Fundraiser by <Link href={`/c/${creatorProfile.slug}`} style={{ color: 'var(--v2-primary)', fontWeight: 700, textDecoration: 'none' }}>{displayName}</Link>
-            {creatorProfile.is_verified && <span style={{ color: 'var(--v2-green)', marginLeft: '4px' }}>✓</span>}
-          </span>
+          <Link href={`/c/${creatorProfile.slug}`} style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-primary)', textDecoration: 'none' }}>
+            {displayName}{creatorProfile.is_verified && <span style={{ color: 'var(--v2-green)', marginLeft: '4px' }}>✓</span>}
+          </Link>
         </div>
 
-        {/* Campaign Title & Description */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <h1 style={{ fontSize: '48px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.02em', marginBottom: '16px', lineHeight: 1.1 }}>
-            {fundraiser.title}
-          </h1>
-          <p style={{ fontSize: '18px', color: 'var(--v2-text-variant)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.5 }}>
-            {fundraiser.description}
-          </p>
+        {/* Title */}
+        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 8px 0', lineHeight: 1.3 }}>{fundraiser.title}</h1>
+        {fundraiser.description && (
+          <p style={{ fontSize: '15px', color: 'var(--v2-text-variant)', lineHeight: 1.6, margin: '0 0 24px 0' }}>{fundraiser.description}</p>
+        )}
+
+        {/* Progress */}
+        <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+          <span><strong>₦{currentAmount.toLocaleString()}</strong> raised</span>
+          <span style={{ color: 'var(--v2-text-variant)' }}>₦{targetAmount.toLocaleString()} goal</span>
         </div>
-
-        {/* Progress & Action Card */}
-        <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '32px', padding: '48px', boxShadow: '0 24px 48px rgba(0,0,0,0.03)', marginBottom: '48px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
-            <div>
-              <span style={{ fontSize: '36px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.02em' }}>
-                ₦{currentAmount.toLocaleString()}
-              </span>
-              <span style={{ fontSize: '16px', color: 'var(--v2-text-variant)', marginLeft: '8px', fontWeight: 500 }}>raised</span>
-            </div>
-            <div style={{ fontSize: '16px', color: 'var(--v2-text-variant)', fontWeight: 600 }}>
-              of ₦{targetAmount.toLocaleString()} goal
-            </div>
-          </div>
-
-          <div style={{ height: '16px', background: 'var(--v2-surface-container)', borderRadius: '999px', overflow: 'hidden', marginBottom: '32px' }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)', transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-          </div>
-
-          <DonationModalWrapper creatorId={creatorProfile.id} fundraiserId={fundraiser.id} title={fundraiser.title} />
+        <div style={{ height: '8px', background: 'var(--v2-surface-low)', borderRadius: '4px', overflow: 'hidden', marginBottom: isOverFunded ? '8px' : '24px' }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
         </div>
+        {isOverFunded && (
+          <p style={{ fontSize: '12px', color: 'var(--v2-green)', fontWeight: 600, margin: '0 0 24px 0' }}>✦ Goal surpassed</p>
+        )}
 
-        {/* Leaderboard Section */}
+        {/* Donate form */}
+        <InlineDonationForm creatorId={creatorProfile.id} fundraiserId={fundraiser.id} />
+
+        {/* Supporters */}
         {fundraiser.show_leaderboard && topDonations && topDonations.length > 0 && (
-          <div style={{ padding: '0 16px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '24px', letterSpacing: '-0.01em' }}>Top Supporters</h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {topDonations.map((d, index) => {
-                let badgeColor = 'var(--v2-surface-low)';
-                let textColor = 'var(--v2-text-variant)';
-                let border = '1px solid var(--v2-outline)';
-                
-                if (index === 0) { badgeColor = 'rgba(234, 179, 8, 0.15)'; textColor = '#ca8a04'; border = '1px solid rgba(234, 179, 8, 0.3)'; } // Gold
-                if (index === 1) { badgeColor = 'rgba(148, 163, 184, 0.15)'; textColor = '#64748b'; border = '1px solid rgba(148, 163, 184, 0.3)'; } // Silver
-                if (index === 2) { badgeColor = 'rgba(180, 83, 9, 0.15)'; textColor = '#92400e'; border = '1px solid rgba(180, 83, 9, 0.3)'; } // Bronze
-
-                return (
-                  <div key={d.id} className="v2-leaderboard-item" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '20px', borderRadius: '20px', background: 'var(--v2-surface-lowest)', border: border, transition: 'transform 0.2s', cursor: 'default' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: badgeColor, color: textColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px' }}>
-                      #{index + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontWeight: 700, color: 'var(--v2-primary)', fontSize: '16px' }}>
-                        {d.donor_name || 'Anonymous Fan'} <span style={{ color: 'var(--v2-green)', fontWeight: 600 }}>donated ₦{(d.amount / 100).toLocaleString()}</span>
-                      </p>
-                      {d.donor_note && (
-                        <p style={{ margin: '6px 0 0 0', color: 'var(--v2-text-variant)', fontSize: '15px', lineHeight: 1.4 }}>"{d.donor_note}"</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div style={{ marginTop: '32px', borderTop: '1px solid var(--v2-border)', paddingTop: '24px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>Top Supporters</h3>
+            {topDonations.map((d, i) => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'baseline', gap: '8px', padding: '10px 0', borderBottom: i < topDonations.length - 1 ? '1px solid var(--v2-border)' : 'none', fontSize: '14px' }}>
+                <span style={{ color: 'var(--v2-text-variant)', fontWeight: 600, width: '20px', flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ fontWeight: 600 }}>{d.donor_name || 'Anonymous'}</span>
+                <span style={{ color: 'var(--v2-green)', fontWeight: 600, marginLeft: 'auto', flexShrink: 0 }}>₦{(d.amount / 100).toLocaleString()}</span>
+              </div>
+            ))}
           </div>
         )}
 
-      </main>
+        {/* Footer */}
+        <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--v2-text-variant)', marginTop: '32px', opacity: 0.5 }}>
+          Payments secured by Paystack
+        </p>
+      </div>
     </div>
   );
 }
