@@ -22,6 +22,8 @@ export default async function CreatorLayout({
         redirect('/suspended');
     } else if (profile?.admin_role) {
         redirect('/admin');
+    } else if (!profile?.role || profile?.role === 'user') {
+        redirect('/onboarding');
     } else if (profile?.role !== 'creator') {
         redirect('/fan');
     } else {

@@ -21,6 +21,7 @@ export default async function FanFeed() {
     .eq('id', user.id)
     .single();
 
+  if (!profile?.role || profile?.role === 'user') redirect('/onboarding');
   if (profile?.role !== 'fan') redirect('/creator');
 
   // Fetch active subscriptions with tier data to determine access

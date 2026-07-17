@@ -12,6 +12,11 @@ export default function FundraisersPage() {
   const [creatorSlug, setCreatorSlug] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Donors Modal State
+  const [viewingDonorsId, setViewingDonorsId] = useState<string | null>(null);
+  const [donorsList, setDonorsList] = useState<any[]>([]);
+  const [loadingDonors, setLoadingDonors] = useState(false);
+
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -101,6 +106,22 @@ export default function FundraisersPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const fetchDonors = async (id: string) => {
+    setViewingDonorsId(id);
+    setLoadingDonors(true);
+    setDonorsList([]);
+    try {
+      const res = await fetch(`/api/fundraisers/${id}/donations`);
+      const json = await res.json();
+      if (json.data) {
+        setDonorsList(json.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch donors', err);
+    }
+    setLoadingDonors(false);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this fundraiser?')) return;
     await fetch(`/api/fundraisers/${id}`, { method: 'DELETE' });
@@ -147,6 +168,10 @@ export default function FundraisersPage() {
                     <p style={{ margin: '0 0 16px 0', color: 'var(--v2-text-variant)', fontSize: '14px' }}>{f.description}</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => fetchDonors(f.id)} style={{ padding: '6px 12px', background: 'var(--v2-surface-low)', color: 'var(--v2-primary)', border: '1px solid var(--v2-outline)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>group</span>
+                      Donors
+                    </button>
                     <button 
                       onClick={() => copyShareLink(f.id)} 
                       style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--v2-outline)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -270,6 +295,45 @@ export default function FundraisersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Donors List Modal */}
+      {viewingDonorsId && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'var(--v2-surface-lowest)', width: '100%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', borderRadius: '16px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--v2-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)' }}>Donors</h2>
+              <button onClick={() => setViewingDonorsId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--v2-text-variant)' }}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div style={{ padding: '24px 32px', overflowY: 'auto', flex: 1 }}>
+              {loadingDonors ? (
+                <p style={{ textAlign: 'center', color: 'var(--v2-text-variant)' }}>Loading donors...</p>
+              ) : donorsList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--v2-text-variant)' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.5 }}>inbox</span>
+                  <p style={{ margin: 0 }}>No donations yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {donorsList.map((d: any) => (
+                    <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '16px', borderBottom: '1px solid var(--v2-border)' }}>
+                      <div>
+                        <p style={{ margin: '0 0 4px 0', fontWeight: 600, color: 'var(--v2-primary)' }}>{d.donor_name || 'Anonymous'}</p>
+                        {d.donor_note && <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--v2-text-variant)', fontStyle: 'italic' }}>"{d.donor_note}"</p>}
+                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--v2-text-variant)' }}>{new Date(d.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div style={{ fontWeight: 700, color: 'var(--v2-green)' }}>
+                        ₦{(d.amount / 100).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
