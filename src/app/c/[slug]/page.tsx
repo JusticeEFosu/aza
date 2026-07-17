@@ -185,7 +185,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
         </nav>
       )}
 
-      <main style={{ width: '100%', paddingBottom: '64px' }}>
+      <main className="v2-profile-main" style={{ width: '100%', paddingBottom: '64px' }}>
         <div className="v2-profile-container">
           
           {/* Profile Header */}
@@ -528,6 +528,13 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
           </div>
         </div>
       </footer>
+      <style dangerouslySetInnerHTML={{__html: `
+        @media (max-width: 767px) {
+          .v2-profile-main {
+            padding-bottom: 120px !important;
+          }
+        }
+      `}} />
     </div>
   );
 

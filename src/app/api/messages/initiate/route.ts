@@ -49,53 +49,65 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Fetch the creator's specific DM setting
-    const { data: creatorProfile, error: profileError } = await supabase
-      .from('creator_profiles')
-      .select('min_tier_id_for_dm')
-      .eq('id', creator_id)
-      .single();
+    // 2. Fetch creator status for both users to determine who is the creator and if checks are needed
+    const [currentUserCreatorRes, targetUserCreatorRes] = await Promise.all([
+      supabase.from('creator_profiles').select('id').eq('id', user.id).maybeSingle(),
+      supabase.from('creator_profiles').select('id, min_tier_id_for_dm').eq('id', creator_id).maybeSingle()
+    ]);
 
-    if (profileError) {
-      return NextResponse.json({ error: 'Could not fetch creator settings.' }, { status: 500 });
+    const currentUserCreator = currentUserCreatorRes?.data;
+    const targetUserCreator = targetUserCreatorRes?.data;
+
+    let channelCreatorId = creator_id;
+    let skipSubscriptionCheck = false;
+
+    if (currentUserCreator) {
+      // Current user is a creator, they can message anyone (fan or another creator)
+      channelCreatorId = user.id;
+      skipSubscriptionCheck = true;
+    } else if (!targetUserCreator) {
+      // Neither is a creator, or target is a fan (shouldn't happen on standard flow, but bypass to be safe)
+      skipSubscriptionCheck = true;
     }
 
-    // 3. Determine the required minimum price
-    let requiredPrice = 250000; // Platform floor
-    
-    if (creatorProfile.min_tier_id_for_dm) {
-      const { data: tierData } = await supabase
-        .from('tiers')
-        .select('amount')
-        .eq('id', creatorProfile.min_tier_id_for_dm)
-        .single();
-        
-      if (tierData && tierData.amount > requiredPrice) {
-        requiredPrice = tierData.amount;
-      }
-    }
-
-    // 4. Query the fan's active subscriptions to this creator
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const adminSupabase = createAdminClient();
-    
-    const { data: subData, error: subError } = await adminSupabase
-      .from('subscriptions')
-      .select('id, tiers!inner(amount)')
-      .eq('fan_id', user.id)
-      .eq('creator_id', creator_id)
-      .eq('status', 'active');
 
-    const hasQualifyingSubscription = subData && subData.some(sub => {
-      // Handle array or single object depending on relation
-      const tier = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
-      return tier && tier.amount >= requiredPrice;
-    });
+    if (!skipSubscriptionCheck && targetUserCreator) {
+      // 3. Determine the required minimum price
+      let requiredPrice = 250000; // Platform floor
+      
+      if (targetUserCreator.min_tier_id_for_dm) {
+        const { data: tierData } = await supabase
+          .from('tiers')
+          .select('amount')
+          .eq('id', targetUserCreator.min_tier_id_for_dm)
+          .single();
+          
+        if (tierData && tierData.amount > requiredPrice) {
+          requiredPrice = tierData.amount;
+        }
+      }
 
-    if (subError || !hasQualifyingSubscription) {
-      return NextResponse.json({ 
-        error: `Direct Messages are restricted. You must be subscribed to a tier priced at ₦${(requiredPrice / 100).toLocaleString()} or higher to message this creator.` 
-      }, { status: 403 });
+      // 4. Query the fan's active subscriptions to this creator
+      const { data: subData, error: subError } = await adminSupabase
+        .from('subscriptions')
+        .select('id, tiers!inner(amount)')
+        .eq('fan_id', user.id)
+        .eq('creator_id', creator_id)
+        .eq('status', 'active');
+
+      const hasQualifyingSubscription = subData && subData.some(sub => {
+        // Handle array or single object depending on relation
+        const tier = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
+        return tier && tier.amount >= requiredPrice;
+      });
+
+      if (subError || !hasQualifyingSubscription) {
+        return NextResponse.json({ 
+          error: `Direct Messages are restricted. You must be subscribed to a tier priced at ₦${(requiredPrice / 100).toLocaleString()} or higher to message this creator.` 
+        }, { status: 403 });
+      }
     }
 
     // 5. Admin bypass to create the channel (since RLS prevents fans from inserting channels)
@@ -104,7 +116,7 @@ export async function POST(request: Request) {
       .from('chat_channels')
       .insert({
         type: 'direct_message',
-        creator_id: creator_id,
+        creator_id: channelCreatorId,
       })
       .select('id')
       .single();

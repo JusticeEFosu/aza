@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function SubscribersPage() {
   const [subscribers, setSubscribers] = useState<any[]>([]);
@@ -14,8 +15,10 @@ export default function SubscribersPage() {
   const [tierFilter, setTierFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 10;
+  const [messagingId, setMessagingId] = useState<string | null>(null);
 
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => { loadData(); }, []);
 
@@ -111,6 +114,30 @@ export default function SubscribersPage() {
   // Reset to page 1 when filters change
   useEffect(() => { setCurrentPage(1); }, [search, tierFilter]);
 
+  const handleMessageSubscriber = async (subscriberId: string) => {
+    setMessagingId(subscriberId);
+    try {
+      const res = await fetch('/api/messages/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ creator_id: subscriberId })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to initiate message');
+      }
+
+      router.push(`/messages?channelId=${data.channel_id}`);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setMessagingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="v2-dashboard-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -130,9 +157,9 @@ export default function SubscribersPage() {
               <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', margin: 0, letterSpacing: '-0.01em' }}>Subscribers</h1>
               <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)', marginTop: '4px' }}>Manage your active community members.</p>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="v2-search-filter-container">
               {/* Search */}
-              <div style={{ position: 'relative' }}>
+              <div className="v2-search-wrapper" style={{ position: 'relative' }}>
                 <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--v2-text-variant)', fontSize: '20px' }}>search</span>
                 <input
                   type="text"
@@ -145,6 +172,7 @@ export default function SubscribersPage() {
               {/* Filter */}
               {tiers.length > 1 && (
                 <select
+                  className="v2-filter-select"
                   value={tierFilter}
                   onChange={e => setTierFilter(e.target.value)}
                   style={{ padding: '8px 32px 8px 12px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface-lowest)', fontSize: '14px', outline: 'none', cursor: 'pointer', appearance: 'none' }}
@@ -285,12 +313,18 @@ export default function SubscribersPage() {
                     {/* Action */}
                     <div style={{ textAlign: 'right' }}>
                       <button
-                        style={{ padding: '6px', background: 'transparent', border: 'none', borderRadius: '50%', cursor: 'pointer', color: 'var(--v2-text-variant)', transition: 'all 0.2s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--v2-surface-low)'; e.currentTarget.style.color = 'var(--v2-primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--v2-text-variant)'; }}
+                        onClick={() => profile?.id && handleMessageSubscriber(profile.id)}
+                        disabled={messagingId !== null}
+                        style={{ padding: '6px', background: 'transparent', border: 'none', borderRadius: '50%', cursor: messagingId !== null ? 'not-allowed' : 'pointer', color: 'var(--v2-text-variant)', transition: 'all 0.2s' }}
+                        onMouseEnter={e => { if (messagingId === null) { e.currentTarget.style.background = 'var(--v2-surface-low)'; e.currentTarget.style.color = 'var(--v2-primary)'; } }}
+                        onMouseLeave={e => { if (messagingId === null) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--v2-text-variant)'; } }}
                         title="Message"
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chat</span>
+                        {messagingId === profile?.id ? (
+                          <span className="material-symbols-outlined spin-icon" style={{ fontSize: '20px' }}>sync</span>
+                        ) : (
+                          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chat</span>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -339,6 +373,38 @@ export default function SubscribersPage() {
         )}
 
       </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .spin-icon {
+          animation: spin 1s linear infinite;
+          display: inline-block;
+        }
+        .v2-search-filter-container {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          width: auto;
+        }
+        @media (max-width: 640px) {
+          .v2-search-filter-container {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+          .v2-search-wrapper {
+            width: 100% !important;
+          }
+          .v2-search-wrapper input {
+            width: 100% !important;
+          }
+          .v2-filter-select {
+            width: 100% !important;
+          }
+        }
+      `}} />
     </main>
   );
 }

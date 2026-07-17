@@ -61,6 +61,17 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
     scrollToBottom();
   }, [messages]);
 
+  // Read channelId or channel from URL search parameters on load
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const channelId = params.get('channelId') || params.get('channel');
+      if (channelId) {
+        setActiveChannelId(channelId);
+      }
+    }
+  }, []);
+
   // Initial Load: Fetch Channels
   useEffect(() => {
     async function fetchChannels() {

@@ -388,7 +388,15 @@ export default function CreatorSettings() {
 
         {/* Tab Navigation */}
         <div style={{ borderBottom: '1px solid var(--v2-outline)', marginBottom: '32px' }}>
-          <nav style={{ display: 'flex', gap: '24px' }}>
+          <nav style={{ 
+            display: 'flex', 
+            gap: '24px',
+            overflowX: 'auto',
+            whiteSpace: 'nowrap',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}>
             {['profile', 'tiers', 'payouts', 'messages', 'account'].map((tab) => (
               <button
                 key={tab}
@@ -403,7 +411,8 @@ export default function CreatorSettings() {
                   fontSize: '14px',
                   cursor: 'pointer',
                   textTransform: 'capitalize',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  flexShrink: 0
                 }}
               >
                 {tab}
