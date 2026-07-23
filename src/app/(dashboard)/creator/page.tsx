@@ -6,6 +6,7 @@ import HeaderShareButton from '@/components/HeaderShareButton';
 import SetupWidget from '@/components/SetupWidget';
 import AnalyticsChart from '@/components/AnalyticsChart';
 import RecentActivityFeed from '@/components/dashboard/RecentActivityFeed';
+import ActiveGoalsCard from '@/components/dashboard/ActiveGoalsCard';
 
 // Utility for relative time formatting
 function formatTimeAgo(dateString: string) {
@@ -137,6 +138,13 @@ export default async function CreatorDashboard() {
 
   const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
   const avatarUrl = profile?.avatar_url;
+  const { data: activeFundraisers } = await supabase
+    .from('fundraisers')
+    .select('id, title, target_amount, current_amount')
+    .eq('creator_id', user.id)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+
   const shareUrl = `https://aza-chi.vercel.app/c/${creatorProfile?.slug}`; // Should use NEXT_PUBLIC variables later
 
   const { data: creatorTiers } = await supabase
@@ -150,6 +158,8 @@ export default async function CreatorDashboard() {
   const hasBank = Boolean(creatorProfile?.bank_account_number && creatorProfile?.bank_code);
   const hasProfile = Boolean(profile?.avatar_url);
   const isPublished = Boolean(creatorProfile?.is_published);
+
+
 
   return (
     <main className="v2-main-content">
@@ -173,7 +183,7 @@ export default async function CreatorDashboard() {
 
         {/* Stats Grid */}
         <div className="v2-stats-grid">
-          {/* Stat Card 1 */}
+          {/* Stat Card 1: Total Subscribers */}
           <div className="v2-stat-card">
             <div>
               <p className="v2-stat-label">Total Subscribers</p>
@@ -182,26 +192,13 @@ export default async function CreatorDashboard() {
             <div style={{ height: '24px' }}></div>
           </div>
 
+          {/* Stat Card 2: MRR & Revenue Chart */}
           <div className="v2-stat-card">
             <AnalyticsChart transactions={allTransactions || []} formattedMRR={formatMRR(mrr)} />
           </div>
 
-          <div className="v2-stat-card">
-            <div>
-              <p className="v2-stat-label">Tips & Fundraisers (All Time)</p>
-              <div style={{ display: 'flex', gap: '24px', marginTop: '8px' }}>
-                <div>
-                  <h3 className="v2-stat-value" style={{ fontSize: '20px' }}>{formatMRR(tipsTotal)}</h3>
-                  <p className="v2-stat-label" style={{ fontSize: '12px' }}>General Tips</p>
-                </div>
-                <div>
-                  <h3 className="v2-stat-value" style={{ fontSize: '20px' }}>{formatMRR(fundraisersTotal)}</h3>
-                  <p className="v2-stat-label" style={{ fontSize: '12px' }}>Goal Fundraisers</p>
-                </div>
-              </div>
-            </div>
-            <div style={{ height: '24px' }}></div>
-          </div>
+          {/* Stat Card 3: Active Goals Carousel (Renders conditionally if active goals exist) */}
+          <ActiveGoalsCard fundraisers={activeFundraisers || []} />
         </div>
 
         {/* Recent Activity with 4-Tab Filter */}
