@@ -5,6 +5,7 @@ import MobileNav from '@/components/MobileNav';
 import HeaderShareButton from '@/components/HeaderShareButton';
 import SetupWidget from '@/components/SetupWidget';
 import AnalyticsChart from '@/components/AnalyticsChart';
+import RecentActivityFeed from '@/components/dashboard/RecentActivityFeed';
 
 // Utility for relative time formatting
 function formatTimeAgo(dateString: string) {
@@ -70,7 +71,7 @@ export default async function CreatorDashboard() {
   // Fetch successful donations for Fundraisers vs Tips
   const { data: donations } = await supabase
     .from('donations')
-    .select('amount, fundraiser_id, created_at, donor_name, donor_note')
+    .select('id, amount, fundraiser_id, created_at, donor_name, donor_note')
     .eq('creator_id', user.id)
     .eq('status', 'success')
     .order('created_at', { ascending: false });
@@ -203,78 +204,8 @@ export default async function CreatorDashboard() {
           </div>
         </div>
 
-        {/* Recent Subscriber Activity */}
-        <section className="v2-activity-section">
-          <div className="v2-activity-header">
-            <h2 className="v2-activity-title">Recent Subscriber Activity</h2>
-            <Link href="/creator/payouts" className="v2-activity-view-all">View All</Link>
-          </div>
-          
-          <div className="v2-activity-list">
-            {allRecentActivity.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
-                {isPublished 
-                  ? "No recent activity yet. Share your page to get your first subscriber or tip!"
-                  : "Complete your setup and publish your page to start getting subscribers!"
-                }
-              </div>
-            ) : (
-              allRecentActivity.map((item: any) => {
-                if (item._type === 'donation') {
-                  const donorName = item.donor_name || 'Guest Fan';
-                  const activitySubtext = item.fundraiser_id ? `Donated to Fundraiser` : `Sent a Tip`;
-                  return (
-                    <div key={item.id} className="v2-activity-item">
-                      <div className="v2-activity-user">
-                        <div className="v2-activity-avatar">
-                          <span className="material-symbols-outlined">volunteer_activism</span>
-                        </div>
-                        <div>
-                          <p className="v2-activity-name" style={{ fontWeight: 600 }}>{donorName}</p>
-                          <p className="v2-activity-desc">{activitySubtext} {item.donor_note ? ` - "${item.donor_note}"` : ''}</p>
-                        </div>
-                      </div>
-                      <div className="v2-activity-right">
-                        <p className="v2-activity-amount" style={{ color: 'var(--v2-green)' }}>+ ₦ {(item.amount / 100).toLocaleString()}</p>
-                        <p className="v2-activity-time">{formatTimeAgo(item.created_at)}</p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Subscription logic
-                const fanName = item.profiles?.display_name || item.profiles?.full_name || 'Anonymous Fan';
-                const fanAvatar = item.profiles?.avatar_url;
-                
-                const tierInfo = item.subscriptions?.tiers;
-                const tierName = Array.isArray(tierInfo) ? tierInfo[0]?.name : tierInfo?.name;
-                const activitySubtext = tierName ? `Subscribed to ${tierName}` : `Payment Received (${item.status})`;
-                
-                return (
-                  <div key={item.id} className="v2-activity-item">
-                    <div className="v2-activity-user">
-                      <div className="v2-activity-avatar">
-                        {fanAvatar ? (
-                          <img src={fanAvatar} alt="" />
-                        ) : (
-                          <span className="material-symbols-outlined">person</span>
-                        )}
-                      </div>
-                      <div>
-                        <p className="v2-activity-name" style={{ fontWeight: 600 }}>{fanName}</p>
-                        <p className="v2-activity-desc">{activitySubtext}</p>
-                      </div>
-                    </div>
-                    <div className="v2-activity-right">
-                      <p className="v2-activity-amount">₦ {(item.amount / 100).toLocaleString()}</p>
-                      <p className="v2-activity-time">{formatTimeAgo(item.created_at)}</p>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </section>
+        {/* Recent Activity with 4-Tab Filter */}
+        <RecentActivityFeed activities={allRecentActivity as any} isPublished={isPublished} />
     </main>
   );
 }
