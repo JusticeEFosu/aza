@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import LandingNavbar from '@/components/LandingNavbar';
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -37,29 +38,7 @@ export default async function HomePage() {
   return (
     <div className="landing-v2">
       {/* TopNavBar Component */}
-      <nav className="v2-nav">
-        <div className="v2-nav-inner">
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Link href="/" className="v2-brand">MyAzaa</Link>
-            <div className="v2-nav-links">
-              <Link href="/creators" className="v2-nav-link active">Creators</Link>
-              <Link href="/fundraisers" className="v2-nav-link">Causes</Link>
-              <Link href="/how-it-works" className="v2-nav-link">How it Works</Link>
-            </div>
-          </div>
-          <div className="v2-nav-actions">
-            {user ? (
-              <Link href={dashboardUrl} className="v2-btn-outline v2-hidden-mobile">My Dashboard</Link>
-            ) : (
-              <Link href="/login" className="v2-btn-outline v2-hidden-mobile">Log In</Link>
-            )}
-            <Link href="/signup" className="v2-btn-primary">Create Account</Link>
-            <button className="v2-mobile-menu">
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-          </div>
-        </div>
-      </nav>
+      <LandingNavbar user={user} dashboardUrl={dashboardUrl} />
 
       <main className="v2-main">
         {/* Hero Section */}
@@ -72,13 +51,31 @@ export default async function HomePage() {
               Join the community behind your favourite voices. Empowering Nigerian creativity and the voices that matter most to you.
             </p>
           </div>
-          <div className="v2-hero-actions">
-            <Link href="/signup" className="v2-btn-primary lg">
-              Create Account <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
-            </Link>
-            <Link href="/creators" className="v2-btn-outline lg">
-              Explore Creators
-            </Link>
+          <div className="v2-hero-actions" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+            {user ? (
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+                <Link href={dashboardUrl} className="v2-btn-primary lg">
+                  Go to Dashboard <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+                </Link>
+                <Link href="/fundraisers" className="v2-btn-outline lg">
+                  Explore Causes
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+                  <Link href="/signup" className="v2-btn-primary lg">
+                    Create Account <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+                  </Link>
+                  <Link href="/creators" className="v2-btn-outline lg">
+                    Explore Creators
+                  </Link>
+                </div>
+                <Link href="/login" style={{ fontSize: '15px', color: 'var(--v2-text-variant)', textDecoration: 'none', fontWeight: 500, marginTop: '16px', display: 'inline-block' }}>
+                  Already have an account? <span style={{ color: 'var(--v2-primary)', fontWeight: 600, textDecoration: 'underline' }}>Log In</span>
+                </Link>
+              </>
+            )}
           </div>
         </section>
 
