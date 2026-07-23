@@ -42,7 +42,8 @@ export default async function HomePage() {
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Link href="/" className="v2-brand">MyAzaa</Link>
             <div className="v2-nav-links">
-              <Link href="/creators" className="v2-nav-link active">Discover</Link>
+              <Link href="/creators" className="v2-nav-link active">Creators</Link>
+              <Link href="/fundraisers" className="v2-nav-link">Causes</Link>
               <Link href="/how-it-works" className="v2-nav-link">How it Works</Link>
             </div>
           </div>
