@@ -110,7 +110,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
             top: 0, left: 0, right: 0, bottom: 0,
             background: 'rgba(0,0,0,0.6)',
             backdropFilter: 'blur(4px)',
-            zIndex: 49,
+            zIndex: 10000,
             animation: 'fadeIn 0.2s ease'
           }}
         />
@@ -126,7 +126,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           maxWidth: '320px',
           background: 'var(--v2-surface-lowest)',
           borderRight: '1px solid var(--v2-outline)',
-          zIndex: 50,
+          zIndex: 10001,
           transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex',
           flexDirection: 'column',
