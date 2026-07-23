@@ -18,30 +18,30 @@ export default async function CreatorPayoutsPage() {
   const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
   const avatarUrl = profile?.avatar_url;
 
-  // Fetch REAL payouts
-  const { data: payouts } = await supabase
-    .from('payouts')
-    .select('id, net_amount, status, created_at')
-    .eq('creator_id', user.id)
-    .order('created_at', { ascending: false });
-
-  // Calculate real balances from transactions for the hero card
-  const { data: transactions } = await supabase
-    .from('transactions')
-    .select('creator_share, status')
-    .eq('creator_id', user.id);
+  const [
+    { data: payouts },
+    { data: transactions },
+    { data: activeSubs }
+  ] = await Promise.all([
+    supabase.from('payouts').select('id, net_amount, status, created_at').eq('creator_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('transactions').select('creator_share, status').eq('creator_id', user.id),
+    supabase.from('subscriptions').select('tiers(amount)').eq('creator_id', user.id).eq('status', 'active')
+  ]);
 
   // Calculate real balances
   const totalNet = (transactions || []).reduce((sum, tx) => sum + (tx.status === 'success' ? tx.creator_share : 0), 0);
   
-  // Calculate real MRR
-  const { data: activeSubs } = await supabase
-    .from('subscriptions')
-    .select('amount')
-    .eq('creator_id', user.id)
-    .eq('status', 'active');
+  // Sum up all payouts that are either pending, processing, or paid (everything except failed)
+  const totalWithdrawn = (payouts || [])
+    .filter(p => p.status !== 'failed')
+    .reduce((sum, p) => sum + p.net_amount, 0);
+
+  const availableBalance = Math.max(0, totalNet - totalWithdrawn);
   
-  const mrr = (activeSubs || []).reduce((sum, sub) => sum + sub.amount, 0);
+  const mrr = (activeSubs || []).reduce((sum, sub) => {
+    const tierData = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
+    return sum + (tierData?.amount || 0);
+  }, 0);
 
   return (
     <main className="v2-main-content" style={{ background: 'var(--v2-surface)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -66,7 +66,7 @@ export default async function CreatorPayoutsPage() {
               <div style={{ marginBottom: '32px' }}>
                 <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)', marginBottom: '4px' }}>Total Available Balance</p>
                 <h2 style={{ fontSize: '48px', fontWeight: 700, color: 'var(--v2-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                  ₦ {(totalNet / 100).toLocaleString() + (totalNet % 100 === 0 ? '.00' : '')}
+                  ₦ {(availableBalance / 100).toLocaleString() + (availableBalance % 100 === 0 ? '.00' : '')}
                 </h2>
                 <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>trending_up</span>

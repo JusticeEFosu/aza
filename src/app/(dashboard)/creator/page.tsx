@@ -36,17 +36,32 @@ export default async function CreatorDashboard() {
   if (!profile?.role || profile?.role === 'user') redirect('/onboarding');
   if (profile?.role !== 'creator') redirect('/fan');
 
-  const { data: creatorProfile } = await supabase
-    .from('creator_profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  // Fetch Subscriptions for MRR and 7d new
-  const { data: subscriptions } = await supabase
-    .from('subscriptions')
-    .select('id, created_at, status, tiers(amount)')
-    .eq('creator_id', user.id);
+  const [
+    { data: creatorProfile },
+    { data: subscriptions },
+    { data: donations },
+    { data: transactions },
+    { data: allTransactions },
+    { data: activeFundraisers },
+    { data: creatorTiers }
+  ] = await Promise.all([
+    supabase.from('creator_profiles').select('*').eq('id', user.id).single(),
+    supabase.from('subscriptions').select('id, created_at, status, tiers(amount)').eq('creator_id', user.id),
+    supabase.from('donations').select('id, amount, fundraiser_id, created_at, donor_name, donor_note').eq('creator_id', user.id).eq('status', 'success').order('created_at', { ascending: false }),
+    supabase.from('transactions').select(`
+      id,
+      amount,
+      status,
+      created_at,
+      profiles ( full_name, display_name, avatar_url ),
+      subscriptions (
+        tiers ( name )
+      )
+    `).eq('creator_id', user.id).order('created_at', { ascending: false }).limit(10),
+    supabase.from('transactions').select('amount, created_at, status').eq('creator_id', user.id).eq('status', 'success').order('created_at', { ascending: true }),
+    supabase.from('fundraisers').select('id, title, target_amount, current_amount').eq('creator_id', user.id).eq('is_active', true).order('created_at', { ascending: false }),
+    supabase.from('tiers').select('id').eq('creator_id', user.id).eq('is_active', true).limit(1)
+  ]);
 
   let mrr = 0;
   let newSubs7d = 0;
@@ -69,14 +84,6 @@ export default async function CreatorDashboard() {
     });
   }
 
-  // Fetch successful donations for Fundraisers vs Tips
-  const { data: donations } = await supabase
-    .from('donations')
-    .select('id, amount, fundraiser_id, created_at, donor_name, donor_note')
-    .eq('creator_id', user.id)
-    .eq('status', 'success')
-    .order('created_at', { ascending: false });
-
   let fundraisersTotal = 0;
   let tipsTotal = 0;
 
@@ -98,31 +105,6 @@ export default async function CreatorDashboard() {
     return `₦ ${amountNaira.toLocaleString()}`;
   };
 
-  // Fetch transactions for recent activity explicitly matching mockup style
-  const { data: transactions } = await supabase
-    .from('transactions')
-    .select(`
-      id,
-      amount,
-      status,
-      created_at,
-      profiles ( full_name, display_name, avatar_url ),
-      subscriptions (
-        tiers ( name )
-      )
-    `)
-    .eq('creator_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
-
-  // Fetch all successful transactions for the Analytics chart
-  const { data: allTransactions } = await supabase
-    .from('transactions')
-    .select('amount, created_at, status')
-    .eq('creator_id', user.id)
-    .eq('status', 'success')
-    .order('created_at', { ascending: true });
-
   // Merge transactions and donations for recent activity
   const allRecentActivity = [
     ...(transactions || []).map((tx: any) => ({
@@ -138,21 +120,8 @@ export default async function CreatorDashboard() {
 
   const displayName = creatorProfile?.display_name || profile?.display_name || profile?.full_name || 'Creator';
   const avatarUrl = profile?.avatar_url;
-  const { data: activeFundraisers } = await supabase
-    .from('fundraisers')
-    .select('id, title, target_amount, current_amount')
-    .eq('creator_id', user.id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-
+  
   const shareUrl = `https://aza-chi.vercel.app/c/${creatorProfile?.slug}`; // Should use NEXT_PUBLIC variables later
-
-  const { data: creatorTiers } = await supabase
-    .from('tiers')
-    .select('id')
-    .eq('creator_id', user.id)
-    .eq('is_active', true)
-    .limit(1);
 
   const hasTiers = Boolean(creatorTiers && creatorTiers.length > 0);
   const hasBank = Boolean(creatorProfile?.bank_account_number && creatorProfile?.bank_code);
