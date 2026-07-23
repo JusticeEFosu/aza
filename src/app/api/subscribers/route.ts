@@ -20,7 +20,7 @@ export async function GET() {
         fan_id,
         tier_id,
         tiers (id, name, amount),
-        profiles:fan_id (display_name, full_name, avatar_url, email)
+        profiles:fan_id (id, display_name, full_name, avatar_url, email)
       `)
       .eq('creator_id', user.id)
       .order('created_at', { ascending: false });

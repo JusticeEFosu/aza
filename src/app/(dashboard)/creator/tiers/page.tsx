@@ -313,14 +313,14 @@ export default function SubscribersPage() {
                     {/* Action */}
                     <div style={{ textAlign: 'right' }}>
                       <button
-                        onClick={() => profile?.id && handleMessageSubscriber(profile.id)}
+                        onClick={() => sub.fan_id && handleMessageSubscriber(sub.fan_id)}
                         disabled={messagingId !== null}
                         style={{ padding: '6px', background: 'transparent', border: 'none', borderRadius: '50%', cursor: messagingId !== null ? 'not-allowed' : 'pointer', color: 'var(--v2-text-variant)', transition: 'all 0.2s' }}
                         onMouseEnter={e => { if (messagingId === null) { e.currentTarget.style.background = 'var(--v2-surface-low)'; e.currentTarget.style.color = 'var(--v2-primary)'; } }}
                         onMouseLeave={e => { if (messagingId === null) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--v2-text-variant)'; } }}
                         title="Message"
                       >
-                        {messagingId === profile?.id ? (
+                        {messagingId === sub.fan_id ? (
                           <span className="material-symbols-outlined spin-icon" style={{ fontSize: '20px' }}>sync</span>
                         ) : (
                           <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chat</span>
