@@ -19,64 +19,70 @@ export default function FundraiserCard({
   const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
 
   return (
-    <div id={fundraiser.id} style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden', marginBottom: '24px' }}>
-      <div style={{ padding: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-          <div>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fundraiser Goal</span>
-            <h2 style={{ fontSize: '24px', fontWeight: 600, margin: '0 0 8px 0', color: 'var(--v2-primary)' }}>{fundraiser.title}</h2>
-            <p style={{ color: 'var(--v2-text-variant)', margin: 0, fontSize: '15px' }}>{fundraiser.description}</p>
-          </div>
-          <button 
-            onClick={() => setShowModal(true)}
-            className="v2-btn v2-btn-primary"
-            style={{ padding: '12px 32px', fontSize: '16px' }}
-          >
-            Contribute
-          </button>
+    <div id={fundraiser.id} className="az-card" style={{ padding: '32px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        <div style={{ flex: 1, minWidth: '260px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--az-primary)', letterSpacing: '0.05em', textTransform: 'uppercase', background: 'var(--az-surface-low)', padding: '4px 10px', borderRadius: '4px', display: 'inline-block', marginBottom: '12px' }}>
+            Fundraiser Goal
+          </span>
+          <h2 className="az-h2" style={{ marginBottom: '8px', fontSize: '24px' }}>{fundraiser.title}</h2>
+          <p className="az-body" style={{ color: 'var(--az-text-muted)', fontSize: '15px' }}>{fundraiser.description}</p>
         </div>
-
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '16px', fontWeight: 600 }}>
-            <span style={{ color: 'var(--v2-primary)' }}>₦{currentAmount.toLocaleString()} <span style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500 }}>raised</span></span>
-            <span style={{ color: 'var(--v2-text-variant)' }}>₦{targetAmount.toLocaleString()}</span>
-          </div>
-          <div style={{ height: '16px', background: 'var(--v2-surface-container)', borderRadius: '999px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-          </div>
-        </div>
-
-        {fundraiser.show_leaderboard && donations && donations.length > 0 && (
-          <div style={{ marginTop: '32px', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Supporters</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {donations.map((d, index) => {
-                let badgeColor = 'var(--v2-surface-low)';
-                let textColor = 'var(--v2-text-variant)';
-                if (index === 0) { badgeColor = 'rgba(234, 179, 8, 0.1)'; textColor = '#ca8a04'; } // Gold
-                if (index === 1) { badgeColor = 'rgba(148, 163, 184, 0.1)'; textColor = '#64748b'; } // Silver
-                if (index === 2) { badgeColor = 'rgba(180, 83, 9, 0.1)'; textColor = '#92400e'; } // Bronze
-
-                return (
-                  <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px', borderRadius: '12px', background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: badgeColor, color: textColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '14px' }}>
-                      #{index + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px' }}>
-                        {d.donor_name || 'Guest'} <span style={{ color: 'var(--v2-green)' }}>donated ₦{(d.amount / 100).toLocaleString()}</span>
-                      </p>
-                      {d.donor_note && (
-                        <p style={{ margin: '4px 0 0 0', color: 'var(--v2-text-variant)', fontSize: '13px', fontStyle: 'italic' }}>"{d.donor_note}"</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <button 
+          onClick={() => setShowModal(true)}
+          className="az-btn-primary"
+          style={{ padding: '12px 32px', fontSize: '16px' }}
+        >
+          Contribute
+        </button>
       </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
+            ₦{currentAmount.toLocaleString()} <span style={{ color: 'var(--az-text-muted)', fontSize: '14px', fontWeight: 500 }}>raised</span>
+          </span>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--az-text-muted)' }}>
+            Goal: ₦{targetAmount.toLocaleString()}
+          </span>
+        </div>
+        <div style={{ height: '12px', background: 'var(--az-surface-low)', borderRadius: '9999px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progress}%`, background: 'var(--az-primary)', borderRadius: '9999px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+        </div>
+      </div>
+
+      {fundraiser.show_leaderboard && donations && donations.length > 0 && (
+        <div style={{ marginTop: '32px', borderTop: '1px solid var(--az-border)', paddingTop: '24px' }}>
+          <h3 className="az-label" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--az-text-main)', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Top Supporters
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {donations.map((d, index) => {
+              let badgeBg = 'var(--az-surface-low)';
+              let badgeColor = 'var(--az-primary)';
+              if (index === 0) { badgeBg = '#fed65b'; badgeColor = '#745c00'; } // Gold
+              if (index === 1) { badgeBg = '#e2e8f0'; badgeColor = '#334155'; } // Silver
+              if (index === 2) { badgeBg = '#ffdad6'; badgeColor = '#904340'; } // Bronze
+
+              return (
+                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '12px 16px', borderRadius: 'var(--az-radius-lg)', background: '#ffffff', border: '1px solid var(--az-border)' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: badgeBg, color: badgeColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
+                    #{index + 1}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p className="az-body" style={{ margin: 0, fontWeight: 600, fontSize: '14px' }}>
+                      {d.donor_name || 'Guest'} <span style={{ color: 'var(--az-primary)', fontWeight: 700 }}>donated ₦{(d.amount / 100).toLocaleString()}</span>
+                    </p>
+                    {d.donor_note && (
+                      <p style={{ margin: '2px 0 0 0', color: 'var(--az-text-muted)', fontSize: '13px', fontStyle: 'italic' }}>"{d.donor_note}"</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <DonationModal

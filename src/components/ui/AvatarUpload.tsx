@@ -176,16 +176,16 @@ export default function AvatarUpload({ currentUrl, onUploadComplete, userId }: A
           position: absolute;
           bottom: 2px;
           right: 2px;
-          background: var(--primary);
+          background: #004e34;
           width: 32px;
           height: 32px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 3px solid #111; /* Match background for separation */
+          border: 3px solid #ffffff; /* Match background for separation */
           z-index: 3;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .uploading {

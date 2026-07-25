@@ -130,19 +130,19 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <h1 style={{ fontSize: '36px', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, marginBottom: '8px', color: 'var(--v2-on-surface)' }}>Create your page</h1>
-        <p style={{ color: 'var(--v2-text-variant)', fontSize: '16px', margin: 0 }}>Choose your creator name to get started.</p>
+        <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, marginBottom: '8px', color: '#0b1c30' }}>Create your page</h1>
+        <p style={{ color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', fontSize: '16px', margin: 0 }}>Choose your creator name to get started.</p>
       </div>
 
       {error && (
-        <div style={{ padding: '12px', background: 'var(--v2-error-container, #ffdad6)', color: 'var(--v2-on-error-container, #93000a)', borderRadius: '4px', fontSize: '14px' }}>
+        <div style={{ padding: '12px 16px', background: '#ffdad6', color: '#ba1a1a', borderRadius: '8px', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)', fontWeight: 600 }}>
           {error}
         </div>
       )}
 
       {/* Display Name */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label htmlFor="displayName" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-on-surface)' }}>Creator / Display Name</label>
+        <label htmlFor="displayName" style={{ fontSize: '14px', fontWeight: 600, color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Creator / Display Name</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <input
             id="displayName"
@@ -151,31 +151,30 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
             value={displayName}
             onChange={e => {
               setDisplayName(e.target.value);
-              // Auto generate slug: lowercase, remove non-alphanumeric (no hyphens)
               setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''));
             }}
-            style={{ flex: 1, padding: '12px 16px', borderRadius: '4px', border: '1px solid var(--v2-outline)', fontSize: '16px', outline: 'none' }}
-            onFocus={(e) => e.target.style.borderColor = 'var(--v2-primary)'}
-            onBlur={(e) => e.target.style.borderColor = 'var(--v2-outline)'}
+            style={{ flex: 1, padding: '14px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '16px', outline: 'none', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#0b1c30', background: '#ffffff' }}
+            onFocus={(e) => e.target.style.borderColor = '#004e34'}
+            onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             required
           />
           {checkingName && (
-            <span className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px', color: 'var(--v2-primary)', flexShrink: 0 }} />
+            <span className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px', color: '#004e34', flexShrink: 0 }} />
           )}
           {!checkingName && nameAvailable === true && (
-            <span className="material-symbols-outlined" style={{ color: 'var(--v2-green)', fontSize: '24px', flexShrink: 0 }} title="Available">check_circle</span>
+            <span className="material-symbols-outlined" style={{ color: '#059669', fontSize: '24px', flexShrink: 0 }} title="Available">check_circle</span>
           )}
           {!checkingName && nameAvailable === false && (
-            <span className="material-symbols-outlined" style={{ color: '#dc2626', fontSize: '24px', flexShrink: 0 }} title="Taken">cancel</span>
+            <span className="material-symbols-outlined" style={{ color: '#ba1a1a', fontSize: '24px', flexShrink: 0 }} title="Taken">cancel</span>
           )}
         </div>
       </div>
 
       {/* URL Slug */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label htmlFor="slug" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-on-surface)' }}>Your URL</label>
-        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--v2-outline)', borderRadius: '4px', overflow: 'hidden' }}>
-          <span style={{ padding: '12px 16px', background: 'var(--v2-surface-low)', color: 'var(--v2-text-variant)', borderRight: '1px solid var(--v2-outline)' }}>
+        <label htmlFor="slug" style={{ fontSize: '14px', fontWeight: 600, color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Your URL</label>
+        <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E2E8F0', borderRadius: '8px', overflow: 'hidden', background: '#ffffff' }}>
+          <span style={{ padding: '14px 16px', background: '#f8f9ff', color: '#6f7a72', borderRight: '1px solid #E2E8F0', fontSize: '15px', fontFamily: 'var(--font-body, Inter, sans-serif)', fontWeight: 500 }}>
             azaa.com/
           </span>
           <input 
@@ -185,11 +184,13 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
             onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
             placeholder="chefboma"
             style={{ 
-              padding: '12px 16px', 
+              padding: '14px 16px', 
               border: 'none',
               flex: 1,
               fontSize: '16px',
-              outline: 'none'
+              outline: 'none',
+              fontFamily: 'var(--font-body, Inter, sans-serif)',
+              color: '#0b1c30'
             }}
           />
         </div>
@@ -198,8 +199,8 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
       <button 
         type="submit" 
         disabled={loading || nameAvailable === false || checkingName}
-        className="v2-btn-primary lg"
-        style={{ marginTop: '16px', width: '100%', justifyContent: 'center', background: 'var(--v2-accent, #fed65b)', color: '#241a00', opacity: (loading || nameAvailable === false || checkingName) ? 0.5 : 1 }}
+        className="az-btn-primary"
+        style={{ marginTop: '16px', width: '100%', padding: '14px', fontSize: '16px', opacity: (loading || nameAvailable === false || checkingName) ? 0.5 : 1 }}
       >
         {loading ? 'Saving...' : 'Finish Setup'}
       </button>
@@ -208,7 +209,7 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
         <button 
           type="button" 
           onClick={handleRevertToFan}
-          style={{ background: 'none', border: 'none', color: 'var(--v2-text-variant)', fontSize: '14px', textDecoration: 'underline', cursor: 'pointer' }}
+          style={{ background: 'none', border: 'none', color: '#6f7a72', fontSize: '14px', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'var(--font-body, Inter, sans-serif)' }}
         >
           Wait, I just want to be a fan.
         </button>

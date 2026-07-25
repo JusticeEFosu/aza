@@ -52,75 +52,10 @@ export default function FundraisersEditorialGrid({ initialFundraisers }: { initi
   }, [searchQuery]);
 
   return (
-    <div style={{ padding: '0 16px' }}>
-      <style>{`
-        .editorial-masonry {
-          column-count: 1;
-          column-gap: 32px;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        @media (min-width: 768px) {
-          .editorial-masonry { column-count: 2; }
-        }
-        @media (min-width: 1024px) {
-          .editorial-masonry { column-count: 3; }
-        }
-        .editorial-card {
-          break-inside: avoid;
-          margin-bottom: 32px;
-          background: #ffffff;
-          border-radius: 16px;
-          padding: 40px 32px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.03);
-          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          text-decoration: none;
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          overflow: hidden;
-          cursor: pointer;
-          border: 1px solid rgba(0,0,0,0.02);
-        }
-        .editorial-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 40px 80px rgba(0,0,0,0.06);
-        }
-        .editorial-card-btn {
-          opacity: 0;
-          transition: opacity 0.3s ease, transform 0.3s ease;
-          transform: translateY(10px);
-          background: var(--v2-primary);
-          color: white;
-          padding: 12px 24px;
-          border-radius: 99px;
-          font-weight: 600;
-          font-size: 14px;
-          text-align: center;
-          margin-top: 32px;
-        }
-        .editorial-card:hover .editorial-card-btn {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .editorial-progress-bg {
-          width: 100%;
-          height: 2px;
-          background: var(--v2-outline);
-          margin-top: 24px;
-          border-radius: 2px;
-          overflow: hidden;
-        }
-        .editorial-progress-fill {
-          height: 100%;
-          background: var(--v2-green);
-          border-radius: 2px;
-        }
-      `}</style>
-
-      <div style={{ marginBottom: '48px', maxWidth: '600px', margin: '0 auto 64px auto' }}>
+    <div style={{ padding: '16px 0 48px 0' }}>
+      <div style={{ marginBottom: '40px', maxWidth: '640px', margin: '0 auto 48px auto' }}>
         <div style={{ position: 'relative' }}>
-          <span className="material-symbols-outlined" style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'var(--v2-text-variant)' }}>
+          <span className="material-symbols-outlined" style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'var(--az-outline)', fontSize: '20px' }}>
             search
           </span>
           <input 
@@ -130,29 +65,31 @@ export default function FundraisersEditorialGrid({ initialFundraisers }: { initi
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ 
               width: '100%', 
-              padding: '20px 20px 20px 56px', 
+              padding: '16px 20px 16px 52px', 
               fontSize: '16px', 
-              borderRadius: '99px', 
-              border: '1px solid rgba(0,0,0,0.05)', 
-              background: '#fff',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.02)',
+              borderRadius: '9999px', 
+              border: '1px solid var(--az-border)', 
+              background: '#ffffff',
+              boxShadow: 'var(--az-shadow-card)',
               outline: 'none',
-              fontFamily: 'inherit'
+              color: 'var(--az-text-main)',
+              fontFamily: 'var(--font-body)'
             }}
           />
         </div>
       </div>
 
       {fundraisersList.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 24px', opacity: 0.5 }}>
-          <h3 style={{ fontSize: '24px', fontWeight: 300, margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>No causes found</h3>
-          <p style={{ fontSize: '16px' }}>Try adjusting your search terms.</p>
+        <div className="az-card" style={{ textAlign: 'center', padding: '64px 24px', maxWidth: '500px', margin: '0 auto' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--az-outline)', marginBottom: '16px', display: 'block' }}>search_off</span>
+          <h3 className="az-h3" style={{ marginBottom: '8px' }}>No causes found</h3>
+          <p className="az-body" style={{ color: 'var(--az-text-muted)' }}>Try adjusting your search terms.</p>
         </div>
       ) : (
-        <div className="editorial-masonry">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '32px' }}>
           {fundraisersList.map((fundraiser: any) => {
             const creatorName = fundraiser.profiles?.display_name || fundraiser.profiles?.full_name || 'Creator';
-            const progressPercent = Math.min(100, Math.round((fundraiser.current_amount / fundraiser.target_amount) * 100));
+            const progressPercent = fundraiser.target_amount > 0 ? Math.min(100, Math.round((fundraiser.current_amount / fundraiser.target_amount) * 100)) : 0;
             const targetNaira = fundraiser.target_amount / 100;
             const currentNaira = fundraiser.current_amount / 100;
             
@@ -163,49 +100,57 @@ export default function FundraisersEditorialGrid({ initialFundraisers }: { initi
               <Link
                 key={fundraiser.id}
                 href={`/fundraiser/${fundraiser.id}`}
-                className="editorial-card"
+                className="az-card az-card-interactive"
+                style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', padding: '28px' }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                  {fundraiser.profiles?.avatar_url ? (
-                    <img 
-                      src={fundraiser.profiles.avatar_url} 
-                      alt="" 
-                      style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '50%' }} 
-                    />
-                  ) : (
-                    <div style={{ width: '32px', height: '32px', background: 'var(--v2-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 600 }}>
-                      {creatorName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--v2-text-variant)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-                    {creatorName}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {fundraiser.profiles?.avatar_url ? (
+                      <img 
+                        src={fundraiser.profiles.avatar_url} 
+                        alt={creatorName} 
+                        style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '50%' }} 
+                      />
+                    ) : (
+                      <div style={{ width: '36px', height: '36px', background: 'var(--az-surface-low)', color: 'var(--az-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>
+                        {creatorName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="az-label" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--az-text-main)' }}>
+                      {creatorName}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', background: 'var(--az-surface-low)', color: 'var(--az-primary)', padding: '3px 10px', borderRadius: '9999px' }}>
+                    Cause
                   </span>
                 </div>
 
-                <h3 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--v2-primary)', margin: '0 0 16px 0', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                <h3 className="az-h3" style={{ fontSize: '20px', marginBottom: '12px', lineHeight: 1.3 }}>
                   {fundraiser.title}
                 </h3>
                 
-                <p style={{ fontSize: '15px', lineHeight: 1.6, color: '#666', margin: '0 0 32px 0', fontWeight: 400 }}>
+                <p className="az-body" style={{ fontSize: '14px', color: 'var(--az-text-muted)', marginBottom: '24px', flexGrow: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5 }}>
                   {excerpt}
                 </p>
 
-                <div style={{ marginTop: 'auto' }}>
+                <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--v2-primary)' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
                       ₦{currentNaira.toLocaleString()}
                     </span>
-                    <span style={{ fontSize: '13px', color: 'var(--v2-text-variant)' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--az-text-muted)', fontWeight: 500 }}>
                       of ₦{targetNaira.toLocaleString()}
                     </span>
                   </div>
-                  <div className="editorial-progress-bg">
-                    <div className="editorial-progress-fill" style={{ width: progressPercent + '%' }}></div>
+                  <div style={{ width: '100%', height: '6px', background: 'var(--az-surface-low)', borderRadius: '9999px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: progressPercent + '%', background: 'var(--az-primary)', borderRadius: '9999px', transition: 'width 0.5s ease' }}></div>
                   </div>
                 </div>
 
-                <div className="editorial-card-btn">
-                  Donate to this cause
+                <div style={{ marginTop: '20px' }}>
+                  <span className="az-btn-primary" style={{ width: '100%', padding: '10px 16px', fontSize: '14px' }}>
+                    Donate to Cause
+                  </span>
                 </div>
               </Link>
             );

@@ -17,7 +17,7 @@ export default async function NewGroupChatPage() {
     .order('amount', { ascending: true });
 
   return (
-    <main className="v2-main-content" style={{ padding: '40px 20px' }}>
+    <main style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <h1 className="v2-dash-title">Create Group Chat</h1>
       <p className="v2-dash-subtitle" style={{ marginBottom: '32px' }}>

@@ -277,17 +277,18 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
         <div style={{ padding: '24px', borderBottom: '1px solid var(--v2-outline)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>Messages</h1>
           {currentUser.role === 'creator' && (
-            <Link href="/creator/messages/new" className="v2-btn v2-btn-icon" title="New Group Chat" style={{ padding: '8px' }}>
-              <span className="material-symbols-outlined">add_comment</span>
+            <Link href="/creator/messages/new" className="az-btn-secondary" title="New Group Chat" style={{ padding: '8px 12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>add_comment</span>
+              New
             </Link>
           )}
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {isLoading ? (
-            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>Loading messages...</div>
+            <div style={{ padding: '24px', textAlign: 'center', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Loading messages...</div>
           ) : channels.length === 0 ? (
-            <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
+            <div style={{ padding: '40px 24px', textAlign: 'center', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
               No messages yet.
             </div>
           ) : (
@@ -305,9 +306,9 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                       display: 'flex',
                       alignItems: 'center',
                       padding: '16px 24px',
-                      background: activeChannelId === channel.id ? 'var(--v2-surface-highest)' : 'transparent',
+                      background: activeChannelId === channel.id ? '#eff4ff' : 'transparent',
                       border: 'none',
-                      borderBottom: '1px solid var(--v2-outline)',
+                      borderBottom: '1px solid #E2E8F0',
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'background 0.2s',
@@ -317,21 +318,21 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                       {avatar ? (
                         <img src={avatar} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--v2-surface-highest)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: 'var(--v2-primary)', border: '1px solid var(--v2-outline)' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#004e34', border: '1px solid #E2E8F0', fontFamily: 'var(--font-heading, Montserrat, sans-serif)' }}>
                           {initials}
                         </div>
                       )}
                     </div>
                     <div style={{ flex: 1, overflow: 'hidden' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--v2-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ fontWeight: 600, fontSize: '15px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {displayName}
                         </span>
                         {channel.type === 'group_chat' && (
-                          <span style={{ fontSize: '10px', background: 'var(--v2-primary)', color: 'white', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>GROUP</span>
+                          <span style={{ fontSize: '10px', background: '#004e34', color: 'white', padding: '2px 6px', borderRadius: '10px', fontWeight: 700, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>GROUP</span>
                         )}
                       </div>
-                      <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '13px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         Click to view conversation
                       </div>
                     </div>
@@ -346,7 +347,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
       {/* RIGHT SIDE: Active Chat */}
       <div 
         className={`v2-chat-area ${!activeChannelId ? 'hidden-mobile' : ''}`}
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--v2-surface-lowest)' }}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9ff' }}
       >
         {activeChannelId && activeChannel ? (
           <>
@@ -406,25 +407,27 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                       )}
                       <div style={{
                         maxWidth: '75%',
-                        padding: '8px 12px',
+                        padding: '10px 14px',
                         borderTopLeftRadius: !isMine ? (isFirstInGroup ? '16px' : '4px') : '16px',
                         borderBottomLeftRadius: !isMine ? (isLastInGroup ? '16px' : '4px') : '16px',
                         borderTopRightRadius: isMine ? (isFirstInGroup ? '16px' : '4px') : '16px',
                         borderBottomRightRadius: isMine ? (isLastInGroup ? '16px' : '4px') : '16px',
-                        backgroundColor: isMine ? 'var(--v2-primary)' : 'var(--v2-surface)',
-                        color: isMine ? '#ffffff' : 'var(--v2-text)',
-                        border: isMine ? 'none' : '1px solid var(--v2-outline)',
+                        backgroundColor: isMine ? '#004e34' : '#ffffff',
+                        color: isMine ? '#ffffff' : '#0b1c30',
+                        border: isMine ? 'none' : '1px solid #E2E8F0',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                         fontSize: '14px',
-                        lineHeight: '1.4'
+                        lineHeight: '1.4',
+                        fontFamily: 'var(--font-body, Inter, sans-serif)'
                       }}>
                         {msg.content}
                         <div style={{ 
                           fontSize: '11px', 
                           marginTop: '4px', 
                           textAlign: 'right', 
-                          opacity: 0.7,
-                          color: isMine ? 'rgba(255,255,255,0.8)' : 'var(--v2-text-variant)'
+                          opacity: 0.8,
+                          color: isMine ? 'rgba(255,255,255,0.85)' : '#6f7a72',
+                          fontFamily: 'var(--font-body, Inter, sans-serif)'
                         }}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
@@ -437,7 +440,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
             </div>
 
             {/* Chat Input */}
-            <div style={{ padding: '12px 24px', borderTop: '1px solid var(--v2-outline)', backgroundColor: 'var(--v2-surface)' }}>
+            <div style={{ padding: '12px 24px', borderTop: '1px solid #E2E8F0', backgroundColor: '#ffffff' }}>
               <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '12px' }}>
                 <input 
                   type="text" 
@@ -445,14 +448,15 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   disabled={isSending}
+                  className="az-input"
                   style={{
                     flex: 1,
                     padding: '10px 16px',
                     borderRadius: '20px',
-                    border: '1px solid var(--v2-outline)',
-                    backgroundColor: 'var(--v2-surface-lowest)',
-                    color: 'var(--v2-text)',
-                    fontSize: '15px',
+                    border: '1px solid #E2E8F0',
+                    backgroundColor: '#ffffff',
+                    color: '#0b1c30',
+                    fontSize: '16px',
                     outline: 'none',
                   }}
                 />
@@ -463,8 +467,8 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                     width: '42px',
                     height: '42px',
                     borderRadius: '50%',
-                    backgroundColor: newMessage.trim() ? 'var(--v2-primary)' : 'var(--v2-surface-highest)',
-                    color: newMessage.trim() ? '#ffffff' : 'var(--v2-text-variant)',
+                    backgroundColor: newMessage.trim() ? '#fed65b' : '#eff4ff',
+                    color: newMessage.trim() ? '#745c00' : '#6f7a72',
                     border: 'none',
                     display: 'flex',
                     alignItems: 'center',
@@ -473,7 +477,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                     transition: 'all 0.2s'
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '20px', marginLeft: '4px' }}>send</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', marginLeft: '2px' }}>send</span>
                 </button>
               </form>
             </div>

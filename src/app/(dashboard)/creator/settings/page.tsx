@@ -380,14 +380,14 @@ export default function CreatorSettings() {
   }
 
   return (
-    <main className="v2-main-content" style={{ maxWidth: '1200px' }}>
+    <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 16px' }}>
         <header style={{ marginBottom: '32px' }}>
-          <h1 className="v2-dash-title">Settings</h1>
-          <p className="v2-dash-desc">Manage your creator profile, subscription tiers, and payouts.</p>
+          <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', margin: 0, letterSpacing: '-0.01em' }}>Settings</h1>
+          <p style={{ fontSize: '16px', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#3f4943', marginTop: '4px' }}>Manage your creator profile, subscription tiers, and payouts.</p>
         </header>
 
         {/* Tab Navigation */}
-        <div style={{ borderBottom: '1px solid var(--v2-outline)', marginBottom: '32px' }}>
+        <div style={{ borderBottom: '1px solid #E2E8F0', marginBottom: '32px' }}>
           <nav style={{ 
             display: 'flex', 
             gap: '24px',
@@ -400,15 +400,17 @@ export default function CreatorSettings() {
             {['profile', 'tiers', 'payouts', 'messages', 'account'].map((tab) => (
               <button
                 key={tab}
+                type="button"
                 onClick={() => setActiveTab(tab as any)}
                 style={{
                   padding: '16px 4px',
                   background: 'none',
                   border: 'none',
-                  borderBottom: activeTab === tab ? '2px solid var(--v2-primary)' : '2px solid transparent',
-                  color: activeTab === tab ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
+                  borderBottom: activeTab === tab ? '3px solid #004e34' : '3px solid transparent',
+                  color: activeTab === tab ? '#004e34' : '#6f7a72',
                   fontWeight: activeTab === tab ? 700 : 500,
-                  fontSize: '14px',
+                  fontSize: '15px',
+                  fontFamily: 'var(--font-heading, Montserrat, sans-serif)',
                   cursor: 'pointer',
                   textTransform: 'capitalize',
                   transition: 'all 0.2s',
@@ -926,11 +928,11 @@ export default function CreatorSettings() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Tier Name</label>
-                        <input type="text" placeholder="e.g. VIP Supporter" value={tierName} onChange={e => setTierName(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                        <input type="text" placeholder="e.g. VIP Supporter" value={tierName} onChange={e => setTierName(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }} />
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Monthly Price (₦)</label>
-                        <input type="number" placeholder="1000" min="100" step="100" value={tierAmountNaira} onChange={e => setTierAmountNaira(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                        <input type="number" placeholder="1000" min="100" step="100" value={tierAmountNaira} onChange={e => setTierAmountNaira(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }} />
                         
                         <div style={{ marginTop: '12px', padding: '12px', borderRadius: '8px', fontSize: '13px', lineHeight: 1.5, background: (tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'rgba(52, 211, 153, 0.1)' : 'var(--v2-surface-low)', color: (tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'var(--v2-green)' : 'var(--v2-text-variant)', border: `1px solid ${(tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'var(--v2-green)' : 'var(--v2-outline)'}` }}>
                           {(tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? (
@@ -949,11 +951,11 @@ export default function CreatorSettings() {
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Description</label>
-                      <textarea rows={2} placeholder="Short description for your fans" value={tierDescription} onChange={e => setTierDescription(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px' }} />
+                      <textarea rows={2} placeholder="Short description for your fans" value={tierDescription} onChange={e => setTierDescription(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Perks (One per line)</label>
-                      <textarea rows={4} placeholder={"Exclusive videos\nPrivate Discord invite\nMonthly Q&A"} value={tierPerksText} onChange={e => setTierPerksText(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '15px', lineHeight: 1.5 }} />
+                      <textarea rows={4} placeholder={"Exclusive videos\nPrivate Discord invite\nMonthly Q&A"} value={tierPerksText} onChange={e => setTierPerksText(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px', lineHeight: 1.5 }} />
                     </div>
                   </div>
                 </div>

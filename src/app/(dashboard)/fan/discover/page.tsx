@@ -30,15 +30,13 @@ export default async function FanDiscoverPage() {
     .order('subscriber_count', { ascending: false });
 
   return (
-    <main className="v2-fan-main">
-        <div className="v2-fan-container">
-          <header style={{ marginBottom: '32px' }}>
-            <h1 className="v2-dash-title">Discover Creators</h1>
-            <p className="v2-dash-desc">Find your next favorite creator on MyAzaa.</p>
-          </header>
+    <main className="az-container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+      <header style={{ marginBottom: '32px' }}>
+        <h1 className="az-h1" style={{ fontSize: '32px', color: 'var(--az-primary, #004e34)' }}>Discover Creators</h1>
+        <p className="az-body-lg" style={{ color: 'var(--az-text-muted, #6f7a72)', marginTop: '4px' }}>Find your next favorite creator on MyAzaa.</p>
+      </header>
 
-          <CreatorsGrid initialCreators={creators || []} />
-        </div>
-      </main>
+      <CreatorsGrid initialCreators={creators || []} />
+    </main>
   );
 }

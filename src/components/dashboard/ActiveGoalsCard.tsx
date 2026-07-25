@@ -32,12 +32,12 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
   };
 
   return (
-    <div className="v2-stat-card">
+    <div className="az-card" style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px' }}>
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <p className="v2-stat-label" style={{ margin: 0 }}>Active Goal</p>
+              <p className="az-label" style={{ margin: 0, color: '#3f4943', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Active Goal</p>
               {fundraisers.length > 1 && (
                 <span 
                   style={{ 
@@ -45,8 +45,9 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
                     fontWeight: 600, 
                     padding: '2px 8px', 
                     borderRadius: '999px', 
-                    background: 'var(--v2-surface-low)', 
-                    color: 'var(--v2-text-variant)' 
+                    background: '#eff4ff', 
+                    color: '#004e34',
+                    fontFamily: 'var(--font-body, Inter, sans-serif)' 
                   }}
                 >
                   {currentIndex + 1} of {fundraisers.length}
@@ -65,7 +66,7 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
                       border: 'none',
                       cursor: 'pointer',
                       padding: '2px',
-                      color: 'var(--v2-text-variant)',
+                      color: '#3f4943',
                       display: 'flex',
                       alignItems: 'center',
                     }}
@@ -81,7 +82,7 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
                       border: 'none',
                       cursor: 'pointer',
                       padding: '2px',
-                      color: 'var(--v2-text-variant)',
+                      color: '#3f4943',
                       display: 'flex',
                       alignItems: 'center',
                     }}
@@ -92,28 +93,28 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
                 </div>
               )}
 
-              <Link href="/creator/fundraisers" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', textDecoration: 'none' }}>
+              <Link href="/creator/fundraisers" style={{ fontSize: '12px', fontWeight: 600, color: '#004e34', textDecoration: 'none', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                 Manage →
               </Link>
             </div>
           </div>
 
-          <h3 className="v2-stat-value" style={{ fontSize: '18px', margin: '0 0 12px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={currentGoal.title}>
+          <h3 style={{ fontSize: '18px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 600, color: '#0b1c30', margin: '0 0 12px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={currentGoal.title}>
             {currentGoal.title}
           </h3>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px', fontSize: '13px' }}>
-            <span style={{ fontWeight: 700, color: 'var(--v2-primary)' }}>₦ {goalCurrent.toLocaleString()}</span>
-            <span style={{ color: 'var(--v2-text-variant)' }}>of ₦ {goalTarget.toLocaleString()} ({goalProgress}%)</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px', fontSize: '13px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+            <span style={{ fontWeight: 700, color: '#004e34' }}>₦ {goalCurrent.toLocaleString()}</span>
+            <span style={{ color: '#3f4943' }}>of ₦ {goalTarget.toLocaleString()} ({goalProgress}%)</span>
           </div>
 
-          <div style={{ height: '6px', background: 'var(--v2-surface-low)', borderRadius: '999px', overflow: 'hidden' }}>
+          <div style={{ height: '8px', background: '#eff4ff', borderRadius: '999px', overflow: 'hidden' }}>
             <div 
               style={{
                 height: '100%',
                 width: `${goalProgress}%`,
                 borderRadius: '999px',
-                background: isGoalOverFunded ? 'linear-gradient(90deg, var(--v2-green), #10b981)' : 'var(--v2-green)',
+                background: isGoalOverFunded ? 'linear-gradient(90deg, #004e34, #059669)' : '#004e34',
                 transition: 'width 0.5s ease',
               }}
             />

@@ -1,10 +1,21 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import FundraisersEditorialGrid from '@/components/FundraisersEditorialGrid';
+import LandingNavbar from '@/components/LandingNavbar';
 
 export default async function FundraisersDirectoryPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  let dashboardUrl = '/login';
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    dashboardUrl = profile?.role === 'creator' ? '/creator' : '/fan';
+  }
 
   // Fetch initial active fundraisers
   const { data: fundraisers } = await supabase
@@ -25,37 +36,16 @@ export default async function FundraisersDirectoryPage() {
     .limit(30);
 
   return (
-    <div className="v2-profile-page">
-      {/* TopNavBar */}
-      <nav className="v2-profile-nav">
-        <div className="v2-profile-nav-inner">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <Link href="/" style={{ fontSize: '32px', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--v2-primary)', textDecoration: 'none' }}>MyAzaa</Link>
-            <div className="v2-profile-nav-links">
-              <Link href="/creators" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Creators</Link>
-              <Link href="/fundraisers" style={{ color: 'var(--v2-primary)', fontSize: '14px', fontWeight: 600, textDecoration: 'none' }}>Causes</Link>
-              <Link href="/how-it-works" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>How it Works</Link>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {!user ? (
-              <>
-                <Link href="/login" className="v2-profile-nav-links" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-                <Link href="/signup" className="v2-sub-btn v2-sub-btn-primary" style={{ padding: '8px 24px', fontSize: '14px' }}>Start a Cause</Link>
-              </>
-            ) : (
-              <Link href="/fan" className="v2-sub-btn v2-sub-btn-secondary" style={{ padding: '8px 24px', fontSize: '14px' }}>Dashboard</Link>
-            )}
-          </div>
-        </div>
-      </nav>
+    <div style={{ background: 'var(--az-bg)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Navigation */}
+      <LandingNavbar user={user} dashboardUrl={dashboardUrl} />
 
-      <main style={{ width: '100%', paddingBottom: '64px' }}>
-        <div className="v2-profile-container" style={{ paddingTop: '64px' }}>
+      <main style={{ flexGrow: 1, paddingBottom: '64px' }}>
+        <div className="az-container" style={{ paddingTop: '64px' }}>
 
           <header style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h1 className="v2-profile-name" style={{ fontSize: '48px', marginBottom: '16px' }}>Discover Causes</h1>
-            <p className="v2-profile-bio" style={{ margin: '0 auto', maxWidth: '600px', fontSize: '18px' }}>
+            <h1 className="az-h1" style={{ marginBottom: '16px' }}>Discover Causes</h1>
+            <p className="az-body-lg" style={{ margin: '0 auto', maxWidth: '640px' }}>
               Explore and fund meaningful projects, medical needs, and creative endeavors brought to life by the MyAzaa community.
             </p>
           </header>
@@ -64,6 +54,28 @@ export default async function FundraisersDirectoryPage() {
 
         </div>
       </main>
+
+      {/* Footer */}
+      <footer style={{ background: '#ffffff', borderTop: '1px solid var(--az-border)', padding: '48px 0' }}>
+        <div className="az-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+          <div>
+            <Link href="/" className="az-h3" style={{ color: 'var(--az-primary)', textDecoration: 'none', fontWeight: 800 }}>
+              MyAzaa
+            </Link>
+            <p className="az-label" style={{ marginTop: '4px', color: 'var(--az-text-muted)' }}>
+              © {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--az-text-muted)', marginTop: '2px' }}>
+              Developed by Justice Fosu (In Active Development)
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link href="/legal/privacy" prefetch={false} className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>Privacy</Link>
+            <Link href="/legal/terms-of-service" prefetch={false} className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>Terms</Link>
+            <Link href="mailto:support@myazaa.com" className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>Support</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

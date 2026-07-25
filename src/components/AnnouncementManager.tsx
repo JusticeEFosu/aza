@@ -61,7 +61,7 @@ export function AnnouncementManager({ initialAnnouncement }: { initialAnnounceme
               border: '1px solid var(--v2-outline)',
               background: 'var(--v2-surface-lowest)',
               color: 'var(--v2-text)',
-              fontSize: '15px'
+              fontSize: '16px'
             }}
           />
           <button 

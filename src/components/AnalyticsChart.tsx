@@ -62,9 +62,9 @@ export default function AnalyticsChart({ transactions, formattedMRR }: { transac
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ background: '#fff', border: '1px solid var(--v2-outline)', padding: '8px 12px', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 10 }}>
-          <p style={{ margin: '0 0 2px 0', fontSize: '12px', color: 'var(--v2-text-variant)' }}>{label}</p>
-          <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: 'var(--v2-primary)' }}>
+        <div style={{ background: '#fff', border: '1px solid #E2E8F0', padding: '8px 12px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10 }}>
+          <p style={{ margin: '0 0 2px 0', fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{label}</p>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#004e34', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
             ₦ {payload[0].value.toLocaleString()}
           </p>
         </div>
@@ -77,24 +77,26 @@ export default function AnalyticsChart({ transactions, formattedMRR }: { transac
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <p className="v2-stat-label">Monthly Recurring Revenue</p>
-          <h3 className="v2-stat-value">{formattedMRR}</h3>
+          <p className="az-label" style={{ margin: 0, color: '#3f4943', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Monthly Recurring Revenue</p>
+          <h3 style={{ fontSize: '24px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#004e34', margin: '4px 0 0 0' }}>{formattedMRR}</h3>
         </div>
         
         <select 
           value={timeRange} 
           onChange={(e: any) => setTimeRange(e.target.value)}
+          className="az-select"
           style={{ 
-            padding: '4px 8px', 
+            padding: '4px 10px', 
             borderRadius: '6px', 
-            border: '1px solid var(--v2-outline)', 
-            background: 'var(--v2-surface-low)', 
-            fontSize: '11px', 
+            border: '1px solid #E2E8F0', 
+            background: '#eff4ff', 
+            fontSize: '16px', 
             fontWeight: 600,
-            color: 'var(--v2-text-variant)', 
+            color: '#3f4943', 
             outline: 'none', 
             cursor: 'pointer',
-            marginTop: '2px'
+            marginTop: '2px',
+            width: 'auto'
           }}
         >
           <option value="30">30d</option>
@@ -105,7 +107,7 @@ export default function AnalyticsChart({ transactions, formattedMRR }: { transac
       
       <div style={{ height: '60px', width: '100%', marginTop: 'auto', paddingTop: '16px' }}>
         {data.length === 0 ? (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'flex-end', color: 'var(--v2-text-variant)', fontSize: '12px', paddingBottom: '4px' }}>
+          <div style={{ height: '100%', display: 'flex', alignItems: 'flex-end', color: '#3f4943', fontSize: '12px', paddingBottom: '4px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
             No recent transactions
           </div>
         ) : (
@@ -113,15 +115,15 @@ export default function AnalyticsChart({ transactions, formattedMRR }: { transac
             <AreaChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--v2-green)" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="var(--v2-green)" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#004e34" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#004e34" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--v2-outline)', strokeWidth: 1, strokeDasharray: '3 3' }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#E2E8F0', strokeWidth: 1, strokeDasharray: '3 3' }} />
               <Area 
                 type="monotone" 
                 dataKey="earnings" 
-                stroke="var(--v2-green)" 
+                stroke="#004e34" 
                 strokeWidth={2} 
                 fillOpacity={1} 
                 fill="url(#colorEarnings)" 

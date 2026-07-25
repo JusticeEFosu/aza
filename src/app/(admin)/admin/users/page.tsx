@@ -33,22 +33,22 @@ export default async function AdminUsersPage({
 
   return (
     <div>
-      <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>User Management</h1>
-      <p style={{ color: 'var(--v2-text-variant)', marginBottom: '24px', fontSize: '16px' }}>View and manage all accounts on the platform.</p>
+      <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '8px', letterSpacing: '-0.02em' }}>User Management</h1>
+      <p style={{ color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '24px', fontSize: '16px' }}>View and manage all accounts on the platform.</p>
 
       <AdminUserSearch />
 
-      <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden' }}>
+      <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
         <div className="v2-table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ minWidth: '800px' }}>
             {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 0.5fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Joined</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Earnings</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 0.5fr', padding: '16px 24px', background: '#f8f9ff', borderBottom: '1px solid #E2E8F0' }}>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>User</span>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</span>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</span>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Joined</span>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Earnings</span>
+              <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</span>
             </div>
 
             {/* Rows */}
@@ -56,44 +56,45 @@ export default async function AdminUsersPage({
               const cProfile = Array.isArray(user.creator_profiles) ? user.creator_profiles[0] : user.creator_profiles;
               
               return (
-                <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 0.5fr', padding: '16px 24px', borderBottom: '1px solid var(--v2-outline)', alignItems: 'center', opacity: user.is_suspended ? 0.6 : 1 }}>
+                <div key={user.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1fr 1fr 1fr 0.5fr', padding: '16px 24px', borderBottom: '1px solid #E2E8F0', alignItems: 'center', opacity: user.is_suspended ? 0.6 : 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--v2-surface-low)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: 'var(--v2-primary)' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#004e34', fontFamily: 'var(--font-heading, Montserrat, sans-serif)' }}>
                       {user.full_name?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ fontWeight: 600, color: '#0b1c30', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {user.full_name}
-                        {user.admin_role && <span style={{ fontSize: '10px', background: 'var(--v2-green)', color: '#002116', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Staff</span>}
+                        {user.admin_role && <span style={{ fontSize: '10px', background: '#ecfdf5', color: '#059669', border: '1px solid #059669', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Staff</span>}
                         {user.is_suspended && <span style={{ fontSize: '10px', background: '#ffdad6', color: '#ba1a1a', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Suspended</span>}
                       </div>
-                      {cProfile && <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>@{cProfile.slug}</div>}
+                      {cProfile && <div style={{ fontSize: '12px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>@{cProfile.slug}</div>}
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>
+                  <div style={{ fontSize: '14px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                     {user.email}
                   </div>
 
                   <div>
                     <span style={{ 
-                      padding: '4px 8px', 
-                      borderRadius: '8px', 
+                      padding: '4px 10px', 
+                      borderRadius: '9999px', 
                       fontSize: '12px', 
                       fontWeight: 600,
-                      background: user.admin_role ? '#cce5ff' : user.role === 'creator' ? 'var(--v2-surface-low)' : 'transparent',
-                      color: user.admin_role ? '#004085' : user.role === 'creator' ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
-                      border: user.admin_role ? '1px solid #b8daff' : user.role === 'creator' ? '1px solid var(--v2-outline)' : '1px solid transparent'
+                      fontFamily: 'var(--font-body, Inter, sans-serif)',
+                      background: user.admin_role ? '#eff4ff' : user.role === 'creator' ? '#ecfdf5' : '#f3f4f6',
+                      color: user.admin_role ? '#004e34' : user.role === 'creator' ? '#059669' : '#3f4943',
+                      border: user.admin_role ? '1px solid #004e34' : user.role === 'creator' ? '1px solid #059669' : '1px solid #E2E8F0'
                     }}>
                       {user.admin_role ? user.admin_role.replace('_', ' ') : (user.role.charAt(0).toUpperCase() + user.role.slice(1))}
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>
+                  <div style={{ fontSize: '14px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                     {new Date(user.created_at).toLocaleDateString()}
                   </div>
 
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: cProfile?.total_earnings ? 'var(--v2-green)' : 'var(--v2-text-variant)' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'var(--font-body, Inter, sans-serif)', color: cProfile?.total_earnings ? '#059669' : '#6f7a72' }}>
                     {cProfile ? `₦${((cProfile.total_earnings || 0) / 100).toLocaleString()}` : '-'}
                   </div>
 

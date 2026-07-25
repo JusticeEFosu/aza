@@ -81,48 +81,48 @@ export default async function AdminPayoutsPage() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
         <div>
-          <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Payout Approvals</h1>
-          <p style={{ color: 'var(--v2-text-variant)', fontSize: '16px' }}>Review and approve creator withdrawals via Paystack.</p>
+          <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '8px', letterSpacing: '-0.02em' }}>Payout Approvals</h1>
+          <p style={{ color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', fontSize: '16px' }}>Review and approve creator withdrawals via Paystack.</p>
         </div>
         <BulkApproveButton creators={pendingPayouts.filter(p => p.bank_account_number)} />
       </div>
 
       {/* Pending Queue */}
-      <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden', marginBottom: '40px' }}>
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)' }}>Live Pending Queue ({pendingPayouts.length})</h2>
-          <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>Creators with unsettled transactions totaling ≥ ₦1,000</p>
+      <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', marginBottom: '40px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <div style={{ padding: '24px', borderBottom: '1px solid #E2E8F0', background: '#f8f9ff' }}>
+          <h2 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', margin: 0 }}>Live Pending Queue ({pendingPayouts.length})</h2>
+          <p style={{ fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#3f4943', marginTop: '4px', margin: 0 }}>Creators with unsettled transactions totaling ≥ ₦1,000</p>
         </div>
         
         {pendingPayouts.length === 0 ? (
-          <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>
+          <div style={{ padding: '48px 24px', textAlign: 'center', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
             No pending payouts at this time.
           </div>
         ) : (
-          <div className="v2-table-wrapper">
+          <div className="v2-table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <div style={{ minWidth: '800px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owed Amount</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bank Details</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Transactions</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', background: '#f8f9ff', borderBottom: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owed Amount</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bank Details</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Transactions</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</span>
               </div>
 
               {pendingPayouts.map(creator => {
                 const hasBank = !!creator.bank_account_number;
                 
                 return (
-                  <div key={creator.creator_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', borderBottom: '1px solid var(--v2-outline)', alignItems: 'center' }}>
+                  <div key={creator.creator_id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
                     
                     {/* Creator Info */}
                     <div>
-                      <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px' }}>{creator.displayName}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>{creator.email}</div>
+                      <div style={{ fontWeight: 600, color: '#0b1c30', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{creator.displayName}</div>
+                      <div style={{ fontSize: '12px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{creator.email}</div>
                     </div>
 
                     {/* Amount */}
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--v2-green)' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#059669', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                       ₦ {(creator.amount / 100).toLocaleString()}
                     </div>
 
@@ -130,16 +130,16 @@ export default async function AdminPayoutsPage() {
                     <div>
                       {hasBank ? (
                         <>
-                          <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px' }}>{creator.bank_account_name}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>{creator.bank_account_number} (Code: {creator.bank_code})</div>
+                          <div style={{ fontWeight: 600, color: '#0b1c30', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{creator.bank_account_name}</div>
+                          <div style={{ fontSize: '12px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{creator.bank_account_number} (Code: {creator.bank_code})</div>
                         </>
                       ) : (
-                        <span style={{ color: '#dc2626', fontSize: '12px', fontWeight: 600 }}>Missing Bank Setup</span>
+                        <span style={{ color: '#ba1a1a', fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Missing Bank Setup</span>
                       )}
                     </div>
 
                     {/* Transaction Count */}
-                    <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>
+                    <div style={{ fontSize: '14px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                       {creator.transaction_count} pending
                     </div>
 
@@ -149,7 +149,7 @@ export default async function AdminPayoutsPage() {
                         <IndividualPayoutActions creator={creator} />
                       ) : (
                         <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>Cannot approve</span>
+                          <span style={{ fontSize: '12px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Cannot approve</span>
                         </div>
                       )}
                     </div>
@@ -163,44 +163,44 @@ export default async function AdminPayoutsPage() {
       </div>
 
       {/* Historical Payouts */}
-      <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '16px' }}>Payout Ledger</h3>
-      <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden' }}>
-         <div className="v2-table-wrapper">
+      <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '16px' }}>Payout Ledger</h3>
+      <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+         <div className="v2-table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <div style={{ minWidth: '800px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bank Details</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Status</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', background: '#f8f9ff', borderBottom: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Amount</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bank Details</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Status</span>
               </div>
 
               {historicalPayouts.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>No historical payouts.</div>
+                <div style={{ padding: '24px', textAlign: 'center', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>No historical payouts.</div>
               ) : historicalPayouts.map(payout => {
                 const profile = Array.isArray(payout.profiles) ? payout.profiles[0] : payout.profiles;
                 const cProfile = Array.isArray(payout.creator_profiles) ? payout.creator_profiles[0] : payout.creator_profiles;
                 const displayName = cProfile?.slug || profile?.display_name || profile?.full_name || 'Creator';
                 
-                const statusColor = payout.status === 'paid' ? 'var(--v2-green)' : (payout.status === 'processing' ? '#eab308' : '#dc2626');
-                const statusBg = payout.status === 'paid' ? 'rgba(5, 150, 105, 0.1)' : (payout.status === 'processing' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(220, 38, 38, 0.1)');
+                const statusColor = payout.status === 'paid' ? '#059669' : (payout.status === 'processing' ? '#735c00' : '#ba1a1a');
+                const statusBg = payout.status === 'paid' ? '#ecfdf5' : (payout.status === 'processing' ? '#fed65b' : '#ffdad6');
 
                 return (
-                  <div key={payout.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', borderBottom: '1px solid var(--v2-outline)', alignItems: 'center' }}>
+                  <div key={payout.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '14px' }}>{displayName}</div>
+                      <div style={{ fontWeight: 600, color: '#0b1c30', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{displayName}</div>
                     </div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--v2-primary)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#004e34', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                       ₦ {((payout.net_amount || 0) / 100).toLocaleString()}
                     </div>
-                    <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>
+                    <div style={{ fontSize: '14px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                       {cProfile?.bank_account_name || 'N/A'}
                     </div>
-                    <div style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>
+                    <div style={{ fontSize: '14px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                       {new Date(payout.created_at).toLocaleDateString()}
                     </div>
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                       <span style={{ display: 'inline-block', padding: '4px 8px', background: statusBg, color: statusColor, borderRadius: '9999px', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                       <span style={{ display: 'inline-block', padding: '4px 10px', background: statusBg, color: statusColor, borderRadius: '9999px', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-body, Inter, sans-serif)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           {payout.status}
                        </span>
                        <AuditReceiptButton payoutId={payout.id} payoutAmount={payout.net_amount || 0} />

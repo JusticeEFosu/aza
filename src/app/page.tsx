@@ -22,9 +22,9 @@ export default async function HomePage() {
     .select(`
       slug,
       id,
-      slug,
       bio,
       cover_url,
+      subscriber_count,
       profiles!inner ( full_name, display_name, avatar_url, is_suspended, admin_role ),
       subscription_tiers ( price )
     `)
@@ -36,165 +36,187 @@ export default async function HomePage() {
   const displayCreators = creators || [];
 
   return (
-    <div className="landing-v2">
+    <div style={{ background: 'var(--az-bg)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* TopNavBar Component */}
       <LandingNavbar user={user} dashboardUrl={dashboardUrl} />
 
-      <main className="v2-main">
+      <main style={{ flexGrow: 1 }}>
         {/* Hero Section */}
-        <section className="v2-section v2-border-b v2-hero">
-          <div className="v2-hero-content">
-            <h1 className="v2-hero-title">
+        <section style={{ padding: '80px 0', borderBottom: '1px solid var(--az-border)', background: '#ffffff' }}>
+          <div className="az-container" style={{ maxWidth: '840px', textAlign: 'center', margin: '0 auto' }}>
+            <h1 className="az-h1" style={{ marginBottom: '20px' }}>
               Fund the creators who inspire you.
             </h1>
-            <p className="v2-hero-desc">
+            <p className="az-body-lg" style={{ marginBottom: '32px', maxWidth: '640px', marginLeft: 'auto', marginRight: 'auto' }}>
               Join the community behind your favourite voices. Empowering Nigerian creativity and the voices that matter most to you.
             </p>
-          </div>
-          <div className="v2-hero-actions" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            {user ? (
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-                <Link href={dashboardUrl} className="v2-btn-primary lg">
-                  Go to Dashboard <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
-                </Link>
-                <Link href="/fundraisers" className="v2-btn-outline lg">
-                  Explore Causes
-                </Link>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-                  <Link href="/signup" className="v2-btn-primary lg">
-                    Create Account <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
+            
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {user ? (
+                <>
+                  <Link href={dashboardUrl} className="az-btn-primary" style={{ padding: '14px 28px' }}>
+                    Go to Dashboard <span className="material-symbols-outlined" style={{ fontSize: '18px', marginLeft: '8px' }}>arrow_forward</span>
                   </Link>
-                  <Link href="/creators" className="v2-btn-outline lg">
+                  <Link href="/fundraisers" className="az-btn-secondary" style={{ padding: '14px 28px' }}>
+                    Explore Causes
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/signup" className="az-btn-primary" style={{ padding: '14px 28px' }}>
+                    Create Account <span className="material-symbols-outlined" style={{ fontSize: '18px', marginLeft: '8px' }}>arrow_forward</span>
+                  </Link>
+                  <Link href="/creators" className="az-btn-secondary" style={{ padding: '14px 28px' }}>
                     Explore Creators
                   </Link>
-                </div>
-                <Link href="/login" style={{ fontSize: '15px', color: 'var(--v2-text-variant)', textDecoration: 'none', fontWeight: 500, marginTop: '16px', display: 'inline-block' }}>
-                  Already have an account? <span style={{ color: 'var(--v2-primary)', fontWeight: 600, textDecoration: 'underline' }}>Log In</span>
+                </>
+              )}
+            </div>
+            {!user && (
+              <div style={{ marginTop: '20px' }}>
+                <Link href="/login" className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>
+                  Already have an account? <span style={{ color: 'var(--az-primary)', fontWeight: 600, textDecoration: 'underline' }}>Log In</span>
                 </Link>
-              </>
+              </div>
             )}
           </div>
         </section>
 
         {/* Featured Creators */}
         {displayCreators.length > 0 && (
-          <section className="v2-section v2-border-b">
-            <div className="v2-section-header">
-              <div>
-                <h2 className="v2-section-title">Trending Creators</h2>
-                <p className="v2-section-desc">Discover top talent building their communities on MyAzaa.</p>
+          <section style={{ padding: '80px 0', borderBottom: '1px solid var(--az-border)' }}>
+            <div className="az-container">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px' }}>
+                <div>
+                  <h2 className="az-h2">Trending Creators</h2>
+                  <p className="az-body" style={{ color: 'var(--az-text-muted)', marginTop: '4px' }}>Discover top talent building their communities on MyAzaa.</p>
+                </div>
+                <Link href="/creators" className="az-label" style={{ color: 'var(--az-primary)', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  View all creators &rarr;
+                </Link>
               </div>
-              <Link href="/creators" className="v2-view-all">View all creators</Link>
-            </div>
 
-            <div className="v2-creators-grid">
-              {displayCreators.map((creator: any) => {
-                const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name || 'Creator';
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '24px' }}>
+                {displayCreators.map((creator: any) => {
+                  const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name || 'Creator';
 
-                // Calculate dynamic price strictly based on DB minimum tier
-                let displayPrice = 'Free';
-                if (creator.tiers && creator.tiers.length > 0) {
-                  const minAmount = Math.min(...creator.tiers.map((t: any) => t.amount));
-                  displayPrice = `₦${(minAmount / 100).toLocaleString()}/mo`;
-                }
+                  let displayPrice = 'Free';
+                  const tiers = creator.subscription_tiers;
+                  if (tiers && tiers.length > 0) {
+                    const minAmount = Math.min(...tiers.map((t: any) => t.price));
+                    displayPrice = `₦${(minAmount / 100).toLocaleString()}/mo`;
+                  }
 
-                // Format subscribers (e.g. 1.2k)
-                const subCount = creator.subscriber_count || 0;
-                const displaySubscribers = subCount > 999
-                  ? (subCount / 1000).toFixed(1) + 'k'
-                  : subCount;
+                  const subCount = creator.subscriber_count || 0;
+                  const displaySubscribers = subCount > 999
+                    ? (subCount / 1000).toFixed(1) + 'k'
+                    : subCount;
 
-                return (
-                  <Link key={creator.slug} href={`/c/${creator.slug}`} className="v2-creator-card">
-                    <div className="v2-card-line"></div>
-                    <div className="v2-creator-header">
-                      {creator.profiles?.avatar_url ? (
-                        <img src={creator.profiles.avatar_url} alt={name} className="v2-creator-avatar" />
-                      ) : (
-                        <div className="v2-creator-avatar">{name.charAt(0).toUpperCase()}</div>
-                      )}
-                      <div>
-                        <h3 className="v2-creator-name">{name}</h3>
-                        <p className="v2-creator-category">{creator.category || 'Creator'}</p>
+                  return (
+                    <Link key={creator.slug} href={`/c/${creator.slug}`} className="az-card az-card-interactive" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        {creator.profiles?.avatar_url ? (
+                          <img src={creator.profiles.avatar_url} alt={name} style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--az-surface-low)', color: 'var(--az-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px' }}>
+                            {name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="az-h3" style={{ fontSize: '18px' }}>{name}</h3>
+                          <span style={{ display: 'inline-block', background: 'var(--az-surface-low)', color: 'var(--az-primary)', fontSize: '12px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', marginTop: '2px' }}>
+                            {creator.category || 'Creator'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <p className="v2-creator-bio">{creator.bio}</p>
-                    <div className="v2-creator-footer">
-                      <span className="v2-creator-stats">
-                        <span className="material-symbols-outlined">group</span> {displaySubscribers}
-                      </span>
-                      <span className="v2-creator-price">{displayPrice}</span>
-                    </div>
-                  </Link>
-                );
-              })}
+                      <p className="az-body" style={{ fontSize: '14px', color: 'var(--az-text-muted)', flexGrow: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {creator.bio || 'No bio provided.'}
+                      </p>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid var(--az-border)' }}>
+                        <span style={{ fontSize: '13px', color: 'var(--az-text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--az-primary)' }}>group</span> {displaySubscribers}
+                        </span>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--az-primary)' }}>{displayPrice}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-            <Link href="/creators" className="v2-mobile-all-btn">View all creators</Link>
           </section>
         )}
 
         {/* How It Works Section */}
-        <section className="v2-section v2-bg-lowest">
-          <div className="v2-center-content">
-            <h2 className="v2-section-title">How it Works</h2>
-            <p className="v2-subtitle-center">
-              Three simple steps to start monetizing your passion and connecting with your truest fans.
-            </p>
-          </div>
-
-          <div className="v2-steps-grid">
-            <div className="v2-step-line"></div>
-
-            <div className="v2-step">
-              <div className="v2-step-icon">
-                <span className="material-symbols-outlined">add_circle</span>
-              </div>
-              <h3 className="v2-step-title">Create</h3>
-              <p className="v2-step-desc">Set up your page in minutes. Define your subscription tiers and what exclusive value you offer.</p>
+        <section style={{ padding: '80px 0', background: '#ffffff' }}>
+          <div className="az-container">
+            <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+              <h2 className="az-h2">How it Works</h2>
+              <p className="az-body-lg" style={{ marginTop: '8px', maxWidth: '560px', marginLeft: 'auto', marginRight: 'auto' }}>
+                Three simple steps to start monetizing your passion and connecting with your truest fans.
+              </p>
             </div>
 
-            <div className="v2-step">
-              <div className="v2-step-icon">
-                <span className="material-symbols-outlined">share</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px' }}>
+              <div className="az-card" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: 'var(--az-radius-lg)', background: 'var(--az-surface-low)', color: 'var(--az-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>add_circle</span>
+                </div>
+                <h3 className="az-h3" style={{ marginBottom: '8px' }}>Create</h3>
+                <p className="az-body" style={{ color: 'var(--az-text-muted)', fontSize: '15px' }}>
+                  Set up your page in minutes. Define your subscription tiers and what exclusive value you offer.
+                </p>
               </div>
-              <h3 className="v2-step-title">Share</h3>
-              <p className="v2-step-desc">Promote your MyAzaa link across your social platforms. Invite your audience to join your inner circle.</p>
+
+              <div className="az-card" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: 'var(--az-radius-lg)', background: 'var(--az-surface-low)', color: 'var(--az-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>share</span>
+                </div>
+                <h3 className="az-h3" style={{ marginBottom: '8px' }}>Share</h3>
+                <p className="az-body" style={{ color: 'var(--az-text-muted)', fontSize: '15px' }}>
+                  Promote your MyAzaa link across your social platforms. Invite your audience to join your inner circle.
+                </p>
+              </div>
+
+              <div className="az-card" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: 'var(--az-radius-lg)', background: 'var(--az-surface-low)', color: 'var(--az-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '32px' }}>payments</span>
+                </div>
+                <h3 className="az-h3" style={{ marginBottom: '8px' }}>Earn</h3>
+                <p className="az-body" style={{ color: 'var(--az-text-muted)', fontSize: '15px' }}>
+                  Get paid directly to your local bank account. Fast payouts, transparent fees, built for Nigeria.
+                </p>
+              </div>
             </div>
 
-            <div className="v2-step">
-              <div className="v2-step-icon">
-                <span className="material-symbols-outlined">payments</span>
-              </div>
-              <h3 className="v2-step-title">Earn</h3>
-              <p className="v2-step-desc">Get paid directly to your local bank account. Fast payouts, transparent fees, built for Nigeria.</p>
+            <div style={{ marginTop: '48px', textAlign: 'center' }}>
+              <Link href="/signup" className="az-btn-primary" style={{ padding: '16px 36px', fontSize: '16px' }}>
+                Create Your Page Now
+              </Link>
             </div>
-          </div>
-
-          <div className="v2-cta-wrapper">
-            <Link href="/signup" className="v2-btn-primary lg" style={{ display: 'inline-flex' }}>
-              Create Your Page Now
-            </Link>
           </div>
         </section>
       </main>
 
       {/* Footer Component */}
-      <footer className="v2-footer">
-        <div className="v2-footer-inner">
-          <div className="v2-footer-left">
-            <Link href="/" className="v2-footer-brand">MyAzaa</Link>
-            <p className="v2-footer-copy" style={{ marginBottom: '4px' }}>© {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.</p>
-            <p style={{ fontSize: '13px', color: 'var(--v2-text-variant)', fontWeight: 500, margin: 0 }}>Developed by Justice Fosu (In Active Development)</p>
+      <footer style={{ background: '#ffffff', borderTop: '1px solid var(--az-border)', padding: '48px 0' }}>
+        <div className="az-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+          <div>
+            <Link href="/" className="az-h3" style={{ color: 'var(--az-primary)', textDecoration: 'none', fontWeight: 800 }}>
+              MyAzaa
+            </Link>
+            <p className="az-label" style={{ marginTop: '4px', color: 'var(--az-text-muted)' }}>
+              © {new Date().getFullYear()} MyAzaa. Built for Nigerian Creators.
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--az-text-muted)', marginTop: '2px' }}>
+              Developed by Justice Fosu (In Active Development)
+            </p>
           </div>
-          <div className="v2-footer-links">
-            <Link href="/legal/privacy" prefetch={false} className="v2-footer-link">Privacy</Link>
-            <Link href="/legal/terms-of-service" prefetch={false} className="v2-footer-link">Terms</Link>
-            <Link href="mailto:support@myazaa.com" className="v2-footer-link">Support</Link>
-            <span className="v2-secure">
-              <span className="material-symbols-outlined">lock</span> Secured by Paystack
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link href="/legal/privacy" prefetch={false} className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>Privacy</Link>
+            <Link href="/legal/terms-of-service" prefetch={false} className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>Terms</Link>
+            <Link href="mailto:support@myazaa.com" className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>Support</Link>
+            <span style={{ fontSize: '13px', color: 'var(--az-primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>lock</span> Secured by Paystack
             </span>
           </div>
         </div>

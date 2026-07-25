@@ -25,18 +25,20 @@ export default function AdminUserSearch() {
   return (
     <form onSubmit={handleSearch} style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
       <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-        <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--v2-text-variant)', fontSize: '20px' }}>search</span>
+        <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6f7a72', fontSize: '20px' }}>search</span>
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by name or email..."
-          style={{ width: '100%', padding: '10px 16px 10px 40px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', color: 'var(--v2-text)', fontSize: '14px', outline: 'none' }}
+          style={{ width: '100%', padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#ffffff', color: '#0b1c30', fontSize: '16px', outline: 'none', fontFamily: 'var(--font-body, Inter, sans-serif)' }}
+          onFocus={(e) => e.target.style.borderColor = '#004e34'}
+          onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
         />
       </div>
-      <button type="submit" className="v2-btn v2-btn-secondary" style={{ padding: '8px 16px' }}>Search</button>
+      <button type="submit" className="az-btn-secondary" style={{ padding: '10px 16px', fontSize: '14px' }}>Search</button>
       {initialQuery && (
-        <button type="button" onClick={() => { setQuery(''); router.push('/admin/users'); }} className="v2-btn v2-btn-secondary" style={{ padding: '8px 16px', background: 'transparent', border: '1px solid transparent', color: 'var(--v2-text-variant)' }}>Clear</button>
+        <button type="button" onClick={() => { setQuery(''); router.push('/admin/users'); }} style={{ padding: '10px 16px', background: 'transparent', border: 'none', color: '#6f7a72', cursor: 'pointer', fontFamily: 'var(--font-body, Inter, sans-serif)', fontSize: '14px' }}>Clear</button>
       )}
     </form>
   );

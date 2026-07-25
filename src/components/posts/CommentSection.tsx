@@ -27,10 +27,11 @@ const CommentInput = ({ value, onChange, onSubmit, placeholder, isSubmitting, on
         onChange={(e) => onChange(e.target.value)}
         disabled={isSubmitting}
         autoFocus={!!onCancel}
+        className="az-input"
         style={{
           flex: 1, padding: '12px 16px', borderRadius: '24px',
           border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)',
-          fontSize: '14px', color: 'var(--v2-text)', outline: 'none',
+          fontSize: '16px', color: 'var(--v2-text)', outline: 'none',
           transition: 'border-color 0.2s ease',
         }}
       />
@@ -41,7 +42,7 @@ const CommentInput = ({ value, onChange, onSubmit, placeholder, isSubmitting, on
         type="submit" 
         disabled={!value.trim() || isSubmitting}
         style={{ 
-          background: value.trim() ? 'var(--v2-primary)' : 'var(--v2-surface-highest)', 
+          background: value.trim() ? '#004e34' : 'var(--v2-surface-highest)', 
           color: value.trim() ? 'white' : 'var(--v2-text-variant)', 
           border: 'none', borderRadius: '24px', padding: '0 20px', 
           fontWeight: 600, fontSize: '14px', cursor: value.trim() && !isSubmitting ? 'pointer' : 'not-allowed',

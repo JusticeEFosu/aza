@@ -40,7 +40,7 @@ export default async function CreatorLayout({
   }
 
   return (
-    <div className="v2-dashboard-layout">
+    <div className="v2-dashboard-layout" style={{ backgroundColor: '#f8f9ff', minHeight: '100vh' }}>
       {/* Desktop Sidebar */}
       <DashboardSidebar role="creator" />
 
@@ -48,7 +48,9 @@ export default async function CreatorLayout({
       <MobileNav role="creator" />
 
       {/* Main Content Area */}
-      {children}
+      <div className="v2-main-content">
+        {children}
+      </div>
     </div>
   );
 }

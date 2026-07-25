@@ -147,35 +147,36 @@ export default function SubscribersPage() {
   }
 
   return (
-    <main className="v2-main-content" style={{ overflowX: 'hidden' }}>
+    <main style={{ overflowX: 'hidden', padding: '32px 16px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
 
         {/* Page Header */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
             <div>
-              <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', margin: 0, letterSpacing: '-0.01em' }}>Subscribers</h1>
-              <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)', marginTop: '4px' }}>Manage your active community members.</p>
+              <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', margin: 0, letterSpacing: '-0.01em' }}>Subscribers</h1>
+              <p style={{ fontSize: '16px', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#3f4943', marginTop: '4px' }}>Manage your active community members.</p>
             </div>
             <div className="v2-search-filter-container">
               {/* Search */}
               <div className="v2-search-wrapper" style={{ position: 'relative' }}>
-                <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--v2-text-variant)', fontSize: '20px' }}>search</span>
+                <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6f7a72', fontSize: '20px' }}>search</span>
                 <input
                   type="text"
                   placeholder="Search subscribers..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  style={{ paddingLeft: '40px', paddingRight: '16px', padding: '8px 16px 8px 40px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface-lowest)', fontSize: '14px', outline: 'none', width: '240px' }}
+                  className="az-input"
+                  style={{ paddingLeft: '40px', paddingRight: '16px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#ffffff', fontSize: '16px', outline: 'none', width: '240px' }}
                 />
               </div>
               {/* Filter */}
               {tiers.length > 1 && (
                 <select
-                  className="v2-filter-select"
+                  className="az-select v2-filter-select"
                   value={tierFilter}
                   onChange={e => setTierFilter(e.target.value)}
-                  style={{ padding: '8px 32px 8px 12px', border: '1px solid var(--v2-outline)', borderRadius: '8px', background: 'var(--v2-surface-lowest)', fontSize: '14px', outline: 'none', cursor: 'pointer', appearance: 'none' }}
+                  style={{ padding: '8px 32px 8px 12px', border: '1px solid #E2E8F0', borderRadius: '8px', background: '#ffffff', fontSize: '16px', outline: 'none', cursor: 'pointer', appearance: 'none' }}
                 >
                   <option value="all">All Tiers</option>
                   {tiers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -186,18 +187,18 @@ export default function SubscribersPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="v2-bento-stats" style={{ marginBottom: '32px' }}>
-          <div className="v2-bento-card-main" style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)' }}>Total Active</span>
-            <div style={{ fontSize: '48px', fontWeight: 700, color: 'var(--v2-primary)', marginTop: '8px', letterSpacing: '-0.02em' }}>{activeSubscribers.length.toLocaleString()}</div>
+        <div className="v2-bento-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+          <div className="v2-bento-card-main" style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Total Active</span>
+            <div style={{ fontSize: '44px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#004e34', marginTop: '8px', letterSpacing: '-0.02em' }}>{activeSubscribers.length.toLocaleString()}</div>
           </div>
-          <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)' }}>New This Month</span>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--v2-green)', marginTop: '4px', letterSpacing: '-0.02em' }}>+{newThisMonth}</div>
+          <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>New This Month</span>
+            <div style={{ fontSize: '28px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#059669', marginTop: '4px', letterSpacing: '-0.02em' }}>+{newThisMonth}</div>
           </div>
-          <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)' }}>Churn Rate</span>
-            <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--v2-primary)', marginTop: '4px', letterSpacing: '-0.02em' }}>{churnRate}%</div>
+          <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Churn Rate</span>
+            <div style={{ fontSize: '28px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginTop: '4px', letterSpacing: '-0.02em' }}>{churnRate}%</div>
           </div>
         </div>
 

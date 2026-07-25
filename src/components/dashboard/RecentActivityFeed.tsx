@@ -72,10 +72,10 @@ export default function RecentActivityFeed({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="v2-activity-title" style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--v2-primary)' }}>
+          <h2 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, margin: 0, color: '#0b1c30' }}>
             Recent Activity
           </h2>
-          <Link href="/creator/payouts" className="v2-activity-view-all" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--v2-text-variant)', textDecoration: 'none' }}>
+          <Link href="/creator/payouts" style={{ fontSize: '13px', fontFamily: 'var(--font-body, Inter, sans-serif)', fontWeight: 600, color: '#004e34', textDecoration: 'none' }}>
             View All →
           </Link>
         </div>
@@ -99,18 +99,18 @@ export default function RecentActivityFeed({
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  padding: '6px 14px',
+                  padding: '6px 16px',
                   borderRadius: '999px',
                   fontSize: '13px',
-                  fontWeight: isActive ? 700 : 500,
-                  border: isActive ? '1px solid var(--v2-primary)' : '1px solid var(--v2-outline)',
-                  background: isActive ? 'var(--v2-primary)' : 'var(--v2-surface-lowest)',
-                  color: isActive ? 'var(--v2-on-primary)' : 'var(--v2-text-variant)',
+                  fontFamily: 'var(--font-body, Inter, sans-serif)',
+                  fontWeight: isActive ? 600 : 500,
+                  border: isActive ? '1px solid #004e34' : '1px solid #E2E8F0',
+                  background: isActive ? '#004e34' : '#ffffff',
+                  color: isActive ? '#ffffff' : '#3f4943',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.15s ease',
                   flexShrink: 0,
-                  fontFamily: 'inherit',
                 }}
               >
                 {tab.label}
@@ -120,9 +120,9 @@ export default function RecentActivityFeed({
         </div>
       </div>
 
-      <div className="v2-activity-list" style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', overflow: 'hidden' }}>
+      <div className="v2-activity-list" style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
         {filteredActivities.length === 0 ? (
-          <div style={{ padding: '32px 24px', textAlign: 'center', color: 'var(--v2-text-variant)', fontSize: '14px' }}>
+          <div style={{ padding: '32px 24px', textAlign: 'center', color: '#3f4943', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
             {activities.length === 0 ? (
               isPublished 
                 ? "No recent activity yet. Share your page to get your first supporter!"
@@ -145,7 +145,7 @@ export default function RecentActivityFeed({
                     alignItems: 'center', 
                     justifyContent: 'space-between', 
                     padding: '16px 20px', 
-                    borderBottom: '1px solid var(--v2-outline)' 
+                    borderBottom: '1px solid #E2E8F0' 
                   }}
                 >
                   <div className="v2-activity-user" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -155,8 +155,8 @@ export default function RecentActivityFeed({
                         width: '36px', 
                         height: '36px', 
                         borderRadius: '50%', 
-                        background: 'rgba(6, 95, 70, 0.1)', 
-                        color: 'var(--v2-green)', 
+                        background: '#ecfdf5', 
+                        color: '#059669', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center',
@@ -166,17 +166,17 @@ export default function RecentActivityFeed({
                       <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>volunteer_activism</span>
                     </div>
                     <div>
-                      <p className="v2-activity-name" style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: 'var(--v2-primary)' }}>{donorName}</p>
-                      <p className="v2-activity-desc" style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--v2-text-variant)' }}>
+                      <p className="v2-activity-name" style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{donorName}</p>
+                      <p className="v2-activity-desc" style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                         {activitySubtext} {item.donor_note ? `- "${item.donor_note}"` : ''}
                       </p>
                     </div>
                   </div>
                   <div className="v2-activity-right" style={{ textAlign: 'right' }}>
-                    <p className="v2-activity-amount" style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: 'var(--v2-green)' }}>
+                    <p className="v2-activity-amount" style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#059669', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                       + ₦ {(item.amount / 100).toLocaleString()}
                     </p>
-                    <p className="v2-activity-time" style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--v2-text-variant)' }}>{formatTimeAgo(item.created_at)}</p>
+                    <p className="v2-activity-time" style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{formatTimeAgo(item.created_at)}</p>
                   </div>
                 </div>
               );
@@ -199,7 +199,7 @@ export default function RecentActivityFeed({
                   alignItems: 'center', 
                   justifyContent: 'space-between', 
                   padding: '16px 20px', 
-                  borderBottom: '1px solid var(--v2-outline)' 
+                  borderBottom: '1px solid #E2E8F0' 
                 }}
               >
                 <div className="v2-activity-user" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -210,7 +210,7 @@ export default function RecentActivityFeed({
                       height: '36px', 
                       borderRadius: '50%', 
                       overflow: 'hidden', 
-                      background: 'var(--v2-surface-low)', 
+                      background: '#eff4ff', 
                       display: 'flex', 
                       alignItems: 'center', 
                       justifyContent: 'center',
@@ -220,19 +220,19 @@ export default function RecentActivityFeed({
                     {fanAvatar ? (
                       <img src={fanAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--v2-text-variant)' }}>person</span>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#6f7a72' }}>person</span>
                     )}
                   </div>
                   <div>
-                    <p className="v2-activity-name" style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: 'var(--v2-primary)' }}>{fanName}</p>
-                    <p className="v2-activity-desc" style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--v2-text-variant)' }}>{activitySubtext}</p>
+                    <p className="v2-activity-name" style={{ margin: 0, fontWeight: 600, fontSize: '14px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{fanName}</p>
+                    <p className="v2-activity-desc" style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{activitySubtext}</p>
                   </div>
                 </div>
                 <div className="v2-activity-right" style={{ textAlign: 'right' }}>
-                  <p className="v2-activity-amount" style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: 'var(--v2-primary)' }}>
+                  <p className="v2-activity-amount" style={{ margin: 0, fontWeight: 700, fontSize: '14px', color: '#004e34', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                     ₦ {(item.amount / 100).toLocaleString()}
                   </p>
-                  <p className="v2-activity-time" style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--v2-text-variant)' }}>{formatTimeAgo(item.created_at)}</p>
+                  <p className="v2-activity-time" style={{ margin: '2px 0 0 0', fontSize: '11px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{formatTimeAgo(item.created_at)}</p>
                 </div>
               </div>
             );

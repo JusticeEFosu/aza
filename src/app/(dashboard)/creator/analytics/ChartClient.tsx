@@ -13,37 +13,37 @@ export default function AnalyticsChartClient({ data }: { data: any[] }) {
         >
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8bd6b6" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#8bd6b6" stopOpacity={0} />
+              <stop offset="5%" stopColor="#004e34" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#004e34" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
           <XAxis 
             dataKey="name" 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fill: 'var(--v2-text-variant)', fontSize: 12 }} 
+            tick={{ fill: '#3f4943', fontSize: 12, fontFamily: 'Inter' }} 
             dy={10} 
           />
           <YAxis 
             axisLine={false} 
             tickLine={false} 
-            tick={{ fill: 'var(--v2-text-variant)', fontSize: 12 }} 
+            tick={{ fill: '#3f4943', fontSize: 12, fontFamily: 'Inter' }} 
             tickFormatter={(value: any) => `₦${((value || 0) / 1000).toFixed(0)}k`}
           />
           <Tooltip 
-            contentStyle={{ backgroundColor: 'var(--v2-surface-lowest)', borderColor: 'var(--v2-outline)', borderRadius: '8px', color: 'var(--v2-primary)' }}
-            itemStyle={{ color: '#8bd6b6', fontWeight: 600 }}
+            contentStyle={{ backgroundColor: '#ffffff', borderColor: '#E2E8F0', borderRadius: '8px', color: '#0b1c30', fontFamily: 'Inter' }}
+            itemStyle={{ color: '#004e34', fontWeight: 600 }}
             formatter={(value: any) => [`₦${(value || 0).toLocaleString()}`, 'Revenue']}
           />
           <Area 
             type="monotone" 
             dataKey="value" 
-            stroke="#8bd6b6" 
+            stroke="#004e34" 
             strokeWidth={3}
             fillOpacity={1} 
             fill="url(#colorValue)" 
-            activeDot={{ r: 6, fill: '#8bd6b6', stroke: 'var(--v2-surface-lowest)', strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: '#004e34', stroke: '#ffffff', strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>

@@ -31,34 +31,35 @@ export default function SubscriptionCardActions({ slug, subscriptionId }: { slug
 
   return (
     <>
-      <div className="v2-sub-actions">
+      <div style={{ marginTop: '12px' }}>
         <button 
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowModal(true); }}
-          className="v2-sub-btn v2-sub-btn-secondary"
-          style={{ width: '100%' }}
+          className="az-btn-secondary"
+          style={{ width: '100%', padding: '8px 16px', fontSize: '13px' }}
         >
-          Cancel
+          Cancel Subscription
         </button>
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div style={{ background: 'var(--v2-surface-lowest)', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 16px 0', color: 'var(--v2-primary)' }}>Cancel Subscription</h3>
-            <p style={{ fontSize: '15px', color: 'var(--v2-text-variant)', marginBottom: '24px', lineHeight: 1.5 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div className="az-card" style={{ background: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '28px', boxShadow: 'var(--az-shadow-hover)' }}>
+            <h3 className="az-h3" style={{ fontSize: '20px', margin: '0 0 12px 0', color: 'var(--az-primary, #004e34)' }}>Cancel Subscription</h3>
+            <p className="az-body" style={{ fontSize: '14px', color: 'var(--az-text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>
               Are you sure you want to cancel? You will lose access to this creator's exclusive content immediately.
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button 
                 onClick={() => setShowModal(false)}
-                style={{ padding: '10px 20px', background: 'transparent', color: 'var(--v2-text-variant)', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}
+                className="az-btn-secondary"
+                style={{ padding: '8px 20px', fontSize: '14px' }}
               >
                 Keep it
               </button>
               <button 
                 onClick={handleCancel}
                 disabled={canceling}
-                style={{ padding: '10px 24px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: canceling ? 0.5 : 1 }}
+                style={{ padding: '8px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 'var(--az-radius-sm, 4px)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', opacity: canceling ? 0.5 : 1 }}
               >
                 {canceling ? 'Canceling...' : 'Yes, Cancel'}
               </button>

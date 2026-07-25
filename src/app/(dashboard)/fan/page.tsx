@@ -139,211 +139,215 @@ export default async function FanFeed() {
   }
 
   return (
-    <main className="v2-fan-main">
-        <div className="v2-fan-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <header style={{ marginBottom: '32px' }}>
-            <h1 className="v2-dash-title">Your Feed</h1>
-            <p className="v2-dash-desc">Latest posts from creators you support.</p>
-          </header>
+    <main className="az-container" style={{ paddingTop: '32px', paddingBottom: '64px', maxWidth: '840px' }}>
+      <header style={{ marginBottom: '32px' }}>
+        <h1 className="az-h1" style={{ fontSize: '32px', color: 'var(--az-primary, #004e34)' }}>Your Feed</h1>
+        <p className="az-body-lg" style={{ color: 'var(--az-text-muted, #6f7a72)', marginTop: '4px' }}>Latest posts from creators you support.</p>
+      </header>
 
-          {posts.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-              <div style={{ textAlign: 'center', padding: '48px 24px', border: '1px dashed var(--v2-outline)', borderRadius: '12px' }}>
-                <p style={{ color: 'var(--v2-text-variant)', marginBottom: '8px' }}>Your home feed will show posts from creators you support.</p>
-                <p style={{ fontWeight: 600 }}>Explore these featured creators to get started.</p>
-              </div>
+      {posts.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="az-card" style={{ textAlign: 'center', padding: '48px 24px', borderStyle: 'dashed' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--az-primary, #004e34)', marginBottom: '16px', display: 'block' }}>dynamic_feed</span>
+            <p className="az-body" style={{ color: 'var(--az-text-muted)', marginBottom: '8px' }}>Your home feed will show posts from creators you support.</p>
+            <p className="az-body-lg" style={{ fontWeight: 600, color: 'var(--az-primary)' }}>Explore these featured creators to get started.</p>
+          </div>
 
-              <div className="v2-subs-grid">
-                {featuredCreators.map((creator: any) => {
-                  const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name;
-                  return (
-                    <Link 
-                      key={creator.slug} 
-                      href={`/c/${creator.slug}`}
-                      className="v2-sub-card"
-                      style={{ alignItems: 'center', textAlign: 'center', textDecoration: 'none', borderTopColor: 'transparent' }}
-                    >
-                      <div className="v2-sub-avatar" style={{ marginBottom: '8px', width: '80px', height: '80px' }}>
-                        {creator.profiles?.avatar_url ? (
-                          <img src={creator.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                        ) : (
-                          name?.charAt(0).toUpperCase()
-                        )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '24px' }}>
+            {featuredCreators.map((creator: any) => {
+              const name = creator.display_name || creator.profiles?.display_name || creator.profiles?.full_name;
+              return (
+                <Link 
+                  key={creator.slug} 
+                  href={`/c/${creator.slug}`}
+                  className="az-card az-card-interactive"
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', textDecoration: 'none' }}
+                >
+                  <div style={{ marginBottom: '12px', width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--az-primary, #004e34)' }}>
+                    {creator.profiles?.avatar_url ? (
+                      <img src={creator.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'var(--az-surface-low)', color: 'var(--az-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '24px' }}>
+                        {name?.charAt(0).toUpperCase()}
                       </div>
-                      <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>{name}</h3>
-                      <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {creator.bio || "Sharing exclusive content with fans."}
-                      </p>
-                      <div className="v2-sub-btn v2-sub-btn-primary" style={{ width: '100%', marginTop: 'auto' }}>View Profile</div>
+                    )}
+                  </div>
+                  <h3 className="az-h3" style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{name}</h3>
+                  <p className="az-body" style={{ fontSize: '14px', color: 'var(--az-text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: '16px' }}>
+                    {creator.bio || "Sharing exclusive content with fans."}
+                  </p>
+                  <span className="az-btn-primary" style={{ width: '100%', marginTop: 'auto', padding: '8px 16px', fontSize: '14px' }}>View Profile</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {posts.map((post: any) => {
+            const creatorName = post.creator_profiles?.display_name || post.creator_profiles?.profiles?.display_name || post.creator_profiles?.profiles?.full_name || 'Unknown';
+            const creatorSlug = post.creator_profiles?.slug || '';
+            const creatorAvatar = post.creator_profiles?.profiles?.avatar_url;
+            const { hasAccess } = post;
+
+            return (
+              <div key={post.id} className="az-card" style={{ padding: '28px' }}>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', alignItems: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--az-border)', flexShrink: 0 }}>
+                    {creatorAvatar ? (
+                      <img src={creatorAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'var(--az-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                        {creatorName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Link href={`/c/${creatorSlug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <span className="az-body" style={{ fontWeight: 600, fontSize: '16px', color: 'var(--az-text-main)' }}>{creatorName}</span>
                     </Link>
-                  )
-                })}
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {posts.map((post: any) => {
-                const creatorName = post.creator_profiles?.display_name || post.creator_profiles?.profiles?.display_name || post.creator_profiles?.profiles?.full_name || 'Unknown';
-                const creatorSlug = post.creator_profiles?.slug || '';
-                const creatorAvatar = post.creator_profiles?.profiles?.avatar_url;
-                const { hasAccess } = post;
+                    <span style={{ fontSize: '12px', color: 'var(--az-text-muted)' }}>
+                      {new Date(post.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
 
-                return (
-                  <div key={post.id} className="v2-spend-card" style={{ padding: '32px' }}>
-                    <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
-                      <div className="v2-sub-avatar" style={{ width: '48px', height: '48px' }}>
-                        {creatorAvatar ? (
-                          <img src={creatorAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', gap: '12px' }}>
+                  <h2 className="az-h2" style={{ margin: 0, fontSize: '20px' }}>{post.title}</h2>
+                  <span style={{
+                    fontSize: '12px',
+                    padding: '4px 12px',
+                    borderRadius: '9999px',
+                    background: post.is_public ? 'var(--az-surface-low, #f0f4f1)' : (hasAccess ? 'rgba(0, 78, 52, 0.1)' : 'rgba(234, 179, 8, 0.1)'),
+                    color: post.is_public ? 'var(--az-text-muted)' : (hasAccess ? 'var(--az-primary, #004e34)' : '#ca8a04'),
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {post.is_public ? 'Public' : (hasAccess ? (
+                       <><span className="material-symbols-outlined" style={{ fontSize: '16px' }}>diamond</span> {post.requiredTierName} Perk (Unlocked)</>
+                    ) : (
+                       <><span className="material-symbols-outlined" style={{ fontSize: '16px' }}>lock</span> {post.requiredTierName} Required</>
+                    ))}
+                  </span>
+                </div>
+
+                {hasAccess ? (
+                  <>
+                    {post.embed_url ? (
+                      <div style={{ marginBottom: '20px', borderRadius: '12px', overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
+                        <iframe
+                          src={getEmbedUrl(post.embed_url) || ''}
+                          style={{ width: '100%', height: '100%', border: 'none' }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : post.image_url ? (
+                      <div style={{ marginBottom: '20px', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+                        {post.image_url?.includes('/video/') ? (
+                          <VideoPlayer 
+                            src={post.image_url} 
+                            poster={post.thumbnail_url}
+                          />
                         ) : (
-                          creatorName.charAt(0).toUpperCase()
+                          <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                        <Link href={`/c/${creatorSlug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                          <span style={{ fontWeight: 600, fontSize: '16px' }}>{creatorName}</span>
-                        </Link>
-                        <span style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{post.title}</h3>
-                      <span style={{
-                        fontSize: '12px',
-                        padding: '4px 12px',
-                        borderRadius: '9999px',
-                        background: post.is_public ? 'var(--v2-surface-low)' : (hasAccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)'),
-                        color: post.is_public ? 'var(--v2-text-variant)' : (hasAccess ? 'var(--v2-green)' : '#ca8a04'),
-                        fontWeight: 600,
+                    ) : null}
+                    <ExpandableText text={post.content || ''} maxLength={250} />
+                  </>
+                ) : (
+                  <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
+                    {(post.embed_url || post.image_url || post.thumbnail_url) && (
+                      <div style={{ 
+                        marginBottom: '16px', 
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        background: '#000',
+                        aspectRatio: (post.thumbnail_url || post.embed_url) ? '16/9' : 'auto',
+                        minHeight: '240px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        justifyContent: 'center'
                       }}>
-                        {post.is_public ? 'Public' : (hasAccess ? (
-                           <><span className="material-symbols-outlined" style={{ fontSize: '16px' }}>diamond</span> {post.requiredTierName} Perk (Unlocked)</>
-                        ) : (
-                           <><span className="material-symbols-outlined" style={{ fontSize: '16px' }}>lock</span> {post.requiredTierName} Required</>
-                        ))}
-                      </span>
-                    </div>
-
-                    {hasAccess ? (
-                      <>
-                        {post.embed_url ? (
-                          <div style={{ marginBottom: '24px', borderRadius: '8px', overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
-                            <iframe
-                              src={getEmbedUrl(post.embed_url) || ''}
-                              style={{ width: '100%', height: '100%', border: 'none' }}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          </div>
+                        {post.thumbnail_url ? (
+                          <img src={post.thumbnail_url} alt="Locked Video" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
                         ) : post.image_url ? (
-                          <div style={{ marginBottom: '24px', borderRadius: '8px', overflow: 'hidden', background: '#000' }}>
-                            {post.image_url?.includes('/video/') ? (
-                              <VideoPlayer 
-                                src={post.image_url} 
-                                poster={post.thumbnail_url}
-                              />
-                            ) : (
-                              <img src={post.image_url} alt="Post media" style={{ width: '100%', maxHeight: '500px', objectFit: 'cover' }} />
-                            )}
-                          </div>
-                        ) : null}
-                        <ExpandableText text={post.content || ''} maxLength={250} />
-                      </>
-                    ) : (
-                      <div style={{ position: 'relative', marginTop: '16px', display: 'flex', flexDirection: 'column' }}>
-                        {(post.embed_url || post.image_url || post.thumbnail_url) && (
-                          <div style={{ 
-                            marginBottom: '16px', 
-                            borderRadius: '8px',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            background: '#000',
-                            aspectRatio: (post.thumbnail_url || post.embed_url) ? '16/9' : 'auto',
-                            minHeight: '240px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}>
-                            {post.thumbnail_url ? (
-                              <img src={post.thumbnail_url} alt="Locked Video" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5 }} />
-                            ) : post.image_url ? (
-                              <img src={post.image_url} alt="Locked Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--v2-text-variant)' }}>
-                                 <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>play_circle</span>
-                              </div>
-                            )}
-                            <div style={{ 
-                              position: 'absolute',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '8px',
-                              color: 'white',
-                              textShadow: '0 2px 4px rgba(0,0,0,0.8)'
-                            }}>
-                              <span className="material-symbols-outlined" style={{ fontSize: '48px' }}>lock</span>
-                              <div style={{ textAlign: 'center' }}>
-                                 <p style={{ fontWeight: 600, margin: 0, fontSize: '16px' }}>Exclusive {post.thumbnail_url ? 'Video' : 'Photo'}</p>
-                                 <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.9 }}>Upgrade to {post.requiredTierName} to view</p>
-                              </div>
-                            </div>
+                          <img src={post.image_url} alt="Locked Photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--az-text-muted)' }}>
+                             <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>play_circle</span>
                           </div>
                         )}
-                        
-                        <div style={{ position: 'relative' }}>
-                          <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, filter: 'blur(8px)', opacity: 0.3, userSelect: 'none', margin: 0 }}>
-                            ██████████ █████ ███████
-                            █████ ██████████ ████
-                            ██████████ █████ ███████
-                          </p>
-                          <div style={{ 
-                            position: 'absolute', 
-                            top: '50%', 
-                            left: '50%', 
-                            transform: 'translate(-50%, -50%)', 
-                            textAlign: 'center', 
-                            width: '100%', 
-                            padding: '24px', 
-                            borderRadius: '16px',
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            border: '1px solid var(--v2-outline)',
-                            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
-                          }}>
-                            <p style={{ fontWeight: 600, marginBottom: '16px', fontSize: '16px' }}>Upgrade subscription to unlock</p>
-                            <Link href={`/c/${creatorSlug}`} className="v2-sub-btn v2-sub-btn-primary" style={{ display: 'inline-flex', padding: '8px 24px' }}>
-                              Upgrade Membership
-                            </Link>
+                        <div style={{ 
+                          position: 'absolute',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          color: 'white',
+                          textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                        }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '48px' }}>lock</span>
+                          <div style={{ textAlign: 'center' }}>
+                             <p style={{ fontWeight: 600, margin: 0, fontSize: '16px' }}>Exclusive {post.thumbnail_url ? 'Video' : 'Photo'}</p>
+                             <p style={{ fontSize: '14px', margin: '4px 0 0', opacity: 0.9 }}>Upgrade to {post.requiredTierName} to view</p>
                           </div>
                         </div>
                       </div>
                     )}
                     
-                    <PostEngagementBar 
-                      postId={post.id} 
-                      initialLikes={post.likesCount}
-                      initialComments={post.commentsCount}
-                      initialUserHasLiked={post.userHasLiked}
-                      hasAccess={post.hasAccess}
-                    />
-                    
-                    {post.has_poll && post.hasAccess && <PollBlock postId={post.id} />}
-                    
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <ReportPostButton postId={post.id} />
+                    <div style={{ position: 'relative' }}>
+                      <p style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, filter: 'blur(8px)', opacity: 0.3, userSelect: 'none', margin: 0 }}>
+                        ██████████ █████ ███████
+                        █████ ██████████ ████
+                        ██████████ █████ ███████
+                      </p>
+                      <div style={{ 
+                        position: 'absolute', 
+                        top: '50%', 
+                        left: '50%', 
+                        transform: 'translate(-50%, -50%)', 
+                        textAlign: 'center', 
+                        width: '100%', 
+                        padding: '24px', 
+                        borderRadius: '16px',
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid var(--az-border)',
+                        boxShadow: 'var(--az-shadow-hover)'
+                      }}>
+                        <p style={{ fontWeight: 600, marginBottom: '16px', fontSize: '16px', color: 'var(--az-text-main)' }}>Upgrade subscription to unlock</p>
+                        <Link href={`/c/${creatorSlug}`} className="az-btn-primary" style={{ display: 'inline-flex', padding: '8px 24px' }}>
+                          Upgrade Membership
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                )}
+                
+                <PostEngagementBar 
+                  postId={post.id} 
+                  initialLikes={post.likesCount}
+                  initialComments={post.commentsCount}
+                  initialUserHasLiked={post.userHasLiked}
+                  hasAccess={post.hasAccess}
+                />
+                
+                {post.has_poll && post.hasAccess && <PollBlock postId={post.id} />}
+                
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <ReportPostButton postId={post.id} />
+                </div>
+              </div>
+            );
+          })}
         </div>
+      )}
     </main>
   );
 }

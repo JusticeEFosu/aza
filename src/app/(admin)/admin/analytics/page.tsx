@@ -97,81 +97,81 @@ export default async function AdminAnalyticsPage() {
   return (
     <div>
       <div style={{ marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 700, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.02em' }}>Deep Analytics</h1>
-        <p style={{ color: 'var(--v2-text-variant)', fontSize: '16px' }}>Business intelligence, platform revenue, and creator leaderboards.</p>
+        <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '8px', letterSpacing: '-0.02em' }}>Deep Analytics</h1>
+        <p style={{ color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', fontSize: '16px' }}>Business intelligence, platform revenue, and creator leaderboards.</p>
       </div>
 
       {/* Top Level Stats */}
-      <div className="v2-grid-3">
-        <div style={{ background: 'var(--v2-surface)', padding: '24px', borderRadius: '16px', border: '1px solid var(--v2-outline)' }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>30-Day Platform Revenue (10% Cut)</div>
-          <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.03em' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+        <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>30-Day Platform Revenue (10% Cut)</div>
+          <div style={{ fontSize: '36px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, color: '#004e34', letterSpacing: '-0.03em' }}>
             ₦{(totalPlatformRevenue / 100).toLocaleString()}
           </div>
         </div>
-        <div style={{ background: 'var(--v2-surface)', padding: '24px', borderRadius: '16px', border: '1px solid var(--v2-outline)' }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Active Earning Creators</div>
-          <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.03em' }}>
+        <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Active Earning Creators</div>
+          <div style={{ fontSize: '36px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, color: '#004e34', letterSpacing: '-0.03em' }}>
             {Object.keys(creatorEarnings).length}
           </div>
         </div>
-        <div style={{ background: 'var(--v2-surface)', padding: '24px', borderRadius: '16px', border: '1px solid var(--v2-outline)' }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Total Transactions (30 Days)</div>
-          <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.03em' }}>
+        <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <div style={{ fontSize: '13px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Total Transactions (30 Days)</div>
+          <div style={{ fontSize: '36px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, color: '#004e34', letterSpacing: '-0.03em' }}>
             {transactions?.length || 0}
           </div>
         </div>
       </div>
 
       {/* Revenue Chart Section */}
-      <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', padding: '24px', marginBottom: '40px' }}>
-        <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '24px' }}>Net Platform Revenue Over Time</h2>
+      <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '24px', marginBottom: '40px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <h2 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '24px' }}>Net Platform Revenue Over Time</h2>
         <RevenueChart data={chartData} />
       </div>
 
       {/* Top Creators Leaderboard */}
-      <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '16px', overflow: 'hidden' }}>
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '4px' }}>Top Creators Leaderboard</h2>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--v2-text-variant)' }}>Ranked by lifetime earnings generated on MyAzaa.</p>
+      <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+        <div style={{ padding: '24px', borderBottom: '1px solid #E2E8F0', background: '#f8f9ff' }}>
+          <h2 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '4px' }}>Top Creators Leaderboard</h2>
+          <p style={{ margin: 0, fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#3f4943' }}>Ranked by lifetime earnings generated on MyAzaa.</p>
         </div>
         
         {topCreators.length === 0 ? (
-          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--v2-text-variant)' }}>No creator earnings data available.</div>
+          <div style={{ padding: '48px', textAlign: 'center', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>No creator earnings data available.</div>
         ) : (
-         <div className="v2-table-wrapper">
+         <div className="v2-table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <div style={{ minWidth: '800px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1fr 1fr', padding: '16px 24px', background: 'var(--v2-surface-low)', borderBottom: '1px solid var(--v2-outline)' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subscribers</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Total Earnings</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1fr 1fr', padding: '16px 24px', background: '#f8f9ff', borderBottom: '1px solid #E2E8F0' }}>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rank</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creator</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subscribers</span>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#3f4943', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Total Earnings</span>
               </div>
               
               {topCreators.map((creator, index) => (
-                <div key={creator.id} style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1fr 1fr', padding: '16px 24px', borderBottom: '1px solid var(--v2-outline)', alignItems: 'center' }}>
-                  <div style={{ fontSize: '20px', fontWeight: 800, color: index < 3 ? 'var(--v2-primary)' : 'var(--v2-text-variant)' }}>
+                <div key={creator.id} style={{ display: 'grid', gridTemplateColumns: '80px 3fr 1fr 1fr', padding: '16px 24px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
+                  <div style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, color: index < 3 ? '#004e34' : '#6f7a72' }}>
                     #{index + 1}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--v2-surface-low)', overflow: 'hidden' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#eff4ff', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {creator.avatar_url ? (
                         <img src={creator.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span className="material-symbols-outlined" style={{ padding: '8px', color: 'var(--v2-outline)' }}>person</span>
+                        <span className="material-symbols-outlined" style={{ color: '#004e34' }}>person</span>
                       )}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, color: 'var(--v2-primary)', fontSize: '15px' }}>{creator.display_name}</div>
-                      <Link href={`/c/${creator.slug}`} target="_blank" style={{ color: 'var(--v2-text-variant)', fontSize: '13px', textDecoration: 'none' }}>
+                      <div style={{ fontWeight: 600, color: '#0b1c30', fontSize: '15px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{creator.display_name}</div>
+                      <Link href={`/c/${creator.slug}`} target="_blank" style={{ color: '#6f7a72', fontSize: '13px', textDecoration: 'none', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                         myazaa.com/c/{creator.slug}
                       </Link>
                     </div>
                   </div>
-                  <div style={{ fontWeight: 600, color: 'var(--v2-text)' }}>
+                  <div style={{ fontWeight: 600, color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                     {creator.subscriber_count}
                   </div>
-                  <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--v2-green)' }}>
+                  <div style={{ textAlign: 'right', fontWeight: 700, color: '#059669', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
                     ₦{(creator.earnings / 100).toLocaleString()}
                   </div>
                 </div>

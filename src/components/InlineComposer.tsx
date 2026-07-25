@@ -411,7 +411,7 @@ export default function InlineComposer({
             ) : (
               <div style={{ marginTop: '16px', padding: '24px', background: 'var(--v2-surface-low)', borderRadius: '8px', border: '1px dashed var(--v2-outline)' }}>
                 <p style={{ margin: '0 0 8px 0', fontWeight: 600, fontSize: '14px', color: 'var(--v2-primary)' }}>Video Link</p>
-                <input type="url" placeholder="Paste video link..." value={embedUrlInput} onChange={e => setEmbedUrlInput(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', color: 'var(--v2-primary)', outline: 'none' }} />
+                <input type="url" placeholder="Paste video link..." value={embedUrlInput} onChange={e => setEmbedUrlInput(e.target.value)} className="az-input" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', color: 'var(--v2-primary)', outline: 'none', fontSize: '16px' }} />
                 <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Supports YouTube</p>
               </div>
             )}
@@ -449,7 +449,8 @@ export default function InlineComposer({
                         placeholder={`Option ${index + 1}`} 
                         value={opt.text} 
                         onChange={e => updatePollOption(opt.id, { text: e.target.value })} 
-                        style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', color: 'var(--v2-primary)' }} 
+                        className="az-input"
+                        style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '16px', color: 'var(--v2-primary)' }} 
                       />
                       {pollOptions.length > 2 && (
                         <button type="button" onClick={() => setPollOptions(pollOptions.filter(o => o.id !== opt.id))} style={{ background: 'transparent', border: 'none', color: 'var(--v2-error)', cursor: 'pointer', display: 'flex' }}>
@@ -491,7 +492,7 @@ export default function InlineComposer({
 
                 {!isPublic && tiers.length > 0 && (
                   <div style={{ marginTop: '4px', paddingLeft: '12px', borderLeft: '2px solid var(--v2-outline)' }}>
-                    <select value={minPrice} onChange={e => setMinPrice(Number(e.target.value))} style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--v2-outline)', background: 'white', fontSize: '13px', outline: 'none' }}>
+                    <select value={minPrice} onChange={e => setMinPrice(Number(e.target.value))} className="az-select" style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--v2-outline)', background: 'white', fontSize: '16px', outline: 'none' }}>
                       {tiers.map((t: any) => <option key={t.id} value={t.amount}>{t.name} — ₦{(t.amount / 100).toLocaleString()}/mo</option>)}
                     </select>
                   </div>

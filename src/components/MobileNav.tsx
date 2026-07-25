@@ -65,8 +65,8 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           left: 0,
           width: '100%',
           height: '64px',
-          backgroundColor: 'var(--v2-surface)',
-          borderBottom: '1px solid var(--v2-outline)',
+          backgroundColor: '#ffffff',
+          borderBottom: '1px solid #E2E8F0',
           zIndex: 40,
           display: 'flex',
           alignItems: 'center',
@@ -77,13 +77,13 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
       >
         <button
           className="v2-mobile-toggle"
-          style={{ background: 'transparent', border: 'none', color: 'var(--v2-text-variant)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+          style={{ background: 'transparent', border: 'none', color: '#0b1c30', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
           onClick={() => setIsOpen(true)}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>menu</span>
         </button>
 
-        <span className="v2-dash-title" style={{ fontSize: '24px', margin: 0, color: 'var(--v2-primary)', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+        <span className="v2-dash-title" style={{ fontSize: '24px', margin: 0, color: 'var(--az-primary, #004e34)', fontFamily: 'var(--font-heading)', fontWeight: 700, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
           MyAzaa
         </span>
 
@@ -92,9 +92,9 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }}
         >
           {avatarUrl ? (
-            <img src={avatarUrl} alt="Profile" style={{ width: '36px', height: '36px', borderRadius: '12px', objectFit: 'cover' }} />
+            <img src={avatarUrl} alt="Profile" style={{ width: '36px', height: '36px', borderRadius: '12px', objectFit: 'cover', border: '1px solid var(--az-border, #E2E8F0)' }} />
           ) : (
-            <div style={{ width: '36px', height: '36px', borderRadius: '12px', backgroundColor: 'var(--v2-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '14px' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '12px', backgroundColor: 'var(--az-primary, #004e34)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '14px' }}>
               {initials}
             </div>
           )}
@@ -108,7 +108,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.6)',
+            background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(4px)',
             zIndex: 10000,
             animation: 'fadeIn 0.2s ease'
@@ -124,20 +124,20 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
           left: isOpen ? 0 : '-80%',
           width: '80%',
           maxWidth: '320px',
-          background: 'var(--v2-surface-lowest)',
-          borderRight: '1px solid var(--v2-outline)',
+          background: 'var(--az-surface-card, #ffffff)',
+          borderRight: '1px solid var(--az-border, #E2E8F0)',
           zIndex: 10001,
           transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: isOpen ? '10px 0 25px rgba(0,0,0,0.5)' : 'none'
+          boxShadow: isOpen ? '10px 0 25px rgba(0,0,0,0.2)' : 'none'
         }}
       >
         <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="v2-dash-title" style={{ fontSize: '28px', color: 'var(--v2-primary)', margin: 0 }}>MyAzaa</span>
+          <span className="v2-dash-title" style={{ fontSize: '28px', color: 'var(--az-primary, #004e34)', fontFamily: 'var(--font-heading)', fontWeight: 700, margin: 0 }}>MyAzaa</span>
           <button
             onClick={() => setIsOpen(false)}
-            style={{ background: 'none', border: 'none', color: 'var(--v2-text-variant)', cursor: 'pointer', display: 'flex' }}
+            style={{ background: 'none', border: 'none', color: 'var(--az-text-muted, #3f4943)', cursor: 'pointer', display: 'flex' }}
           >
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -152,9 +152,20 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
                 href={link.href}
                 onClick={() => setIsOpen(false)}
                 className={`v2-nav-item ${isActive ? 'active' : ''}`}
-                style={{ marginBottom: '8px' }}
+                style={{
+                  marginBottom: '8px',
+                  backgroundColor: isActive ? 'var(--az-primary, #004e34)' : 'transparent',
+                  color: isActive ? '#ffffff' : 'var(--az-text-muted, #3f4943)',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: isActive ? 600 : 500,
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px'
+                }}
               >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                <span className="material-symbols-outlined" style={{ color: isActive ? '#ffffff' : 'var(--az-outline, #6f7a72)', fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                   {link.icon}
                 </span>
                 {link.label}

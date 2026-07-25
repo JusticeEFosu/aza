@@ -131,11 +131,11 @@ export default async function CreatorDashboard() {
 
 
   return (
-    <main className="v2-main-content">
-        <header className="v2-dash-header">
+    <main style={{ padding: '24px 16px' }}>
+        <header className="v2-dash-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 className="v2-dash-title">Overview</h1>
-            <p className="v2-dash-desc">Here's what's happening with your community today.</p>
+            <h1 className="az-h1" style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', margin: 0 }}>Overview</h1>
+            <p className="az-body" style={{ color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', margin: '4px 0 0 0' }}>Here's what's happening with your community today.</p>
           </div>
           <div className="hidden md:flex">
              {isPublished && <HeaderShareButton url={shareUrl} />}
@@ -151,18 +151,22 @@ export default async function CreatorDashboard() {
         />
 
         {/* Stats Grid */}
-        <div className="v2-stats-grid">
+        <div className="v2-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
           {/* Stat Card 1: Total Subscribers */}
-          <div className="v2-stat-card">
+          <div className="az-card" style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px' }}>
             <div>
-              <p className="v2-stat-label">Total Subscribers</p>
-              <h3 className="v2-stat-value">{activeSubsCount.toLocaleString()}</h3>
+              <p className="az-label" style={{ margin: 0, color: '#3f4943', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Total Subscribers</p>
+              <h3 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#004e34', margin: '8px 0 0 0' }}>{activeSubsCount.toLocaleString()}</h3>
+              {newSubs7d > 0 && (
+                <p style={{ fontSize: '13px', color: '#059669', fontFamily: 'var(--font-body, Inter, sans-serif)', margin: '4px 0 0 0', fontWeight: 600 }}>
+                  +{newSubs7d} in the last 7 days
+                </p>
+              )}
             </div>
-            <div style={{ height: '24px' }}></div>
           </div>
 
           {/* Stat Card 2: MRR & Revenue Chart */}
-          <div className="v2-stat-card">
+          <div className="az-card" style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px' }}>
             <AnalyticsChart transactions={allTransactions || []} formattedMRR={formatMRR(mrr)} />
           </div>
 

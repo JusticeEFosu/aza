@@ -55,7 +55,7 @@ export default async function AnalyticsPage() {
   const { data: subscriptions } = await supabase
     .from('subscriptions')
     .select(`
-      status, created_at,
+      status, created_at, cancelled_at,
       tiers (name, amount)
     `)
     .eq('creator_id', user.id);
@@ -81,8 +81,33 @@ export default async function AnalyticsPage() {
     return sum + ((tierInfo?.amount || 0) / 100);
   }, 0);
 
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  const now = new Date();
+  const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const prevMonthSubs = (subscriptions || []).filter(sub => {
+    const createdAt = new Date(sub.created_at);
+    const cancelledAt = sub.cancelled_at ? new Date(sub.cancelled_at) : null;
+    return createdAt < startOfCurrentMonth && (!cancelledAt || cancelledAt >= startOfCurrentMonth);
+  });
+
+  const prevMrr = prevMonthSubs.reduce((sum, sub) => {
+    const tierInfo = Array.isArray(sub.tiers) ? sub.tiers[0] : sub.tiers;
+    return sum + ((tierInfo?.amount || 0) / 100);
+  }, 0);
+
+  let mrrGrowthPercent = 0;
+  let hasMrrData = true;
+
+  if (prevMrr > 0) {
+    mrrGrowthPercent = Math.round(((mrr - prevMrr) / prevMrr) * 100);
+  } else if (mrr > 0) {
+    mrrGrowthPercent = 100;
+  } else {
+    hasMrrData = false;
+  }
+
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
   const newSubsThisMonth = activeSubs.filter(sub => {
      const d = new Date(sub.created_at);
      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
@@ -95,17 +120,17 @@ export default async function AnalyticsPage() {
     .slice(0, 3); // Top 3 tiers
 
   return (
-    <main className="v2-main-content" style={{ background: 'var(--v2-surface)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <main style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
           
           {/* Page Header */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Link href="/creator/payouts" style={{ color: 'var(--v2-text-variant)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+            <Link href="/creator/payouts" style={{ color: '#004e34', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span> Back to Earnings
             </Link>
             <div>
-              <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', marginBottom: '8px', letterSpacing: '-0.01em' }}>Analytics</h1>
-              <p style={{ fontSize: '16px', color: 'var(--v2-text-variant)' }}>Understand your revenue and audience growth.</p>
+              <h1 style={{ fontSize: '32px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', marginBottom: '8px', letterSpacing: '-0.01em' }}>Analytics</h1>
+              <p style={{ fontSize: '16px', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#3f4943' }}>Understand your revenue and audience growth.</p>
             </div>
           </div>
 
@@ -113,17 +138,28 @@ export default async function AnalyticsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '24px' }}>
             
             {/* Revenue Trends Chart (md:col-span-8) */}
-            <div style={{ gridColumn: 'span 12', background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column' }} className="md-col-8">
+            <div style={{ gridColumn: 'span 12', background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }} className="md-col-8">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                 <div>
-                  <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--v2-text-variant)', marginBottom: '4px' }}>Revenue Trends (6 Months)</p>
-                  <h2 style={{ fontSize: '36px', fontWeight: 700, color: 'var(--v2-primary)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                  <p style={{ fontSize: '14px', fontWeight: 600, color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '4px' }}>Revenue Trends (6 Months)</p>
+                  <h2 style={{ fontSize: '36px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#004e34', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
                     ₦ {totalRevenue.toLocaleString() + '.00'}
                   </h2>
                 </div>
-                <div style={{ padding: '6px 12px', background: 'rgba(5, 150, 105, 0.1)', color: 'var(--v2-green)', borderRadius: '9999px', fontSize: '12px', fontWeight: 600 }}>
-                  +12% MRR Growth
-                </div>
+                {hasMrrData && (
+                  <div style={{
+                    padding: '6px 12px',
+                    background: mrrGrowthPercent >= 0 ? '#ecfdf5' : '#fef2f2',
+                    color: mrrGrowthPercent >= 0 ? '#059669' : '#dc2626',
+                    border: `1px solid ${mrrGrowthPercent >= 0 ? '#a7f3d0' : '#fca5a5'}`,
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    fontFamily: 'var(--font-body, Inter, sans-serif)'
+                  }}>
+                    {mrrGrowthPercent >= 0 ? `+${mrrGrowthPercent}%` : `${mrrGrowthPercent}%`} MRR Growth
+                  </div>
+                )}
               </div>
               
               <div style={{ marginTop: 'auto' }}>
@@ -135,33 +171,33 @@ export default async function AnalyticsPage() {
             <div className="md-col-4" style={{ gridColumn: 'span 12', display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
               {/* Audience Health Card */}
-              <div style={{ background: 'var(--v2-surface-lowest)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '24px', flex: 1 }}>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>Audience Health</p>
+              <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', flex: 1, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
+                <p style={{ fontSize: '14px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>Audience Health</p>
                 
                 <div style={{ marginBottom: '24px' }}>
-                  <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px' }}>Active Subscribers</p>
-                  <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--v2-primary)' }}>{activeSubs.length}</h3>
+                  <p style={{ fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '4px' }}>Active Subscribers</p>
+                  <h3 style={{ fontSize: '28px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#004e34' }}>{activeSubs.length}</h3>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid rgba(126, 117, 118, 0.5)', paddingTop: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #E2E8F0', paddingTop: '16px' }}>
                   <div>
-                    <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px' }}>New (This Month)</p>
-                    <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--v2-green)' }}>+{newSubsThisMonth}</p>
+                    <p style={{ fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '4px' }}>New (This Month)</p>
+                    <p style={{ fontSize: '16px', fontWeight: 600, color: '#059669', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>+{newSubsThisMonth}</p>
                   </div>
                   <div>
-                    <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px' }}>Churned</p>
-                    <p style={{ fontSize: '16px', fontWeight: 600, color: '#dc2626' }}>{churnedSubs.length}</p>
+                    <p style={{ fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '4px' }}>Churned</p>
+                    <p style={{ fontSize: '16px', fontWeight: 600, color: '#ba1a1a', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{churnedSubs.length}</p>
                   </div>
                 </div>
               </div>
 
               {/* Tier Performance Card */}
-              <div style={{ background: 'var(--v2-surface)', border: '1px solid var(--v2-outline)', borderRadius: '12px', padding: '24px', flex: 1 }}>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>Tier Performance</p>
+              <div style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', flex: 1, boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
+                <p style={{ fontSize: '14px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>Tier Performance</p>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {topTiers.length === 0 ? (
-                    <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)' }}>No active tiers generating revenue.</p>
+                    <p style={{ fontSize: '14px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>No active tiers generating revenue.</p>
                   ) : (
                     topTiers.map((tier, idx) => {
                       const percentage = Math.round((tier.revenue / mrr) * 100) || 0;
@@ -169,13 +205,13 @@ export default async function AnalyticsPage() {
                         <div key={idx}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
                             <div>
-                              <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--v2-primary)' }}>{tier.name}</p>
-                              <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)' }}>{tier.count} subs • ₦{tier.revenue.toLocaleString()}/mo</p>
+                              <p style={{ fontSize: '14px', fontWeight: 600, color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{tier.name}</p>
+                              <p style={{ fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{tier.count} subs • ₦{tier.revenue.toLocaleString()}/mo</p>
                             </div>
-                            <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--v2-green)' }}>{percentage}%</p>
+                            <p style={{ fontSize: '14px', fontWeight: 700, color: '#004e34', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{percentage}%</p>
                           </div>
-                          <div style={{ width: '100%', height: '6px', background: 'var(--v2-surface-low)', borderRadius: '99px', overflow: 'hidden' }}>
-                            <div style={{ width: `${percentage}%`, height: '100%', background: 'var(--v2-green)', borderRadius: '99px' }} />
+                          <div style={{ width: '100%', height: '6px', background: '#eff4ff', borderRadius: '99px', overflow: 'hidden' }}>
+                            <div style={{ width: `${percentage}%`, height: '100%', background: '#004e34', borderRadius: '99px' }} />
                           </div>
                         </div>
                       );

@@ -29,7 +29,14 @@ export default async function FanLayout({
   }
 
   return (
-    <div className="v2-dashboard-layout">
+    <div 
+      className="v2-dashboard-layout" 
+      style={{ 
+        backgroundColor: 'var(--az-bg, #f8f9ff)', 
+        minHeight: '100vh',
+        color: 'var(--az-text-main, #0b1c30)'
+      }}
+    >
       {/* Desktop Sidebar */}
       <DashboardSidebar role="fan" />
 
@@ -37,7 +44,9 @@ export default async function FanLayout({
       <MobileNav role="fan" />
 
       {/* Main Content Area */}
-      {children}
+      <div className="v2-main-content">
+        {children}
+      </div>
     </div>
   );
 }

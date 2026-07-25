@@ -18,15 +18,15 @@ export default function AdminLayoutClient({
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="v2-admin-layout">
+    <div className="v2-admin-layout" style={{ background: 'var(--az-bg, #f8f9ff)', minHeight: '100vh' }}>
       {/* Mobile Top Header */}
-      <div className="v2-admin-mobile-header">
-        <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.02em' }}>
-          MyAzaa <span style={{ color: 'var(--v2-green)', fontSize: '12px', verticalAlign: 'middle', background: 'var(--v2-surface-lowest)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--v2-green)' }}>Admin</span>
+      <div className="v2-admin-mobile-header" style={{ background: '#ffffff', borderBottom: '1px solid #E2E8F0' }}>
+        <div style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, color: '#004e34', letterSpacing: '-0.02em' }}>
+          MyAzaa <span style={{ color: '#059669', fontSize: '12px', verticalAlign: 'middle', background: '#ecfdf5', padding: '4px 8px', borderRadius: '12px', border: '1px solid #059669', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Admin</span>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(true)}
-          style={{ background: 'transparent', border: 'none', color: 'var(--v2-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ background: 'transparent', border: 'none', color: '#004e34', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>menu</span>
         </button>
@@ -36,74 +36,65 @@ export default function AdminLayoutClient({
       <div 
         className={`v2-admin-overlay ${isSidebarOpen ? 'open' : ''}`}
         onClick={closeSidebar}
+        style={{ zIndex: 10000 }}
       />
 
       {/* Admin Sidebar */}
-      <aside className={`v2-admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside className={`v2-admin-sidebar ${isSidebarOpen ? 'open' : ''}`} style={{ background: '#ffffff', borderRight: '1px solid #E2E8F0', zIndex: 10001 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--v2-primary)', letterSpacing: '-0.02em' }}>
-            MyAzaa <span style={{ color: 'var(--v2-green)', fontSize: '14px', verticalAlign: 'middle', background: 'var(--v2-surface-lowest)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--v2-green)' }}>Admin</span>
+          <div style={{ fontSize: '24px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 800, color: '#004e34', letterSpacing: '-0.02em' }}>
+            MyAzaa <span style={{ color: '#059669', fontSize: '13px', verticalAlign: 'middle', background: '#ecfdf5', padding: '4px 8px', borderRadius: '12px', border: '1px solid #059669', fontFamily: 'var(--font-body, Inter, sans-serif)', fontWeight: 600 }}>Admin</span>
           </div>
           <button 
             onClick={closeSidebar}
-            style={{ background: 'transparent', border: 'none', color: 'var(--v2-text-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            className="md-flex-none hidden" // hidden on md+
+            style={{ background: 'transparent', border: 'none', color: '#3f4943', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="md-flex-none hidden"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '24px', display: 'none' }}>close</span>
           </button>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, marginTop: '24px' }}>
-          <Link href="/admin" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname === '/admin' ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname === '/admin' ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname === '/admin' ? 600 : 500 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>dashboard</span>
-            Overview
-          </Link>
-          
-          {hasPermission(role, 'canViewUsers') && (
-            <Link href="/admin/users" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname.startsWith('/admin/users') ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname.startsWith('/admin/users') ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname.startsWith('/admin/users') ? 600 : 500 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>group</span>
-              Users
-            </Link>
-          )}
-
-          {role === 'super_admin' && (
-            <Link href="/admin/team" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname.startsWith('/admin/team') ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname.startsWith('/admin/team') ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname.startsWith('/admin/team') ? 600 : 500 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>badge</span>
-              Team
-            </Link>
-          )}
-
-          {role === 'super_admin' && (
-            <Link href="/admin/analytics" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname.startsWith('/admin/analytics') ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname.startsWith('/admin/analytics') ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname.startsWith('/admin/analytics') ? 600 : 500 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>insights</span>
-              Analytics
-            </Link>
-          )}
-
-          {hasPermission(role, 'canViewFinancials') && (
-            <Link href="/admin/payouts" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname.startsWith('/admin/payouts') ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname.startsWith('/admin/payouts') ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname.startsWith('/admin/payouts') ? 600 : 500 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>account_balance</span>
-              Payouts
-            </Link>
-          )}
-
-          {hasPermission(role, 'canViewReports') && (
-            <>
-              <Link href="/admin/content" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname.startsWith('/admin/content') ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname.startsWith('/admin/content') ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname.startsWith('/admin/content') ? 600 : 500 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>flag</span>
-                Content
+          {[
+            { href: '/admin', label: 'Overview', icon: 'dashboard', perm: true },
+            { href: '/admin/users', label: 'Users', icon: 'group', perm: hasPermission(role, 'canViewUsers') },
+            { href: '/admin/team', label: 'Team', icon: 'badge', perm: role === 'super_admin' },
+            { href: '/admin/analytics', label: 'Analytics', icon: 'insights', perm: role === 'super_admin' },
+            { href: '/admin/payouts', label: 'Payouts', icon: 'account_balance', perm: hasPermission(role, 'canViewFinancials') },
+            { href: '/admin/content', label: 'Content', icon: 'flag', perm: hasPermission(role, 'canViewReports') },
+            { href: '/admin/moderation', label: 'Moderation', icon: 'shield', perm: hasPermission(role, 'canViewReports') },
+          ].map(item => {
+            if (!item.perm) return null;
+            const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+            return (
+              <Link 
+                key={item.href}
+                href={item.href} 
+                onClick={closeSidebar} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  padding: '12px 16px', 
+                  color: isActive ? '#ffffff' : '#3f4943', 
+                  textDecoration: 'none', 
+                  borderRadius: '8px', 
+                  background: isActive ? '#004e34' : 'transparent', 
+                  fontWeight: isActive ? 600 : 500,
+                  fontFamily: 'var(--font-body, Inter, sans-serif)',
+                  fontSize: '14px'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '20px', color: isActive ? '#ffffff' : '#6f7a72' }}>{item.icon}</span>
+                {item.label}
               </Link>
-              <Link href="/admin/moderation" onClick={closeSidebar} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: pathname.startsWith('/admin/moderation') ? 'var(--v2-text)' : 'var(--v2-text-variant)', textDecoration: 'none', borderRadius: '8px', background: pathname.startsWith('/admin/moderation') ? 'var(--v2-surface-low)' : 'transparent', fontWeight: pathname.startsWith('/admin/moderation') ? 600 : 500 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>shield</span>
-                Moderation
-              </Link>
-            </>
-          )}
+            );
+          })}
         </nav>
 
-        <div style={{ borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
+        <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '24px' }}>
           <form action="/api/auth/signout" method="POST" style={{ margin: 0, padding: 0 }}>
-            <button type="submit" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: 'var(--v2-text-variant)', background: 'transparent', border: 'none', borderRadius: '8px', fontWeight: 500, cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
+            <button type="submit" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', color: '#ba1a1a', background: 'transparent', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body, Inter, sans-serif)', fontSize: '14px', textAlign: 'left' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>exit_to_app</span>
               Exit Admin / Sign Out
             </button>
@@ -112,7 +103,7 @@ export default function AdminLayoutClient({
       </aside>
 
       {/* Main Content */}
-      <main className="v2-admin-main">
+      <main className="v2-admin-main" style={{ background: '#f8f9ff', padding: '32px 24px', flexGrow: 1 }}>
         {children}
       </main>
     </div>

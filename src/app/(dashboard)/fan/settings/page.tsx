@@ -134,169 +134,169 @@ export default function FanSettings() {
   }
 
   return (
-    <main className="v2-fan-main">
-        <div className="v2-fan-container">
-          <header style={{ marginBottom: '32px' }}>
-            <h1 className="v2-dash-title">Settings</h1>
-            <p className="v2-dash-desc">Manage your fan profile and account details.</p>
-          </header>
+    <main className="az-container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
+      <header style={{ marginBottom: '32px' }}>
+        <h1 className="az-h1" style={{ fontSize: '32px', color: 'var(--az-primary, #004e34)' }}>Settings</h1>
+        <p className="az-body-lg" style={{ color: 'var(--az-text-muted, #6f7a72)', marginTop: '4px' }}>Manage your fan profile and account details.</p>
+      </header>
 
-          <div style={{ borderBottom: '1px solid var(--v2-outline)', marginBottom: '32px' }}>
-            <nav style={{ display: 'flex', gap: '24px' }}>
-              {['profile', 'account'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  style={{
-                    padding: '16px 4px',
-                    background: 'none',
-                    border: 'none',
-                    borderBottom: activeTab === tab ? '2px solid var(--v2-primary)' : '2px solid transparent',
-                    color: activeTab === tab ? 'var(--v2-primary)' : 'var(--v2-text-variant)',
-                    fontWeight: activeTab === tab ? 700 : 500,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </nav>
+      <div style={{ borderBottom: '1px solid var(--az-border)', marginBottom: '32px' }}>
+        <nav style={{ display: 'flex', gap: '24px' }}>
+          {['profile', 'account'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              style={{
+                padding: '12px 4px',
+                background: 'none',
+                border: 'none',
+                borderBottom: activeTab === tab ? '3px solid var(--az-primary, #004e34)' : '3px solid transparent',
+                color: activeTab === tab ? 'var(--az-primary, #004e34)' : 'var(--az-text-muted, #6f7a72)',
+                fontWeight: activeTab === tab ? 700 : 500,
+                fontSize: '15px',
+                cursor: 'pointer',
+                textTransform: 'capitalize',
+                transition: 'all 0.2s'
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {message && (
+        <div style={{
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '24px',
+          background: message.type === 'error' ? '#fef2f2' : '#ecfdf5',
+          color: message.type === 'error' ? '#991b1b' : '#065f46',
+          border: `1px solid ${message.type === 'error' ? '#fecaca' : '#a7f3d0'}`,
+          maxWidth: '800px'
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      {activeTab === 'profile' && (
+        <div className="az-card" style={{ maxWidth: '800px' }}>
+          <h2 className="az-h2" style={{ fontSize: '20px', marginBottom: '24px', color: 'var(--az-text-main)' }}>Public Profile</h2>
+          
+          <div style={{ marginBottom: '24px' }}>
+            <AvatarUpload 
+              currentUrl={avatarUrl} 
+              userId={userId} 
+              onUploadComplete={(url) => setAvatarUrl(url)} 
+            />
           </div>
 
-          {message && (
-            <div style={{
-              padding: '12px 16px',
-              borderRadius: '8px',
-              marginBottom: '24px',
-              background: message.type === 'error' ? '#fef2f2' : '#ecfdf5',
-              color: message.type === 'error' ? '#991b1b' : '#065f46',
-              border: `1px solid ${message.type === 'error' ? '#fecaca' : '#a7f3d0'}`,
-              maxWidth: '800px'
-            }}>
-              {message.text}
+          <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <label className="az-label" style={{ display: 'block', marginBottom: '8px' }}>Display Name / Username</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                placeholder="e.g. SuperFan99"
+                className="az-input"
+                style={{ width: '100%', fontSize: '16px' }}
+              />
+              <span style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--az-text-muted)' }}>This is how creators and other fans will see you on MyAzaa.</span>
             </div>
-          )}
 
-          {activeTab === 'profile' && (
-            <div className="v2-sub-card" style={{ maxWidth: '800px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Public Profile</h2>
-              
-              <div style={{ marginBottom: '24px' }}>
-                <AvatarUpload 
-                  currentUrl={avatarUrl} 
-                  userId={userId} 
-                  onUploadComplete={(url) => setAvatarUrl(url)} 
-                />
-              </div>
-
-              <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Display Name / Username</label>
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={e => setDisplayName(e.target.value)}
-                    placeholder="e.g. SuperFan99"
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                  />
-                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>This is how creators and other fans will see you on MyAzaa.</span>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Full Name (Legal)</label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    placeholder="Your legal name"
-                    required
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                  />
-                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Used for billing and platform records. Kept private.</span>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
-                  <button 
-                    type="submit" 
-                    disabled={saving}
-                    className="v2-sub-btn v2-sub-btn-primary" 
-                    style={{ padding: '12px 32px', width: 'auto' }}
-                  >
-                    {saving ? 'Saving...' : 'Save Profile'}
-                  </button>
-                </div>
-              </form>
+            <div>
+              <label className="az-label" style={{ display: 'block', marginBottom: '8px' }}>Full Name (Legal)</label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={e => setFullName(e.target.value)}
+                placeholder="Your legal name"
+                required
+                className="az-input"
+                style={{ width: '100%', fontSize: '16px' }}
+              />
+              <span style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--az-text-muted)' }}>Used for billing and platform records. Kept private.</span>
             </div>
-          )}
 
-          {activeTab === 'account' && (
-            <div className="v2-sub-card" style={{ maxWidth: '800px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Account Settings</h2>
-
-              <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Email Address</label>
-                  <input
-                    type="email"
-                    value={accountEmail}
-                    onChange={e => setAccountEmail(e.target.value)}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                  />
-                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>We will send a confirmation link to your new email if you change this.</span>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Leave blank to keep current password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--v2-outline)', paddingTop: '24px' }}>
-                  <button 
-                    type="submit" 
-                    disabled={saving}
-                    className="v2-sub-btn v2-sub-btn-primary" 
-                    style={{ padding: '12px 32px', width: 'auto' }}
-                  >
-                    {saving ? 'Saving...' : 'Update Account'}
-                  </button>
-                </div>
-              </form>
-
-              {/* Danger Zone */}
-              <div style={{ marginTop: '48px', borderTop: '1px solid #fecaca', paddingTop: '24px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#dc2626', marginBottom: '8px' }}>Danger Zone</h3>
-                <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>Permanently delete your account and all associated data. This action cannot be undone.</p>
-                <button 
-                  type="button" 
-                  onClick={handleDeleteAccount} 
-                  className="v2-sub-btn" 
-                  style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '12px 24px', fontWeight: 600 }}
-                >
-                  Delete Account
-                </button>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--az-border)', paddingTop: '24px' }}>
+              <button 
+                type="submit" 
+                disabled={saving}
+                className="az-btn-primary" 
+                style={{ padding: '12px 32px', width: 'auto', opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? 'Saving...' : 'Save Profile'}
+              </button>
             </div>
-          )}
-
+          </form>
         </div>
-        
-        <ConfirmModal 
-          isOpen={showDeleteModal}
-          title="Delete Account"
-          message="Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all subscriptions."
-          isDestructive={true}
-          onConfirm={executeDeleteAccount}
-          onCancel={() => setShowDeleteModal(false)}
-        />
-      </main>
+      )}
+
+      {activeTab === 'account' && (
+        <div className="az-card" style={{ maxWidth: '800px' }}>
+          <h2 className="az-h2" style={{ fontSize: '20px', marginBottom: '24px', color: 'var(--az-text-main)' }}>Account Settings</h2>
+
+          <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <label className="az-label" style={{ display: 'block', marginBottom: '8px' }}>Email Address</label>
+              <input
+                type="email"
+                value={accountEmail}
+                onChange={e => setAccountEmail(e.target.value)}
+                className="az-input"
+                style={{ width: '100%', fontSize: '16px' }}
+              />
+              <span style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--az-text-muted)' }}>We will send a confirmation link to your new email if you change this.</span>
+            </div>
+
+            <div>
+              <label className="az-label" style={{ display: 'block', marginBottom: '8px' }}>New Password</label>
+              <input
+                type="password"
+                placeholder="Leave blank to keep current password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                className="az-input"
+                style={{ width: '100%', fontSize: '16px' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--az-border)', paddingTop: '24px' }}>
+              <button 
+                type="submit" 
+                disabled={saving}
+                className="az-btn-primary" 
+                style={{ padding: '12px 32px', width: 'auto', opacity: saving ? 0.7 : 1 }}
+              >
+                {saving ? 'Saving...' : 'Update Account'}
+              </button>
+            </div>
+          </form>
+
+          {/* Danger Zone */}
+          <div style={{ marginTop: '48px', borderTop: '1px solid #fecaca', paddingTop: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#dc2626', marginBottom: '8px' }}>Danger Zone</h3>
+            <p className="az-body" style={{ fontSize: '14px', color: 'var(--az-text-muted)', marginBottom: '16px' }}>Permanently delete your account and all associated data. This action cannot be undone.</p>
+            <button 
+              type="button" 
+              onClick={handleDeleteAccount} 
+              style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '12px 24px', borderRadius: 'var(--az-radius-sm, 4px)', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal 
+        isOpen={showDeleteModal}
+        title="Delete Account"
+        message="Are you absolutely sure you want to permanently delete your account? This action cannot be undone and you will lose all subscriptions."
+        isDestructive={true}
+        onConfirm={executeDeleteAccount}
+        onCancel={() => setShowDeleteModal(false)}
+      />
+    </main>
   );
 }

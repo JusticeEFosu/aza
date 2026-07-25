@@ -69,7 +69,7 @@ export default function CreatorPostsPage() {
   }
 
   return (
-    <main className="v2-main-content" style={{ maxWidth: '800px' }}>
+    <main style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 16px' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid var(--v2-outline)', paddingBottom: '16px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--v2-primary)', margin: 0, letterSpacing: '-0.01em' }}>
             Posts Feed
