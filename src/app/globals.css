@@ -1846,7 +1846,6 @@ textarea,
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex-grow: 1;
   margin-top: 24px;
 }
 
@@ -1876,7 +1875,7 @@ textarea,
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: auto;
+  margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #E5E7EB;
 }
