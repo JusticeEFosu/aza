@@ -11,9 +11,9 @@ export default async function AdminFundraisersPage() {
     .from('fundraisers')
     .select(`
       *,
-      creator_profiles (
-        slug,
-        profiles ( full_name, avatar_url, email )
+      profiles (
+        full_name, avatar_url, email,
+        creator_profiles ( slug )
       )
     `)
     .order('created_at', { ascending: false });
@@ -46,11 +46,12 @@ export default async function AdminFundraisersPage() {
               </div>
 
               {fundraisers.map((campaign: any) => {
-                const profile = Array.isArray(campaign.creator_profiles?.profiles) 
-                  ? campaign.creator_profiles.profiles[0] 
-                  : campaign.creator_profiles?.profiles;
+                const profile = campaign.profiles;
                 const creatorName = profile?.full_name || 'Creator';
-                const creatorSlug = campaign.creator_profiles?.slug;
+                const creatorProfilesData = profile?.creator_profiles;
+                const creatorSlug = Array.isArray(creatorProfilesData) 
+                  ? creatorProfilesData[0]?.slug 
+                  : creatorProfilesData?.slug;
                 
                 const raised = campaign.current_amount;
                 const goal = campaign.target_amount;
