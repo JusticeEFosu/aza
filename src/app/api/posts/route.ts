@@ -63,7 +63,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('posts')
-      .select('*, creator_profiles(slug, display_name, profiles(full_name, avatar_url)), poll_options(*), poll_votes(*)')
+      .select('*, creator_profiles(slug, display_name, profiles(full_name, avatar_url)), poll_options(*), poll_votes(*), likes:post_likes(count), comments:post_comments(count)')
       .order('created_at', { ascending: false });
 
     if (creatorId) {

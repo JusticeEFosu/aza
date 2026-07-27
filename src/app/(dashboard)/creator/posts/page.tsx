@@ -10,6 +10,7 @@ import ConfirmModal from '@/components/ConfirmModal';
 import ExpandableText from '@/components/ExpandableText';
 import { getEmbedUrl } from '@/lib/utils/embed';
 import PollBlock from '@/components/posts/PollBlock';
+import PostEngagementBar from '@/components/posts/PostEngagementBar';
 
 export default function CreatorPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -19,6 +20,7 @@ export default function CreatorPostsPage() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [userLikedPostIds, setUserLikedPostIds] = useState<string[]>([]);
 
   const supabase = createClient();
 
@@ -41,6 +43,12 @@ export default function CreatorPostsPage() {
 
       const { data: tierData } = await supabase.from('tiers').select('*').eq('creator_id', user.id).eq('is_active', true).order('amount', { ascending: true });
       setTiers(tierData || []);
+
+      const { data: likedPosts } = await supabase
+        .from('post_likes')
+        .select('post_id')
+        .eq('user_id', user.id);
+      setUserLikedPostIds(likedPosts?.map(p => p.post_id) || []);
 
       const res = await fetch(`/api/posts?creatorId=${user.id}`);
       const json = await res.json();
@@ -138,6 +146,14 @@ export default function CreatorPostsPage() {
                   <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>
                     Published {new Date(post.created_at).toLocaleDateString()}
                   </div>
+                  
+                  <PostEngagementBar
+                    postId={post.id}
+                    initialLikes={post.likes?.[0]?.count || 0}
+                    initialComments={post.comments?.[0]?.count || 0}
+                    initialUserHasLiked={userLikedPostIds.includes(post.id)}
+                    hasAccess={true}
+                  />
                 </div>
               );
             })}

@@ -15,6 +15,7 @@ export const ROLE_PERMISSIONS = {
     canSuspendUsers: true,
     canDeletePosts: true,
     canViewUsers: true,
+    canSuspendFundraisers: true,
   },
   support_agent: {
     canViewUsers: true,

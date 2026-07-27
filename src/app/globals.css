@@ -1775,12 +1775,13 @@ textarea,
     background: var(--v2-surface);
     border-right: 1px solid #E5E7EB;
     height: 100vh;
-    width: 256px;
+    width: 280px;
     position: fixed;
     left: 0;
     top: 0;
     padding: 24px;
     z-index: 50;
+    box-sizing: border-box;
   }
 }
 
@@ -1880,6 +1881,14 @@ textarea,
   border-top: 1px solid #E5E7EB;
 }
 
+@media (max-height: 800px) {
+  .v2-sidebar { padding: 16px; }
+  .v2-sidebar-header { margin-bottom: 8px; }
+  .v2-nav-list { margin-top: 12px; gap: 0px; }
+  .v2-nav-item { padding: 8px 16px; }
+  .v2-sidebar-footer { margin-top: 12px; padding-top: 8px; }
+}
+
 /* Main Content Area */
 .v2-main-content {
   flex: 1;
@@ -1896,8 +1905,8 @@ textarea,
 }
 @media (min-width: 768px) {
   .v2-main-content {
-    margin-left: 256px;
-    width: calc(100% - 256px);
+    margin-left: 280px;
+    width: calc(100% - 280px);
     padding: 40px;
   }
 }

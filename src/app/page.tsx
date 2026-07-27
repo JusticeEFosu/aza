@@ -58,27 +58,20 @@ export default async function HomePage() {
                     Go to Dashboard <span className="material-symbols-outlined" style={{ fontSize: '18px', marginLeft: '8px' }}>arrow_forward</span>
                   </Link>
                   <Link href="/fundraisers" className="az-btn-secondary" style={{ padding: '14px 28px' }}>
-                    Explore Causes
+                    Explore Fundraisers
                   </Link>
                 </>
               ) : (
                 <>
-                  <Link href="/signup" className="az-btn-primary" style={{ padding: '14px 28px' }}>
-                    Create Account <span className="material-symbols-outlined" style={{ fontSize: '18px', marginLeft: '8px' }}>arrow_forward</span>
-                  </Link>
-                  <Link href="/creators" className="az-btn-secondary" style={{ padding: '14px 28px' }}>
+                  <Link href="/creators" className="az-btn-primary" style={{ padding: '14px 28px' }}>
                     Explore Creators
+                  </Link>
+                  <Link href="/fundraisers" className="az-btn-secondary" style={{ padding: '14px 28px' }}>
+                    Explore Fundraisers
                   </Link>
                 </>
               )}
             </div>
-            {!user && (
-              <div style={{ marginTop: '20px' }}>
-                <Link href="/login" className="az-label" style={{ color: 'var(--az-text-muted)', textDecoration: 'none' }}>
-                  Already have an account? <span style={{ color: 'var(--az-primary)', fontWeight: 600, textDecoration: 'underline' }}>Log In</span>
-                </Link>
-              </div>
-            )}
           </div>
         </section>
 

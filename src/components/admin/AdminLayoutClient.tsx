@@ -63,6 +63,7 @@ export default function AdminLayoutClient({
             { href: '/admin/payouts', label: 'Payouts', icon: 'account_balance', perm: hasPermission(role, 'canViewFinancials') },
             { href: '/admin/content', label: 'Content', icon: 'flag', perm: hasPermission(role, 'canViewReports') },
             { href: '/admin/moderation', label: 'Moderation', icon: 'shield', perm: hasPermission(role, 'canViewReports') },
+            { href: '/admin/fundraisers', label: 'Fundraisers', icon: 'volunteer_activism', perm: hasPermission(role, 'canViewReports') },
           ].map(item => {
             if (!item.perm) return null;
             const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);

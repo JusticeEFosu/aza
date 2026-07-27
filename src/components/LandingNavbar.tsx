@@ -53,7 +53,7 @@ export default function LandingNavbar({ user, dashboardUrl = '/login' }: { user:
                   paddingBottom: '4px'
                 }}
               >
-                Causes
+                Fundraisers
               </Link>
               <Link 
                 href="/how-it-works" 
@@ -116,7 +116,7 @@ export default function LandingNavbar({ user, dashboardUrl = '/login' }: { user:
           overflowY: 'auto'
         }}>
           <Link href="/creators" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: 600, color: 'var(--az-text-main)', textDecoration: 'none' }}>Creators</Link>
-          <Link href="/fundraisers" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: 600, color: 'var(--az-text-main)', textDecoration: 'none' }}>Causes</Link>
+          <Link href="/fundraisers" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: 600, color: 'var(--az-text-main)', textDecoration: 'none' }}>Fundraisers</Link>
           <Link href="/how-it-works" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '20px', fontWeight: 600, color: 'var(--az-text-main)', textDecoration: 'none' }}>How it Works</Link>
 
           <div style={{ borderTop: '1px solid var(--az-border)', margin: '12px 0' }}></div>

@@ -71,6 +71,7 @@ function LoginForm() {
 
       if (signInError) {
         setError(signInError.message);
+        setLoading(false);
         return;
       }
 
@@ -108,10 +109,9 @@ function LoginForm() {
           router.push('/fan');
         }
       }
-      router.refresh();
+      // Removed router.refresh() to prevent Next.js from stalling the transition
     } catch {
       setError('Something went wrong. Please try again.');
-    } finally {
       setLoading(false);
     }
   }

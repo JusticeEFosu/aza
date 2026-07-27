@@ -22,16 +22,71 @@ export async function POST(request: Request) {
         metadata,
       } = event.data;
 
-      // Ensure we have our custom metadata
-      if (!metadata || !metadata.type) {
-        return NextResponse.json({ success: true, message: 'Ignored unrelated charge' });
+      let activeMetadata = metadata;
+
+      // Handle subscription renewals (Paystack strips custom metadata on recurring charges)
+      if (!activeMetadata || !activeMetadata.type) {
+        let resolvedSub = null;
+
+        // Strategy 1: Look up by subscription_code (if Paystack includes it)
+        const subCode = event.data.subscription?.subscription_code;
+        if (subCode) {
+          const { data } = await supabase
+            .from('subscriptions')
+            .select('fan_id, creator_id, tier_id, paystack_subscription_code')
+            .eq('paystack_subscription_code', subCode)
+            .single();
+          resolvedSub = data;
+        }
+
+        // Strategy 2: Look up by plan_code + customer email
+        if (!resolvedSub) {
+          const planCode = event.data.plan?.plan_code || event.data.plan_object?.plan_code;
+          const email = event.data.customer?.email;
+          if (planCode && email) {
+            // Find the tier by plan code, then find the active subscription
+            const { data: tier } = await supabase
+              .from('tiers')
+              .select('id, creator_id')
+              .eq('paystack_plan_code', planCode)
+              .single();
+
+            if (tier) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', email)
+                .single();
+
+              if (profile) {
+                resolvedSub = {
+                  fan_id: profile.id,
+                  creator_id: tier.creator_id,
+                  tier_id: tier.id,
+                };
+              }
+            }
+          }
+        }
+
+        if (resolvedSub) {
+          activeMetadata = {
+            type: 'subscription',
+            fan_id: resolvedSub.fan_id,
+            creator_id: resolvedSub.creator_id,
+            tier_id: resolvedSub.tier_id
+          };
+          console.log(`Resolved renewal for fan ${resolvedSub.fan_id} -> creator ${resolvedSub.creator_id}`);
+        } else {
+          return NextResponse.json({ success: true, message: 'Ignored unrelated charge' });
+        }
       }
 
-      if (metadata.type === 'donation') {
+      if (activeMetadata.type === 'donation') {
         // Handle Donation Success
         const { error } = await supabase.rpc('process_donation_success', {
-          p_donation_id: metadata.donation_id,
-          p_fundraiser_id: metadata.fundraiser_id || null,
+          p_donation_id: activeMetadata.donation_id,
+          p_fundraiser_id: activeMetadata.fundraiser_id || null,
           p_amount: amount
         });
 
@@ -43,7 +98,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, message: 'Donation Processed via RPC' });
       }
 
-      if (metadata.type !== 'subscription' || !metadata.fan_id) {
+      if (activeMetadata.type !== 'subscription' || !activeMetadata.fan_id) {
         return NextResponse.json({ success: true, message: 'Ignored unrelated charge' });
       }
 
@@ -57,9 +112,9 @@ export async function POST(request: Request) {
         p_amount: amount,
         p_platform_fee: platform_fee,
         p_creator_share: creator_share,
-        p_fan_id: metadata.fan_id,
-        p_creator_id: metadata.creator_id,
-        p_tier_id: metadata.tier_id,
+        p_fan_id: activeMetadata.fan_id,
+        p_creator_id: activeMetadata.creator_id,
+        p_tier_id: activeMetadata.tier_id,
         p_subscription_code: event.data.subscription?.subscription_code || ('PAYSTACK_SUB_' + Date.now()),
         p_email_token: event.data.subscription?.email_token || 'TOKEN'
       });
