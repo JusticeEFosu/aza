@@ -5,9 +5,10 @@ import { hasPermission } from '@/lib/permissions';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabaseUser = await createClient();
     const { data: { user } } = await supabaseUser.auth.getUser();
 
@@ -28,7 +29,7 @@ export async function POST(
     const { error } = await supabaseAdmin
       .from('fundraisers')
       .update({ status: suspend ? 'suspended' : 'active', updated_at: new Date().toISOString() })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) throw error;
 
