@@ -28,7 +28,7 @@ export async function POST(
 
     const { error } = await supabaseAdmin
       .from('fundraisers')
-      .update({ status: suspend ? 'suspended' : 'active', updated_at: new Date().toISOString() })
+      .update({ is_suspended: suspend, updated_at: new Date().toISOString() })
       .eq('id', id);
 
     if (error) throw error;

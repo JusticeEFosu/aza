@@ -4,12 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmModal from '@/components/ConfirmModal';
 
-export default function SuspendFundraiserButton({ fundraiserId, status }: { fundraiserId: string, status: string }) {
+export default function SuspendFundraiserButton({ fundraiserId, isSuspended }: { fundraiserId: string, isSuspended: boolean }) {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
-
-  const isSuspended = status === 'suspended';
 
   const handleToggleSuspend = async () => {
     setLoading(true);

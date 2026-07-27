@@ -105,17 +105,17 @@ export default async function AdminFundraisersPage() {
                         padding: '4px 8px', 
                         borderRadius: '12px', 
                         textTransform: 'uppercase',
-                        background: campaign.status === 'active' ? '#ecfdf5' : campaign.status === 'completed' ? '#eff4ff' : '#fef2f2',
-                        color: campaign.status === 'active' ? '#059669' : campaign.status === 'completed' ? '#2563eb' : '#dc2626',
-                        border: `1px solid ${campaign.status === 'active' ? '#059669' : campaign.status === 'completed' ? '#bfdbfe' : '#fecaca'}`
+                        background: campaign.is_suspended ? '#fef2f2' : campaign.is_active ? '#ecfdf5' : '#eff4ff',
+                        color: campaign.is_suspended ? '#dc2626' : campaign.is_active ? '#059669' : '#2563eb',
+                        border: `1px solid ${campaign.is_suspended ? '#fecaca' : campaign.is_active ? '#059669' : '#bfdbfe'}`
                       }}>
-                        {campaign.status}
+                        {campaign.is_suspended ? 'suspended' : campaign.is_active ? 'active' : 'completed'}
                       </span>
                     </div>
 
                     {/* Actions */}
                     <div style={{ textAlign: 'right' }}>
-                      <SuspendFundraiserButton fundraiserId={campaign.id} status={campaign.status} />
+                      <SuspendFundraiserButton fundraiserId={campaign.id} isSuspended={!!campaign.is_suspended} />
                     </div>
                   </div>
                 );
