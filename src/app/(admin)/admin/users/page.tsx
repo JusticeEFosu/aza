@@ -26,7 +26,19 @@ export default async function AdminUsersPage({
     `);
     
   if (query) {
-    queryBuilder = queryBuilder.or(`email.ilike.%${query}%,full_name.ilike.%${query}%,display_name.ilike.%${query}%`);
+    // Find creators whose slug matches the query
+    const { data: matchedCreators } = await supabase
+      .from('creator_profiles')
+      .select('id')
+      .ilike('slug', `%${query}%`);
+      
+    const matchedIds = matchedCreators?.map(c => c.id) || [];
+    
+    if (matchedIds.length > 0) {
+      queryBuilder = queryBuilder.or(`email.ilike.%${query}%,full_name.ilike.%${query}%,display_name.ilike.%${query}%,id.in.(${matchedIds.join(',')})`);
+    } else {
+      queryBuilder = queryBuilder.or(`email.ilike.%${query}%,full_name.ilike.%${query}%,display_name.ilike.%${query}%`);
+    }
   }
 
   const { data: users } = await queryBuilder.order('created_at', { ascending: false });

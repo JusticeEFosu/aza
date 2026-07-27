@@ -30,7 +30,6 @@ export default function AdminUserSearch() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or email..."
           style={{ width: '100%', padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#ffffff', color: '#0b1c30', fontSize: '16px', outline: 'none', fontFamily: 'var(--font-body, Inter, sans-serif)' }}
           onFocus={(e) => e.target.style.borderColor = '#004e34'}
           onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
