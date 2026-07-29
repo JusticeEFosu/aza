@@ -102,6 +102,18 @@ export async function POST(request: Request) {
       throw updateError;
     }
 
+    // Keep global profiles table in sync with creator display name
+    if (displayName) {
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ display_name: displayName })
+        .eq('id', user.id);
+      
+      if (profileUpdateError) {
+        console.error('Failed to sync display name to global profiles:', profileUpdateError);
+      }
+    }
+
     console.log(`Successfully upserted profile for User ID: ${user.id}. New slug: ${updatedResult?.slug}`);
 
     return NextResponse.json({ 

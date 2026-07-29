@@ -260,7 +260,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
   const activeChannel = channels.find((c) => c.id === activeChannelId);
 
   return (
-    <div className="v2-messages-container" style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div className="v2-messages-container" style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' }}>
       
       {/* LEFT SIDEBAR: Channel List */}
       <div 

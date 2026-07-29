@@ -51,3 +51,8 @@ PROJECT.md
 
 # local scripts
 scripts/
+
+# Python scripts & scraper data
+scraper.py
+requirements.txt
+*.csv

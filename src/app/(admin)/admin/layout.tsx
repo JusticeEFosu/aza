@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import AdminLayoutClient from '@/components/admin/AdminLayoutClient';
 
@@ -27,8 +28,15 @@ export default async function AdminLayout({
 
   const role = profile.admin_role;
 
+  // Fetch unread feedback count for sidebar badge
+  const admin = createAdminClient();
+  const { count: feedbackCount } = await admin
+    .from('platform_feedback')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'new');
+
   return (
-    <AdminLayoutClient role={role}>
+    <AdminLayoutClient role={role} feedbackCount={feedbackCount ?? 0}>
       {children}
     </AdminLayoutClient>
   );

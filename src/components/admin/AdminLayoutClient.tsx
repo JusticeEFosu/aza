@@ -8,9 +8,11 @@ import { hasPermission } from '@/lib/permissions';
 export default function AdminLayoutClient({
   children,
   role,
+  feedbackCount = 0,
 }: {
   children: React.ReactNode;
   role: any;
+  feedbackCount?: number;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
@@ -54,7 +56,7 @@ export default function AdminLayoutClient({
           </button>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, marginTop: '24px' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, marginTop: '16px' }}>
           {[
             { href: '/admin', label: 'Overview', icon: 'dashboard', perm: true },
             { href: '/admin/users', label: 'Users', icon: 'group', perm: hasPermission(role, 'canViewUsers') },
@@ -64,6 +66,7 @@ export default function AdminLayoutClient({
             { href: '/admin/content', label: 'Content', icon: 'flag', perm: hasPermission(role, 'canViewReports') },
             { href: '/admin/moderation', label: 'Moderation', icon: 'shield', perm: hasPermission(role, 'canViewReports') },
             { href: '/admin/fundraisers', label: 'Fundraisers', icon: 'volunteer_activism', perm: hasPermission(role, 'canViewReports') },
+            { href: '/admin/feedback', label: 'Feedback', icon: 'feedback', perm: hasPermission(role, 'canViewReports'), badge: feedbackCount },
           ].map(item => {
             if (!item.perm) return null;
             const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
@@ -76,7 +79,7 @@ export default function AdminLayoutClient({
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '12px', 
-                  padding: '12px 16px', 
+                  padding: '8px 16px', 
                   color: isActive ? '#ffffff' : '#3f4943', 
                   textDecoration: 'none', 
                   borderRadius: '8px', 
@@ -88,6 +91,9 @@ export default function AdminLayoutClient({
               >
                 <span className="material-symbols-outlined" style={{ fontSize: '20px', color: isActive ? '#ffffff' : '#6f7a72' }}>{item.icon}</span>
                 {item.label}
+                {(item as any).badge > 0 && (
+                  <span style={{ marginLeft: 'auto', background: '#dc2626', color: '#ffffff', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-body, Inter, sans-serif)', padding: '2px 7px', borderRadius: '100px', lineHeight: '1.3' }}>{(item as any).badge}</span>
+                )}
               </Link>
             );
           })}

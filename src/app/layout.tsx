@@ -30,6 +30,7 @@ export const viewport: import("next").Viewport = {
 };
 
 import { GlobalAnnouncement } from '@/components/GlobalAnnouncement';
+import FeedbackWidget from '@/components/ui/FeedbackWidget';
 
 export default async function RootLayout({
   children,
@@ -45,6 +46,7 @@ export default async function RootLayout({
       <body>
         <GlobalAnnouncement />
         {children}
+        <FeedbackWidget />
       </body>
     </html>
   );
