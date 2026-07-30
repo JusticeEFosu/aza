@@ -11,6 +11,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   const currentTab = searchParams.get('tab') || 'home';
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string>('A');
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
     async function loadProfile() {
@@ -33,6 +34,22 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
     }
     loadProfile();
   }, []);
+
+  // "Silent Check" for unread messages whenever the user navigates
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch('/api/messages/unread-count');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.count || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    }
+    fetchUnreadCount();
+  }, [pathname]);
 
   const creatorLinks = [
     { href: '/creator', icon: 'home', label: 'Dashboard' },
@@ -168,7 +185,12 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
                 <span className="material-symbols-outlined" style={{ color: isActive ? '#ffffff' : 'var(--az-outline, #6f7a72)', fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
                   {link.icon}
                 </span>
-                {link.label}
+                <span style={{ flex: 1 }}>{link.label}</span>
+                {link.href === '/messages' && unreadCount > 0 && (
+                  <div style={{ backgroundColor: '#dc2626', color: 'white', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '100px' }}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </div>
+                )}
               </Link>
             )
           })}
@@ -229,9 +251,14 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
             <Link href="/fan/discover" className="v2-bottom-fab">
               <span className="material-symbols-outlined">search</span>
             </Link>
-            <Link href="/messages" className={`v2-bottom-nav-item ${pathname === '/messages' ? 'active' : ''}`}>
+            <Link href="/messages" className={`v2-bottom-nav-item ${pathname === '/messages' ? 'active' : ''}`} style={{ position: 'relative' }}>
               <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/messages' ? "'FILL' 1" : "'FILL' 0" }}>mail</span>
               <span className="v2-bottom-nav-label">Messages</span>
+              {unreadCount > 0 && (
+                <div style={{ position: 'absolute', top: '4px', right: '16px', backgroundColor: '#dc2626', color: 'white', fontSize: '9px', fontWeight: 700, height: '16px', minWidth: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', padding: '0 4px' }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </div>
+              )}
             </Link>
             <Link href="/fan/settings" className={`v2-bottom-nav-item ${pathname === '/fan/settings' ? 'active' : ''}`}>
               <span className="material-symbols-outlined v2-bottom-nav-icon" style={{ fontVariationSettings: pathname === '/fan/settings' ? "'FILL' 1" : "'FILL' 0" }}>settings</span>

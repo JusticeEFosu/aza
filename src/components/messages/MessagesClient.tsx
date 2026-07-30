@@ -51,6 +51,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
   const [isSending, setIsSending] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom when messages change
   const scrollToBottom = () => {
@@ -252,8 +253,8 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
       alert('Failed to send message. You might not have permission.');
       setNewMessage(contentToSend); // restore
     }
-    
     setIsSending(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   // Find active channel info
@@ -443,11 +444,12 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
             <div style={{ padding: '12px 24px', borderTop: '1px solid #E2E8F0', backgroundColor: '#ffffff' }}>
               <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '12px' }}>
                 <input 
+                  ref={inputRef}
                   type="text" 
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  disabled={isSending}
+                  readOnly={isSending}
                   className="az-input"
                   style={{
                     flex: 1,

@@ -10,6 +10,7 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
   const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
     async function loadProfile() {
@@ -44,6 +45,22 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
     }
     loadProfile();
   }, [role]);
+
+  // "Silent Check" for unread messages whenever the user navigates
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch('/api/messages/unread-count');
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.count || 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    }
+    fetchUnreadCount();
+  }, [pathname]);
 
   const initials = displayName.charAt(0).toUpperCase();
 
@@ -98,22 +115,43 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
           return (
             <Link 
               key={link.href} 
-              href={link.href} 
+              href={link.href}
               className={`v2-nav-item ${isActive ? 'active' : ''}`}
-              style={{
-                backgroundColor: isActive ? 'var(--az-primary, #004e34)' : 'transparent',
-                color: isActive ? '#ffffff' : 'var(--az-text-muted, #3f4943)',
-                fontFamily: 'var(--font-body)',
-                fontWeight: isActive ? 600 : 500,
-                borderRadius: '8px',
-                transition: 'all 0.2s ease',
-                marginBottom: '4px'
+              style={{ 
+                color: isActive ? 'var(--az-primary, #004e34)' : 'var(--az-text-secondary, #6f7a72)', 
+                backgroundColor: isActive ? 'var(--az-bg, #f8f9ff)' : 'transparent',
+                borderLeftColor: isActive ? 'var(--az-primary, #004e34)' : 'transparent',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
               }}
             >
-              <span className="material-symbols-outlined" style={{ color: isActive ? '#ffffff' : 'var(--az-outline, #6f7a72)', fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
-                {link.icon}
-              </span>
-              {link.label}
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>
+                  {link.icon}
+                </span>
+                <span className="v2-nav-label" style={{ fontFamily: 'var(--font-body)', fontWeight: isActive ? 600 : 500 }}>
+                  {link.label}
+                </span>
+              </div>
+              
+              {link.href === '/messages' && unreadCount > 0 && (
+                <div style={{ 
+                  backgroundColor: '#dc2626', 
+                  color: 'white', 
+                  fontSize: '11px', 
+                  fontWeight: 700, 
+                  height: '20px', 
+                  minWidth: '20px', 
+                  padding: '0 6px',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </div>
+              )}
             </Link>
           );
         })}
