@@ -17,18 +17,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tier ID is required.' }, { status: 400 });
     }
 
-    // 1. Fetch Tier & Creator Details using Admin client (bypasses RLS on creator_profiles for fans)
-    const { createAdminClient } = await import('@/lib/supabase/admin');
-    const adminSupabase = createAdminClient();
-
-    const { data: tier, error: tierError } = await adminSupabase
+    // 1. Fetch Tier & Creator Details to get Plan Code & Subaccount
+    const { data: tier, error: tierError } = await supabase
       .from('tiers')
-      .select('*, creator_profiles (paystack_subaccount_code, is_verified)')
+      .select('*, creator_profiles!tiers_creator_id_fkey (paystack_subaccount_code, is_verified)')
       .eq('id', tierId)
       .single();
 
     if (tierError || !tier) {
-      console.error('Subscription Tier Lookup Error:', tierError, 'tierId:', tierId);
       return NextResponse.json({ error: 'Tier not found.' }, { status: 404 });
     }
 
