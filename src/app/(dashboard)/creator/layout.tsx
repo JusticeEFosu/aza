@@ -1,5 +1,6 @@
 import MobileNav from '@/components/MobileNav';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import UnreadCountProvider from '@/components/providers/UnreadCountProvider';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -41,16 +42,18 @@ export default async function CreatorLayout({
 
   return (
     <div className="v2-dashboard-layout" style={{ backgroundColor: '#f8f9ff', minHeight: '100vh' }}>
-      {/* Desktop Sidebar */}
-      <DashboardSidebar role="creator" />
+      <UnreadCountProvider>
+        {/* Desktop Sidebar */}
+        <DashboardSidebar role="creator" />
 
-      {/* Mobile Drawer Navigation */}
-      <MobileNav role="creator" />
+        {/* Mobile Drawer Navigation */}
+        <MobileNav role="creator" />
 
-      {/* Main Content Area */}
-      <div className="v2-main-content">
-        {children}
-      </div>
+        {/* Main Content Area */}
+        <div className="v2-main-content">
+          {children}
+        </div>
+      </UnreadCountProvider>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import MobileNav from '@/components/MobileNav';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import UnreadCountProvider from '@/components/providers/UnreadCountProvider';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -37,16 +38,18 @@ export default async function FanLayout({
         color: 'var(--az-text-main, #0b1c30)'
       }}
     >
-      {/* Desktop Sidebar */}
-      <DashboardSidebar role="fan" />
+      <UnreadCountProvider>
+        {/* Desktop Sidebar */}
+        <DashboardSidebar role="fan" />
 
-      {/* Mobile Drawer Navigation */}
-      <MobileNav role="fan" />
+        {/* Mobile Drawer Navigation */}
+        <MobileNav role="fan" />
 
-      {/* Main Content Area */}
-      <div className="v2-main-content">
-        {children}
-      </div>
+        {/* Main Content Area */}
+        <div className="v2-main-content">
+          {children}
+        </div>
+      </UnreadCountProvider>
     </div>
   );
 }

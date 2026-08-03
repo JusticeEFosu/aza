@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useUnreadCount } from '@/components/providers/UnreadCountProvider';
 
 export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) {
   const pathname = usePathname();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
   const [isVerified, setIsVerified] = useState<boolean>(false);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const { unreadCount } = useUnreadCount();
 
   useEffect(() => {
     async function loadProfile() {
@@ -45,22 +46,6 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
     }
     loadProfile();
   }, [role]);
-
-  // "Silent Check" for unread messages whenever the user navigates
-  useEffect(() => {
-    async function fetchUnreadCount() {
-      try {
-        const res = await fetch('/api/messages/unread-count');
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.count || 0);
-        }
-      } catch (err) {
-        console.error('Failed to fetch unread count:', err);
-      }
-    }
-    fetchUnreadCount();
-  }, [pathname]);
 
   const initials = displayName.charAt(0).toUpperCase();
 

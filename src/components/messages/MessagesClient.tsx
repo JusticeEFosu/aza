@@ -99,6 +99,21 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
         return;
       }
 
+      // Fetch exact unread counts per channel
+      let unreadMap: Record<string, number> = {};
+      if (channelsData && channelsData.length > 0) {
+        const channelIds = channelsData.map(c => c.id);
+        const { data: unreadData } = await supabase.rpc('get_unread_counts_for_channels', {
+          p_user_id: currentUser.id,
+          p_channel_ids: channelIds
+        });
+        if (unreadData) {
+          unreadData.forEach((row: any) => {
+            unreadMap[row.channel_id] = row.unread_count;
+          });
+        }
+      }
+
       // Process channels to format DMs properly
       const formattedChannels: Channel[] = channelsData.map((c: any) => {
         let otherParticipant = undefined;
@@ -139,7 +154,8 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
           creator_id: c.creator_id,
           other_participant: otherParticipant,
           avatar_url: avatarUrl,
-          participants: participants
+          participants: participants,
+          unread_count: unreadMap[c.id] || 0
         };
       });
 
@@ -307,12 +323,13 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                       display: 'flex',
                       alignItems: 'center',
                       padding: '16px 24px',
-                      background: activeChannelId === channel.id ? '#eff4ff' : 'transparent',
+                      background: activeChannelId === channel.id ? '#e0f2fe' : 'transparent',
                       border: 'none',
                       borderBottom: '1px solid #E2E8F0',
+                      borderLeft: activeChannelId === channel.id ? '4px solid var(--az-primary, #004e34)' : '4px solid transparent',
                       cursor: 'pointer',
                       textAlign: 'left',
-                      transition: 'background 0.2s',
+                      transition: 'all 0.2s',
                     }}
                   >
                     <div style={{ marginRight: '16px', flexShrink: 0 }}>
@@ -333,8 +350,29 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                           <span style={{ fontSize: '10px', background: '#004e34', color: 'white', padding: '2px 6px', borderRadius: '10px', fontWeight: 700, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>GROUP</span>
                         )}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        Click to view conversation
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ fontSize: '13px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          Click to view conversation
+                        </div>
+                        {channel.unread_count && channel.unread_count > 0 ? (
+                          <div style={{ 
+                            backgroundColor: '#dc2626', 
+                            color: 'white', 
+                            fontSize: '11px', 
+                            fontWeight: 700, 
+                            height: '20px', 
+                            minWidth: '20px', 
+                            padding: '0 6px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginLeft: '8px',
+                            flexShrink: 0
+                          }}>
+                            {channel.unread_count > 99 ? '99+' : channel.unread_count}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </button>

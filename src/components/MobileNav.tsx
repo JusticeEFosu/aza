@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { useUnreadCount } from '@/components/providers/UnreadCountProvider';
 
 export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +12,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
   const currentTab = searchParams.get('tab') || 'home';
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initials, setInitials] = useState<string>('A');
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const { unreadCount } = useUnreadCount();
 
   useEffect(() => {
     async function loadProfile() {
@@ -34,22 +35,6 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
     }
     loadProfile();
   }, []);
-
-  // "Silent Check" for unread messages whenever the user navigates
-  useEffect(() => {
-    async function fetchUnreadCount() {
-      try {
-        const res = await fetch('/api/messages/unread-count');
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.count || 0);
-        }
-      } catch (err) {
-        console.error('Failed to fetch unread count:', err);
-      }
-    }
-    fetchUnreadCount();
-  }, [pathname]);
 
   const creatorLinks = [
     { href: '/creator', icon: 'home', label: 'Dashboard' },
