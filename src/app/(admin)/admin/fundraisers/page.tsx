@@ -13,7 +13,7 @@ export default async function AdminFundraisersPage() {
       *,
       profiles (
         full_name, avatar_url, email,
-        creator_profiles ( slug )
+        creator_profiles ( slug, display_name )
       )
     `)
     .order('created_at', { ascending: false });
@@ -47,11 +47,15 @@ export default async function AdminFundraisersPage() {
 
               {fundraisers.map((campaign: any) => {
                 const profile = campaign.profiles;
-                const creatorName = profile?.full_name || 'Creator';
                 const creatorProfilesData = profile?.creator_profiles;
                 const creatorSlug = Array.isArray(creatorProfilesData) 
                   ? creatorProfilesData[0]?.slug 
                   : creatorProfilesData?.slug;
+                const creatorDisplayName = Array.isArray(creatorProfilesData) 
+                  ? creatorProfilesData[0]?.display_name 
+                  : creatorProfilesData?.display_name;
+                
+                const creatorName = creatorDisplayName || profile?.full_name || 'Creator';
                 
                 const raised = campaign.current_amount;
                 const goal = campaign.target_amount;
