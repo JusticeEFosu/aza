@@ -10,8 +10,8 @@ interface Tier {
   name: string;
   amount: number;
   paystack_plan_code: string | null;
-  description?: string;
-  perks?: string[];
+  description?: string | null;
+  perks?: string[] | null;
 }
 
 interface ManageSubscriptionProps {

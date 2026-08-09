@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       const { data: payoutData, error: payoutErr } = await supabase.from('payouts').insert({
         creator_id: creator.creator_id,
         net_amount: creator.amount,
-        status: 'processing'
+        status: 'pending'
       }).select('id').single();
 
       if (payoutData?.id) {
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       const { data: payoutData } = await supabase.from('payouts').insert({
         creator_id: creator.creator_id,
         net_amount: creator.amount,
-        status: 'processing'
+        status: 'pending'
       }).select('id').single();
 
       if (payoutData?.id) {

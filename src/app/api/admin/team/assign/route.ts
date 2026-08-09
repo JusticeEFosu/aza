@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     // Assign role
     const { error } = await supabase
       .from('profiles')
-      .update({ admin_role: role })
+      .update({ admin_role: role as any })
       .eq('email', email);
 
     if (error) {

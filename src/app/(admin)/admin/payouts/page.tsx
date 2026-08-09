@@ -182,8 +182,8 @@ export default async function AdminPayoutsPage() {
                 const cProfile = Array.isArray(payout.creator_profiles) ? payout.creator_profiles[0] : payout.creator_profiles;
                 const displayName = cProfile?.slug || profile?.display_name || profile?.full_name || 'Creator';
                 
-                const statusColor = payout.status === 'paid' ? '#059669' : (payout.status === 'processing' ? '#735c00' : '#ba1a1a');
-                const statusBg = payout.status === 'paid' ? '#ecfdf5' : (payout.status === 'processing' ? '#fed65b' : '#ffdad6');
+                const statusColor = payout.status === 'paid' ? '#059669' : (payout.status === 'pending' ? '#735c00' : '#ba1a1a');
+                const statusBg = payout.status === 'paid' ? '#ecfdf5' : (payout.status === 'pending' ? '#fed65b' : '#ffdad6');
 
                 return (
                   <div key={payout.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 2fr 1fr 1.5fr', padding: '16px 24px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>

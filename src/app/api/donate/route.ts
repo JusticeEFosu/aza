@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const initResponse = await initializeTransaction({
       email,
       amount, // in kobo
-      subaccount: creator.paystack_subaccount_code,
+      subaccount: creator.paystack_subaccount_code || undefined,
       callback_url: callbackUrl || `${process.env.NEXT_PUBLIC_APP_URL}/c/${creator.slug}`,
       metadata: {
         donation_id: donation.id,

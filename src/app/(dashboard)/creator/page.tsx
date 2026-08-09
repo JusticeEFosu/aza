@@ -18,7 +18,7 @@ export default async function CreatorDashboard() {
     .eq('id', user.id)
     .single();
 
-  if (!profile?.role || profile?.role === 'user') redirect('/onboarding');
+  if (!profile?.role) redirect('/onboarding');
   if (profile?.role !== 'creator') redirect('/fan');
 
   const { data: creatorProfile } = await supabase

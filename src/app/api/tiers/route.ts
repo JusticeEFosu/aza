@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // @ts-ignore
-    const paystackPlanCode = planRes.data.plan_code;
+    const paystackPlanCode = planRes.data.plan_code as string;
 
     // Insert to Supabase Tiers table
     const { data, error } = await supabase

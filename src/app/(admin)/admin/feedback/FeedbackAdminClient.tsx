@@ -13,7 +13,7 @@ type FeedbackItem = {
   screenshot_url: string | null;
   status: string;
   created_at: string;
-  profiles: { display_name: string; email: string } | null;
+  profiles: { display_name: string | null; email: string } | null;
 };
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {

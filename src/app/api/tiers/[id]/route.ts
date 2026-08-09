@@ -66,7 +66,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       }
 
       // @ts-ignore
-      const paystackPlanCode = planRes.data.plan_code;
+      const paystackPlanCode = planRes.data.plan_code as string;
 
       // B. Insert new Tier
       const { data: newTier, error: insertError } = await supabase

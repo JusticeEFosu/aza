@@ -38,8 +38,8 @@ export async function POST(request: Request) {
     const initResponse = await initializeTransaction({
       email: user.email!, // Guaranteed to exist via Supabase Auth
       amount: tier.amount, // in kobo
-      plan: tier.paystack_plan_code,
-      subaccount: tier.creator_profiles.paystack_subaccount_code,
+      plan: tier.paystack_plan_code || undefined,
+      subaccount: tier.creator_profiles.paystack_subaccount_code || undefined,
       callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/fan`, // Back to fan dashboard on success
       metadata: {
         fan_id: user.id,
