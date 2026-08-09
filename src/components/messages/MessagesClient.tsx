@@ -182,19 +182,19 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
             creator_profiles (display_name)
           )
         `)
-        .eq('channel_id', activeChannelId)
+        .eq('channel_id', activeChannelId as string)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (!error && messagesData) {
-        setMessages(messagesData.reverse()); // Reverse to show oldest first top-down
+        setMessages((messagesData as any).reverse()); // Reverse to show oldest first top-down
       }
 
       // Update last_read_at for this user in this channel
       await supabase
         .from('chat_participants')
         .update({ last_read_at: new Date().toISOString() })
-        .eq('channel_id', activeChannelId)
+        .eq('channel_id', activeChannelId as string)
         .eq('profile_id', currentUser.id);
     }
 

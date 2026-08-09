@@ -193,7 +193,7 @@ export default function CreatorSettings() {
           setSlug(creatorRes.data.slug || '');
           if (creatorRes.data.social_links) {
             // Migrate legacy twitter to x
-            const legacyLinks = creatorRes.data.social_links;
+            const legacyLinks = creatorRes.data.social_links as Record<string, string>;
             setSocialLinks({
               x: legacyLinks.x || legacyLinks.twitter || '',
               instagram: legacyLinks.instagram || '',

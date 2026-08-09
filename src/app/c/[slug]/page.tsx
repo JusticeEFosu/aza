@@ -301,7 +301,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                   currentTierName={currentTierName}
                   currentTierAmount={maxFanTierAmount}
                   renewalDate={activeSub.current_period_end}
-                  tiers={tiers || []}
+                  tiers={(tiers as any) || []}
                   maxFanTierAmount={maxFanTierAmount}
                 />
               ) : (
