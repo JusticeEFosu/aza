@@ -3166,3 +3166,29 @@ textarea,
 }
 
 @media (max-width: 768px) { .v2-desktop-only { display: none !important; } }
+
+/* Mobile Hero Buttons & Feedback Fixes */
+.az-hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+@media (max-width: 640px) {
+  .az-hero-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .az-hero-buttons > * {
+    width: 100%;
+    text-align: center;
+  }
+  .az-feedback-text {
+    display: none;
+  }
+}
+
+.az-mobile-only { display: none; }
+@media (max-width: 768px) {
+  .az-mobile-only { display: inline-flex !important; }
+}

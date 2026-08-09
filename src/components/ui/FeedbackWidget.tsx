@@ -189,7 +189,7 @@ export default function FeedbackWidget() {
         }}
       >
         <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>feedback</span>
-        Feedback
+        <span className="az-feedback-text">Feedback</span>
       </button>
 
       {/* Feedback panel */}

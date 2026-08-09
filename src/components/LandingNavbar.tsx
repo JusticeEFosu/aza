@@ -87,14 +87,21 @@ export default function LandingNavbar({ user, dashboardUrl = '/login' }: { user:
                 </Link>
               </div>
             )}
-            <button
-              className="v2-mobile-menu"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Toggle Menu"
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--az-text-main)', padding: '8px' }}
-            >
-              <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {!user && (
+                <Link href="/login" className="az-mobile-only az-btn-secondary" style={{ padding: '6px 12px', fontSize: '14px' }}>
+                  Log In
+                </Link>
+              )}
+              <button
+                className="v2-mobile-menu"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle Menu"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--az-text-main)', padding: '8px' }}
+              >
+                <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </nav>

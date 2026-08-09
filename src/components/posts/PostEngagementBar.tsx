@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useOptimistic, startTransition } from 'react';
 import CommentSection from './CommentSection';
 
 export default function PostEngagementBar({
@@ -22,6 +22,11 @@ export default function PostEngagementBar({
   const [commentsCount, setCommentsCount] = useState(initialComments);
   const [showUpsell, setShowUpsell] = useState(false);
 
+  const [optimisticState, addOptimisticState] = useOptimistic(
+    { likes, userHasLiked },
+    (state, update: { likes: number, userHasLiked: boolean }) => ({ ...state, ...update })
+  );
+
   const handleLike = async () => {
     if (!hasAccess) {
       setShowUpsell(true);
@@ -29,10 +34,12 @@ export default function PostEngagementBar({
       return;
     }
 
-    // Optimistic UI update
-    const wasLiked = userHasLiked;
-    setUserHasLiked(!wasLiked);
-    setLikes(prev => wasLiked ? prev - 1 : prev + 1);
+    const wasLiked = optimisticState.userHasLiked;
+    const newLikes = wasLiked ? optimisticState.likes - 1 : optimisticState.likes + 1;
+
+    startTransition(() => {
+      addOptimisticState({ userHasLiked: !wasLiked, likes: newLikes });
+    });
 
     try {
       const res = await fetch(`/api/posts/${postId}/like`, {
@@ -41,10 +48,9 @@ export default function PostEngagementBar({
       if (!res.ok) {
         throw new Error('Failed to toggle like');
       }
+      setUserHasLiked(!wasLiked);
+      setLikes(newLikes);
     } catch (error) {
-      // Revert optimistic update on error
-      setUserHasLiked(wasLiked);
-      setLikes(prev => wasLiked ? prev + 1 : prev - 1);
       console.error(error);
     }
   };
@@ -72,7 +78,7 @@ export default function PostEngagementBar({
             background: 'none', 
             border: 'none', 
             cursor: 'pointer',
-            color: userHasLiked ? '#ff3b30' : 'var(--v2-text-variant)',
+            color: optimisticState.userHasLiked ? '#ff3b30' : 'var(--v2-text-variant)',
             transition: 'color 0.2s ease, transform 0.1s ease',
             padding: '4px 8px',
             marginLeft: '-8px',
@@ -81,8 +87,8 @@ export default function PostEngagementBar({
           onMouseEnter={(e) => e.currentTarget.style.background = 'var(--v2-surface-highest)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: '24px', fontVariationSettings: userHasLiked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-          <span style={{ fontSize: '15px', fontWeight: 600 }}>{likes > 0 ? likes.toLocaleString() : 'Like'}</span>
+          <span className="material-symbols-outlined" style={{ fontSize: '24px', fontVariationSettings: optimisticState.userHasLiked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+          <span style={{ fontSize: '15px', fontWeight: 600 }}>{optimisticState.likes > 0 ? optimisticState.likes.toLocaleString() : 'Like'}</span>
         </button>
 
         {/* Comment Button */}

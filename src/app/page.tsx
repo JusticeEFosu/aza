@@ -51,7 +51,7 @@ export default async function HomePage() {
               Join the community behind your favourite voices. Empowering Nigerian creativity and the voices that matter most to you.
             </p>
             
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="az-hero-buttons">
               {user ? (
                 <>
                   <Link href={dashboardUrl} className="az-btn-primary" style={{ padding: '14px 28px' }}>
