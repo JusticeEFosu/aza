@@ -414,6 +414,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
               ) : (
                 messages.map((msg, index) => {
                   const isMine = msg.sender_id === currentUser.id;
+                  const isCreatorInGroup = activeChannel?.type === 'group_chat' && msg.sender_id === activeChannel?.creator_id;
                   const prevMsg = index > 0 ? messages[index - 1] : null;
                   const nextMsg = index < messages.length - 1 ? messages[index + 1] : null;
                   
@@ -440,8 +441,23 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                       alignItems: isMine ? 'flex-end' : 'flex-start'
                     }}>
                       {senderName && (
-                        <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px', marginLeft: '12px', fontWeight: 600 }}>
-                          {senderName}
+                        <div style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginBottom: '4px', marginLeft: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>{senderName}</span>
+                          {isCreatorInGroup && (
+                            <span style={{
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              backgroundColor: '#004e34',
+                              color: '#ffffff',
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              lineHeight: '1.4'
+                            }}>
+                              Creator
+                            </span>
+                          )}
                         </div>
                       )}
                       <div style={{
@@ -451,10 +467,10 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                         borderBottomLeftRadius: !isMine ? (isLastInGroup ? '16px' : '4px') : '16px',
                         borderTopRightRadius: isMine ? (isFirstInGroup ? '16px' : '4px') : '16px',
                         borderBottomRightRadius: isMine ? (isLastInGroup ? '16px' : '4px') : '16px',
-                        backgroundColor: isMine ? '#004e34' : '#ffffff',
-                        color: isMine ? '#ffffff' : '#0b1c30',
-                        border: isMine ? 'none' : '1px solid #E2E8F0',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        backgroundColor: isMine ? '#004e34' : (isCreatorInGroup ? '#eef8f3' : '#ffffff'),
+                        color: isMine ? '#ffffff' : (isCreatorInGroup ? '#003322' : '#0b1c30'),
+                        border: isMine ? 'none' : (isCreatorInGroup ? '1px solid #a3e0c0' : '1px solid #E2E8F0'),
+                        boxShadow: isCreatorInGroup ? '0 1px 3px rgba(0, 78, 52, 0.08)' : '0 1px 2px rgba(0,0,0,0.05)',
                         fontSize: '14px',
                         lineHeight: '1.4',
                         fontFamily: 'var(--font-body, Inter, sans-serif)'
@@ -465,7 +481,7 @@ export default function MessagesClient({ currentUser }: { currentUser: UserProfi
                           marginTop: '4px', 
                           textAlign: 'right', 
                           opacity: 0.8,
-                          color: isMine ? 'rgba(255,255,255,0.85)' : '#6f7a72',
+                          color: isMine ? 'rgba(255,255,255,0.85)' : (isCreatorInGroup ? '#046c4e' : '#6f7a72'),
                           fontFamily: 'var(--font-body, Inter, sans-serif)'
                         }}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

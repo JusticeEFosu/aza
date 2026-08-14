@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
@@ -9,10 +9,19 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(60);
   const supabase = createClient();
 
-  async function handleResetPassword(e: React.FormEvent) {
-    e.preventDefault();
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (success && countdown > 0) {
+      timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [success, countdown]);
+
+  async function handleResetPassword(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     setError('');
     setLoading(true);
 
@@ -25,6 +34,7 @@ export default function ForgotPasswordPage() {
         setError(resetError.message);
       } else {
         setSuccess(true);
+        setCountdown(60);
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -62,6 +72,34 @@ export default function ForgotPasswordPage() {
               <p style={{ color: '#4c4546', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
                 We've sent a password reset link to <strong>{email}</strong>.
               </p>
+
+              <div style={{ marginBottom: '1.5rem', fontSize: '0.875rem', color: '#4c4546' }}>
+                Didn't receive the email?{' '}
+                {countdown > 0 ? (
+                  <span style={{ fontWeight: 600, color: '#7a7576' }}>
+                    Resend in {countdown}s
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleResetPassword()}
+                    disabled={loading}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#004e34',
+                      fontWeight: 600,
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      padding: 0,
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    {loading ? 'Resending...' : 'Resend link'}
+                  </button>
+                )}
+              </div>
+
               <Link href="/login" className="v3-auth-btn" style={{ textDecoration: 'none', display: 'inline-block', textAlign: 'center' }}>
                 Back to Log In
               </Link>

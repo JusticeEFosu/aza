@@ -39,6 +39,7 @@ export default function UpdatePasswordPage() {
       if (updateError) {
         setError(updateError.message);
       } else {
+        await supabase.auth.signOut();
         setSuccess(true);
         setTimeout(() => {
           router.push('/login');

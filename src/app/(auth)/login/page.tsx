@@ -6,15 +6,23 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 function LoginForm() {
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  const urlError = searchParams.get('error');
+  const urlMessage = searchParams.get('message');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(urlError || '');
+  const [message, setMessage] = useState(urlMessage || '');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect');
   const supabase = createClient();
+
+  useEffect(() => {
+    if (urlError) setError(urlError);
+    if (urlMessage) setMessage(urlMessage);
+  }, [urlError, urlMessage]);
 
   useEffect(() => {
     // 1. Listen for instant auth state changes (catches magic links and #access_token instantly)
@@ -129,6 +137,12 @@ function LoginForm() {
           <Link href="/login" className="v3-auth-tab active">Log In</Link>
           <Link href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`} className="v3-auth-tab">Sign Up</Link>
         </div>
+
+        {message && (
+          <div style={{ marginBottom: '1.25rem', backgroundColor: '#e6f4ea', color: '#137333', border: '1px solid #137333', borderRadius: '8px', padding: '12px', fontSize: '14px' }}>
+            {message}
+          </div>
+        )}
 
         {error && (
           <div className="alert alert-error" style={{ marginBottom: '1.25rem', backgroundColor: '#ffdad6', color: '#ba1a1a', border: '1px solid #ba1a1a', borderRadius: '8px', padding: '12px' }}>

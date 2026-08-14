@@ -16,7 +16,10 @@ export default function FanSettings() {
   const [avatarUrl, setAvatarUrl] = useState('');
   
   const [accountEmail, setAccountEmail] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,7 +87,32 @@ export default function FanSettings() {
     try {
       const updates: any = {};
       if (accountEmail) updates.email = accountEmail;
-      if (newPassword) updates.password = newPassword;
+
+      if (newPassword) {
+        if (!oldPassword) {
+          setSaving(false);
+          setMessage({ type: 'error', text: 'Please enter your old password to change it.' });
+          return;
+        }
+        if (newPassword.length < 6) {
+          setSaving(false);
+          setMessage({ type: 'error', text: 'New password must be at least 6 characters long.' });
+          return;
+        }
+        const { data: userResp, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !userResp.user?.email) throw new Error('Could not fetch current user.');
+        
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: userResp.user.email,
+          password: oldPassword
+        });
+        if (signInError) {
+          setSaving(false);
+          setMessage({ type: 'error', text: 'Incorrect old password.' });
+          return;
+        }
+        updates.password = newPassword;
+      }
       
       if (Object.keys(updates).length === 0) {
         setSaving(false);
@@ -98,6 +126,7 @@ export default function FanSettings() {
         setMessage({ type: 'success', text: 'Check your new email inbox to confirm the change!' });
       } else {
         setMessage({ type: 'success', text: 'Password updated successfully!' });
+        setOldPassword('');
         setNewPassword('');
       }
       setTimeout(() => setMessage(null), 4000);
@@ -250,17 +279,70 @@ export default function FanSettings() {
               <span style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--az-text-muted)' }}>We will send a confirmation link to your new email if you change this.</span>
             </div>
 
-            <div>
-              <label className="az-label" style={{ display: 'block', marginBottom: '8px' }}>New Password</label>
-              <input
-                type="password"
-                placeholder="Leave blank to keep current password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                className="az-input"
-                style={{ width: '100%', fontSize: '16px' }}
-              />
-            </div>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 500 }}>Old Password</label>
+                  <Link href="/forgot-password" style={{ fontSize: '12px', fontWeight: 600, color: '#4c4546', textDecoration: 'underline' }}>Forgot Password?</Link>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    placeholder="Enter your old password"
+                    value={oldPassword}
+                    onChange={e => setOldPassword(e.target.value)}
+                    style={{ width: '100%', padding: '12px 4rem 12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--v2-text-variant, #4c4546)',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    {showOldPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>New Password</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    placeholder="Leave blank to keep current password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    style={{ width: '100%', padding: '12px 4rem 12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.75rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--v2-text-variant, #4c4546)',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    {showNewPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--az-border)', paddingTop: '24px' }}>
               <button 

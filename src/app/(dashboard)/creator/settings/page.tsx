@@ -29,7 +29,10 @@ export default function CreatorSettings() {
 
   // Account State
   const [accountEmail, setAccountEmail] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountMsg, setAccountMsg] = useState({ text: '', type: '' });
   
@@ -328,7 +331,32 @@ export default function CreatorSettings() {
     try {
       const updates: any = {};
       if (accountEmail) updates.email = accountEmail;
-      if (newPassword) updates.password = newPassword;
+      
+      if (newPassword) {
+        if (!oldPassword) {
+          setAccountLoading(false);
+          setAccountMsg({ text: 'Please enter your old password to change it.', type: 'error' });
+          return;
+        }
+        if (newPassword.length < 6) {
+          setAccountLoading(false);
+          setAccountMsg({ text: 'New password must be at least 6 characters long.', type: 'error' });
+          return;
+        }
+        const { data: userResp, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !userResp.user?.email) throw new Error('Could not fetch current user.');
+        
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: userResp.user.email,
+          password: oldPassword
+        });
+        if (signInError) {
+          setAccountLoading(false);
+          setAccountMsg({ text: 'Incorrect old password.', type: 'error' });
+          return;
+        }
+        updates.password = newPassword;
+      }
       
       if (Object.keys(updates).length === 0) {
         setAccountLoading(false);
@@ -342,6 +370,7 @@ export default function CreatorSettings() {
         setAccountMsg({ text: 'Check your new email inbox to confirm the change!', type: 'success' });
       } else {
         setAccountMsg({ text: 'Password updated successfully!', type: 'success' });
+        setOldPassword('');
         setNewPassword('');
       }
     } catch (err: any) {
@@ -595,7 +624,7 @@ export default function CreatorSettings() {
                       Payout Schedule
                     </h3>
                     <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', lineHeight: 1.5 }}>
-                      Payouts are processed automatically every Friday for earnings accrued up to the previous Wednesday.
+                      Payouts are processed automatically at the end of every month directly to your verified bank account. Manual payout requests are not supported.
                     </p>
                   </div>
                 </div>
@@ -772,14 +801,68 @@ export default function CreatorSettings() {
                 </div>
 
                 <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500 }}>Old Password</label>
+                    <Link href="/forgot-password" style={{ fontSize: '12px', fontWeight: 600, color: '#4c4546', textDecoration: 'underline' }}>Forgot Password?</Link>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showOldPassword ? 'text' : 'password'}
+                      placeholder="Enter your old password"
+                      value={oldPassword}
+                      onChange={e => setOldPassword(e.target.value)}
+                      style={{ width: '100%', padding: '12px 4rem 12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOldPassword(!showOldPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--v2-text-variant, #4c4546)',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {showOldPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>New Password</label>
-                  <input
-                    type="password"
-                    placeholder="Leave blank to keep current password"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      placeholder="Leave blank to keep current password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      style={{ width: '100%', padding: '12px 4rem 12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--v2-text-variant, #4c4546)',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {showNewPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
