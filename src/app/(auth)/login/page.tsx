@@ -153,7 +153,7 @@ function LoginForm() {
           <div className="v3-form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label htmlFor="password" className="v3-form-label">Password</label>
-              <a href="#" style={{ fontSize: '12px', fontWeight: 600, color: '#4c4546', textDecoration: 'underline' }}>Forgot?</a>
+              <Link href="/forgot-password" style={{ fontSize: '12px', fontWeight: 600, color: '#4c4546', textDecoration: 'underline' }}>Forgot?</Link>
             </div>
             <div style={{ position: 'relative' }}>
               <input
