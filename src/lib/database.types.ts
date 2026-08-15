@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -181,6 +181,7 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string | null
+          dms_enabled: boolean
           id: string
           is_published: boolean
           is_verified: boolean
@@ -199,6 +200,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          dms_enabled?: boolean
           id: string
           is_published?: boolean
           is_verified?: boolean
@@ -217,6 +219,7 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string | null
+          dms_enabled?: boolean
           id?: string
           is_published?: boolean
           is_verified?: boolean
@@ -247,8 +250,11 @@ export type Database = {
       donations: {
         Row: {
           amount: number
+          amount_display: number | null
+          amount_ngn: number | null
           created_at: string
           creator_id: string
+          currency: string
           donor_name: string | null
           donor_note: string | null
           email: string
@@ -262,8 +268,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          amount_display?: number | null
+          amount_ngn?: number | null
           created_at?: string
           creator_id: string
+          currency?: string
           donor_name?: string | null
           donor_note?: string | null
           email: string
@@ -277,8 +286,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          amount_display?: number | null
+          amount_ngn?: number | null
           created_at?: string
           creator_id?: string
+          currency?: string
           donor_name?: string | null
           donor_note?: string | null
           email?: string
@@ -775,6 +787,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      stream_settings: {
+        Row: {
+          alert_duration: number
+          created_at: string
+          creator_id: string
+          overlay_token: string
+          rate_eur: number
+          rate_gbp: number
+          rate_usd: number
+          tts_enabled: boolean
+          tts_min_ngn: number
+          updated_at: string
+          volume_chime: number
+          volume_tts: number
+        }
+        Insert: {
+          alert_duration?: number
+          created_at?: string
+          creator_id: string
+          overlay_token?: string
+          rate_eur?: number
+          rate_gbp?: number
+          rate_usd?: number
+          tts_enabled?: boolean
+          tts_min_ngn?: number
+          updated_at?: string
+          volume_chime?: number
+          volume_tts?: number
+        }
+        Update: {
+          alert_duration?: number
+          created_at?: string
+          creator_id?: string
+          overlay_token?: string
+          rate_eur?: number
+          rate_gbp?: number
+          rate_usd?: number
+          tts_enabled?: boolean
+          tts_min_ngn?: number
+          updated_at?: string
+          volume_chime?: number
+          volume_tts?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_settings_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: true
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {

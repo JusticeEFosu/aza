@@ -16,6 +16,9 @@ export default function StreamAlertsPage() {
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [ttsMinNgn, setTtsMinNgn] = useState('');
   const [alertDuration, setAlertDuration] = useState('8');
+  const [rateUsd, setRateUsd] = useState('1600');
+  const [rateGbp, setRateGbp] = useState('2050');
+  const [rateEur, setRateEur] = useState('1750');
 
   const supabase = createClient();
 
@@ -58,6 +61,9 @@ export default function StreamAlertsPage() {
       setTtsEnabled(streamSettings.tts_enabled);
       setTtsMinNgn((streamSettings.tts_min_ngn / 100).toString());
       setAlertDuration(streamSettings.alert_duration.toString());
+      setRateUsd(streamSettings.rate_usd?.toString() || '1600');
+      setRateGbp(streamSettings.rate_gbp?.toString() || '2050');
+      setRateEur(streamSettings.rate_eur?.toString() || '1750');
     }
     setLoading(false);
   };
@@ -73,6 +79,9 @@ export default function StreamAlertsPage() {
         tts_enabled: ttsEnabled,
         tts_min_ngn: Math.floor(parseFloat(ttsMinNgn) * 100),
         alert_duration: parseInt(alertDuration, 10),
+        rate_usd: parseFloat(rateUsd),
+        rate_gbp: parseFloat(rateGbp),
+        rate_eur: parseFloat(rateEur),
       })
       .eq('creator_id', settings.creator_id);
 
@@ -119,7 +128,8 @@ export default function StreamAlertsPage() {
 
   const copyDonateUrl = () => {
     if (!creatorSlug) return;
-    const url = `https://myaaza.com/donate/${creatorSlug}`;
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
+    const url = `${origin}/donate/${creatorSlug}`;
     navigator.clipboard.writeText(url);
     setCopiedDonateLink(true);
     setTimeout(() => setCopiedDonateLink(false), 2000);
@@ -165,7 +175,7 @@ export default function StreamAlertsPage() {
               <input 
                 type="text" 
                 readOnly 
-                value={creatorSlug ? `https://myaaza.com/donate/${creatorSlug}` : 'Loading...'} 
+                value={creatorSlug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/donate/${creatorSlug}` : 'Loading...'} 
                 className="az-input"
                 style={{ flex: 1, fontFamily: 'monospace', fontSize: '14px', background: '#f8f9ff', color: '#0b1c30' }}
               />
@@ -274,6 +284,64 @@ export default function StreamAlertsPage() {
                     style={{ flex: 1, accentColor: '#004e34' }}
                   />
                   <span style={{ fontWeight: 600, fontSize: '16px', color: '#004e34', minWidth: '40px', textAlign: 'center' }}>{alertDuration}s</span>
+                </div>
+              </div>
+
+              {/* Exchange Rates */}
+              <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '20px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '4px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Exchange Rates (1 unit → ₦)</label>
+                <p style={{ marginTop: '0', marginBottom: '16px', fontSize: '12px', color: '#3f4943', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                  Used to check if foreign currency donations meet your minimum thresholds for alerts and TTS. Paystack handles the actual payouts.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#3f4943' }}>1 USD ($) =</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: '#3f4943', fontSize: '14px' }}>₦</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={rateUsd}
+                        onChange={e => setRateUsd(e.target.value)}
+                        className="az-input"
+                        style={{ width: '100%', paddingLeft: '30px', fontSize: '16px' }}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#3f4943' }}>1 GBP (£) =</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: '#3f4943', fontSize: '14px' }}>₦</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={rateGbp}
+                        onChange={e => setRateGbp(e.target.value)}
+                        className="az-input"
+                        style={{ width: '100%', paddingLeft: '30px', fontSize: '16px' }}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#3f4943' }}>1 EUR (€) =</label>
+                    <div style={{ position: 'relative' }}>
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: '#3f4943', fontSize: '14px' }}>₦</span>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={rateEur}
+                        onChange={e => setRateEur(e.target.value)}
+                        className="az-input"
+                        style={{ width: '100%', paddingLeft: '30px', fontSize: '16px' }}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -1,0 +1,6 @@
+-- Migration 037: Add creator-defined exchange rates to stream_settings
+
+ALTER TABLE stream_settings
+ADD COLUMN IF NOT EXISTS rate_usd NUMERIC(10, 2) NOT NULL DEFAULT 1600.00,
+ADD COLUMN IF NOT EXISTS rate_gbp NUMERIC(10, 2) NOT NULL DEFAULT 2050.00,
+ADD COLUMN IF NOT EXISTS rate_eur NUMERIC(10, 2) NOT NULL DEFAULT 1750.00;

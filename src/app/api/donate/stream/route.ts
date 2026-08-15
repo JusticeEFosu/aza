@@ -34,7 +34,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Creator cannot accept payments yet.' }, { status: 400 });
     }
 
-    // 2. Insert pending donation record using Admin client
+    // 2. Calculate NGN equivalent using creator's exchange rates
+    let amountNgn = amountMinor; // Default: assume NGN
+    if (currency !== 'NGN') {
+      const { data: streamSettings } = await supabase
+        .from('stream_settings')
+        .select('rate_usd, rate_gbp, rate_eur')
+        .eq('creator_id', creatorId)
+        .single();
+
+      const rates: Record<string, number> = {
+        USD: streamSettings?.rate_usd || 1600,
+        GBP: streamSettings?.rate_gbp || 2050,
+        EUR: streamSettings?.rate_eur || 1750,
+      };
+
+      const rate = rates[currency] || 1600;
+      // amount is in standard units (e.g. 5.00), multiply by rate to get NGN, then convert to kobo
+      amountNgn = Math.round(amount * rate * 100);
+    }
+
+    // 3. Insert pending donation record using Admin client
     const { createAdminClient } = await import('@/lib/supabase/admin');
     const adminSupabase = createAdminClient();
 
@@ -43,8 +63,9 @@ export async function POST(request: Request) {
       .insert({
         creator_id: creatorId,
         fan_id: user?.id || null,
-        amount: amountMinor, // we'll use this for processing
+        amount: amountMinor,
         amount_display: amount,
+        amount_ngn: amountNgn,
         currency: currency,
         donor_name: donorName || null,
         donor_note: message || null,
