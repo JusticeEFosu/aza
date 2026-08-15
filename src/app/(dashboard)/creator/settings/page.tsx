@@ -209,7 +209,7 @@ export default function CreatorSettings() {
           setAccountNumber(creatorRes.data.bank_account_number || '');
           setPersistedBankName(creatorRes.data.bank_account_name || '');
           setMinTierIdForDm(creatorRes.data.min_tier_id_for_dm || '');
-          setDmsEnabled(creatorRes.data.dms_enabled !== false);
+          setDmsEnabled((creatorRes.data as any).dms_enabled !== false);
           setUserId(user.id);
         }
       } catch (err) {
