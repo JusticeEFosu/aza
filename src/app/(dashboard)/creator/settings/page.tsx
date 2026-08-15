@@ -38,6 +38,7 @@ export default function CreatorSettings() {
   
   // Messaging State
   const [minTierIdForDm, setMinTierIdForDm] = useState('');
+  const [dmsEnabled, setDmsEnabled] = useState(true);
   
   // Payout State
   const [bankCode, setBankCode] = useState('');
@@ -208,6 +209,7 @@ export default function CreatorSettings() {
           setAccountNumber(creatorRes.data.bank_account_number || '');
           setPersistedBankName(creatorRes.data.bank_account_name || '');
           setMinTierIdForDm(creatorRes.data.min_tier_id_for_dm || '');
+          setDmsEnabled(creatorRes.data.dms_enabled !== false);
           setUserId(user.id);
         }
       } catch (err) {
@@ -301,6 +303,7 @@ export default function CreatorSettings() {
           slug: slug.toLowerCase().replace(/[^a-z0-9]/g, ''),
           socialLinks,
           minTierIdForDm: minTierIdForDm || null,
+          dmsEnabled,
           bankCode: isVerified ? undefined : bankCode, 
           accountNumber: isVerified ? undefined : accountNumber
         })
@@ -739,28 +742,42 @@ export default function CreatorSettings() {
               <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '24px' }}>Messaging Settings</h2>
               
               <div style={{ marginBottom: '32px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Minimum Tier for Direct Messages</label>
-                <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>
-                  Fans must be subscribed to this tier (or a higher one) to send you direct messages. Note: Only tiers priced at ₦2,500 or higher are eligible.
-                </p>
-                
-                {tiersList.filter(t => t.amount >= 250000).length === 0 ? (
-                  <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--v2-surface-highest)', color: 'var(--v2-text-variant)', fontSize: '14px', border: '1px solid var(--v2-outline)', textAlign: 'center' }}>
-                    Direct Messages are a premium community feature. You must create a tier priced at ₦2,500 or higher to allow fans to message you.
-                  </div>
-                ) : (
-                  <select
-                    value={minTierIdForDm}
-                    onChange={(e) => setMinTierIdForDm(e.target.value)}
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
-                  >
-                    <option value="">Any Qualifying Subscriber (₦2,500+)</option>
-                    {tiersList.filter(t => t.amount >= 250000).map(tier => (
-                      <option key={tier.id} value={tier.id}>
-                        {tier.name} (₦{(tier.amount / 100).toLocaleString()}/mo)
-                      </option>
-                    ))}
-                  </select>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '16px', fontWeight: 600, marginBottom: '24px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={dmsEnabled}
+                    onChange={(e) => setDmsEnabled(e.target.checked)}
+                    style={{ width: '20px', height: '20px', accentColor: 'var(--v2-primary)' }}
+                  />
+                  Enable Direct Messages from Fans
+                </label>
+
+                {dmsEnabled && (
+                  <>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Minimum Tier for Direct Messages</label>
+                    <p style={{ fontSize: '14px', color: 'var(--v2-text-variant)', marginBottom: '16px' }}>
+                      Fans must be subscribed to this tier (or a higher one) to send you direct messages. Note: Only tiers priced at ₦2,500 or higher are eligible.
+                    </p>
+                    
+                    {tiersList.filter(t => t.amount >= 250000).length === 0 ? (
+                      <div style={{ padding: '16px', borderRadius: '8px', background: 'var(--v2-surface-highest)', color: 'var(--v2-text-variant)', fontSize: '14px', border: '1px solid var(--v2-outline)', textAlign: 'center' }}>
+                        Direct Messages are a premium community feature. You must create a tier priced at ₦2,500 or higher to allow fans to message you.
+                      </div>
+                    ) : (
+                      <select
+                        value={minTierIdForDm}
+                        onChange={(e) => setMinTierIdForDm(e.target.value)}
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }}
+                      >
+                        <option value="">Any Qualifying Subscriber (₦2,500+)</option>
+                        {tiersList.filter(t => t.amount >= 250000).map(tier => (
+                          <option key={tier.id} value={tier.id}>
+                            {tier.name} (₦{(tier.amount / 100).toLocaleString()}/mo)
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </>
                 )}
               </div>
 

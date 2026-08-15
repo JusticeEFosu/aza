@@ -9,6 +9,8 @@ export default function StreamAlertsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedDonateLink, setCopiedDonateLink] = useState(false);
+  const [creatorSlug, setCreatorSlug] = useState('');
   
   // Form State
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -25,6 +27,14 @@ export default function StreamAlertsPage() {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    // Fetch creator slug for donation link
+    const { data: creatorProfile } = await supabase
+      .from('creator_profiles')
+      .select('slug')
+      .eq('id', user.id)
+      .single();
+    if (creatorProfile?.slug) setCreatorSlug(creatorProfile.slug);
 
     // Fetch or create stream settings
     let { data: streamSettings, error } = await supabase
@@ -107,6 +117,14 @@ export default function StreamAlertsPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const copyDonateUrl = () => {
+    if (!creatorSlug) return;
+    const url = `https://myaaza.com/donate/${creatorSlug}`;
+    navigator.clipboard.writeText(url);
+    setCopiedDonateLink(true);
+    setTimeout(() => setCopiedDonateLink(false), 2000);
+  };
+
   const sendTestAlert = async () => {
     if (isSendingTest) return;
     setIsSendingTest(true);
@@ -138,6 +156,30 @@ export default function StreamAlertsPage() {
 
       {settings && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Donation Page Link */}
+          <section style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
+            <h2 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 600, color: '#0b1c30', margin: '0 0 16px 0' }}>Your Donation Link</h2>
+            <p style={{ fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)', color: '#3f4943', marginBottom: '16px' }}>Share this link in your Twitch, Kick, or YouTube stream description. Fans click it to donate and their message appears live on your stream.</p>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <input 
+                type="text" 
+                readOnly 
+                value={creatorSlug ? `https://myaaza.com/donate/${creatorSlug}` : 'Loading...'} 
+                className="az-input"
+                style={{ flex: 1, fontFamily: 'monospace', fontSize: '14px', background: '#f8f9ff', color: '#0b1c30' }}
+              />
+              <button 
+                onClick={copyDonateUrl}
+                className="az-btn-primary"
+                style={{ padding: '0 16px', borderRadius: '8px', border: 'none', background: '#004e34', color: '#fff', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{copiedDonateLink ? 'check' : 'content_copy'}</span>
+                {copiedDonateLink ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </section>
+
           {/* OBS Setup Section */}
           <section style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
             <h2 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 600, color: '#0b1c30', margin: '0 0 16px 0' }}>OBS Browser Source URL</h2>
