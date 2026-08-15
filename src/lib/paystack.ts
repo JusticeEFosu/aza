@@ -69,7 +69,8 @@ export async function createPlan(data: CreatePlanData) {
 
 interface InitializeTransactionData {
   email: string;
-  amount: number; // Amount in kobo
+  amount: number; // Amount in kobo/cents
+  currency?: string; // NGN, USD, GBP, EUR
   plan?: string; // Plan code for subscriptions
   subaccount?: string; // Subaccount code for splits
   callback_url?: string;

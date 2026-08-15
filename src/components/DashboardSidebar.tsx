@@ -53,6 +53,7 @@ export default function DashboardSidebar({ role }: { role: 'creator' | 'fan' }) 
     { href: '/creator', icon: 'home', label: 'Home' },
     { href: '/creator/tiers', icon: 'group', label: 'Subscribers' },
     { href: '/creator/fundraisers', icon: 'target', label: 'Fundraisers' },
+    { href: '/creator/stream-alerts', icon: 'campaign', label: 'Stream Alerts' },
     { href: '/messages', icon: 'mail', label: 'Messages' },
     { href: '/creator/payouts', icon: 'payments', label: 'Earnings' },
     { href: '/creator/analytics', icon: 'monitoring', label: 'Analytics' },

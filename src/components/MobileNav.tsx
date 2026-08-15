@@ -40,6 +40,7 @@ export default function MobileNav({ role }: { role: 'creator' | 'fan' }) {
     { href: '/creator', icon: 'home', label: 'Dashboard' },
     { href: '/creator/posts', icon: 'list_alt', label: 'Posts' },
     { href: '/creator/fundraisers', icon: 'target', label: 'Fundraisers' },
+    { href: '/creator/stream-alerts', icon: 'campaign', label: 'Alerts' },
     { href: '/messages', icon: 'mail', label: 'Messages' },
     { href: '/creator/payouts', icon: 'payments', label: 'Earnings' },
     { href: '/creator/analytics', icon: 'monitoring', label: 'Analytics' },

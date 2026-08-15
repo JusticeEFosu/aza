@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         }
       }
 
-      if (activeMetadata.type === 'donation') {
+      if (activeMetadata.type === 'donation' || activeMetadata.type === 'stream_donation') {
         // Handle Donation Success
         const { error } = await supabase.rpc('process_donation_success', {
           p_donation_id: activeMetadata.donation_id,
