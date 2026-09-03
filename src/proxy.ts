@@ -6,6 +6,34 @@ export async function proxy(request: NextRequest) {
     request,
   });
 
+  const country =
+    request.headers.get('x-vercel-ip-country') ||
+    request.headers.get('cf-ipcountry') ||
+    'NG';
+
+  let currency = 'USD'; // Default for the rest of the world
+
+  if (country === 'NG') {
+    currency = 'NGN';
+  } else if (country === 'GB') {
+    currency = 'GBP';
+  } else if (
+    [
+      'FR', 'DE', 'IT', 'ES', 'NL', 'BE', 'AT', 'PT', 'FI', 'IE', 'GR', 'EE', 
+      'LV', 'LT', 'SK', 'SI', 'CY', 'MT'
+    ].includes(country)
+  ) {
+    currency = 'EUR';
+  }
+
+  // Set user-currency cookie safely before Supabase attaches auth cookies
+  supabaseResponse.cookies.set('user-currency', currency, {
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+  });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

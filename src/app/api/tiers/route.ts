@@ -37,28 +37,52 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, amount, description, perks } = body;
+    const { name, amount, amount_usd, amount_eur, amount_gbp, description, perks } = body;
 
     // Validate inputs
     if (!name || amount < 100) { // minimum 100 kobo (N1)
       return NextResponse.json({ error: 'Invalid plan details' }, { status: 400 });
     }
 
-    // Call Paystack to create a Plan
-    // amount is in kobo, interval is monthly
-    const planRes = await createPlan({
+    // 1. Create NGN Plan
+    const planResNgn = await createPlan({
       name: `${name} (Creator Subscription)`,
       amount: amount,
       interval: 'monthly',
-      description: description
+      description: description,
+      currency: 'NGN'
     });
 
-    if (!planRes.status) {
-      return NextResponse.json({ error: 'Failed to create subscription plan on Paystack' }, { status: 500 });
+    if (!planResNgn.status) {
+      return NextResponse.json({ error: 'Failed to create NGN subscription plan on Paystack' }, { status: 500 });
     }
 
     // @ts-ignore
-    const paystackPlanCode = planRes.data.plan_code as string;
+    const paystackPlanCodeNgn = planResNgn.data.plan_code as string;
+    
+    // Store plan codes map
+    const paystackPlanCodes: Record<string, string> = {
+      'NGN': paystackPlanCodeNgn
+    };
+
+    // Helper to generate foreign plan
+    const generateForeignPlan = async (currency: string, foreignAmount: number) => {
+      if (!foreignAmount || foreignAmount <= 0) return;
+      const planRes = await createPlan({
+        name: `${name} (Creator Subscription - ${currency})`,
+        amount: Math.round(foreignAmount * 100), // convert standard unit to cents
+        interval: 'monthly',
+        description: description,
+        currency: currency
+      });
+      if (planRes.status) {
+        // @ts-ignore
+        paystackPlanCodes[currency] = planRes.data.plan_code as string;
+      }
+    };
+
+    // Foreign plans are currently skipped on tier creation to prevent errors on accounts without multi-currency support.
+    // (They can be lazily generated when multi-currency is activated).
 
     // Insert to Supabase Tiers table
     const { data, error } = await supabase
@@ -69,7 +93,8 @@ export async function POST(request: Request) {
         amount,
         description,
         perks: perks || [],
-        paystack_plan_code: paystackPlanCode,
+        paystack_plan_code: paystackPlanCodeNgn, // Keep for backward compatibility
+        paystack_plan_codes: paystackPlanCodes,
         is_active: true
       })
       .select()

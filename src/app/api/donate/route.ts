@@ -32,6 +32,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Creator cannot accept payments yet.' }, { status: 400 });
     }
 
+    // If attached to a fundraiser, verify fundraiser is active and not hard-capped
+    if (fundraiserId) {
+      const { data: fundraiser, error: fundError } = await supabase
+        .from('fundraisers')
+        .select('id, is_active, is_suspended, target_amount, current_amount, auto_close_on_goal')
+        .eq('id', fundraiserId)
+        .single();
+
+      if (fundError || !fundraiser) {
+        return NextResponse.json({ error: 'Fundraiser not found.' }, { status: 404 });
+      }
+
+      if (fundraiser.is_suspended) {
+        return NextResponse.json({ error: 'This fundraiser has been suspended.' }, { status: 400 });
+      }
+
+      if (!fundraiser.is_active) {
+        return NextResponse.json({ error: 'This fundraiser is closed and no longer accepting donations.' }, { status: 400 });
+      }
+
+      if (fundraiser.auto_close_on_goal && fundraiser.target_amount && fundraiser.current_amount >= fundraiser.target_amount) {
+        return NextResponse.json({ error: 'This fundraiser has already reached its goal and is closed.' }, { status: 400 });
+      }
+    }
+
     // 2. Platform fee is 5%
     const platformFee = Math.floor(amount * 0.05);
 

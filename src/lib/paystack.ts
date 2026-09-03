@@ -53,9 +53,10 @@ export async function createSubaccount(data: CreateSubaccountData) {
 
 interface CreatePlanData {
   name: string;
-  amount: number; // Amount in kobo
+  amount: number; // Amount in kobo/cents
   interval: 'monthly';
   description?: string;
+  currency?: string; // NGN, USD, GBP, EUR
 }
 
 export async function createPlan(data: CreatePlanData) {

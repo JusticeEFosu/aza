@@ -251,9 +251,10 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
             {creator.is_verified && fundraisers && fundraisers.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', maxWidth: '800px', marginBottom: '48px' }}>
                 {fundraisers.map((f: any) => {
-                  const targetAmount = f.target_amount / 100;
+                  const hasTarget = f.target_amount !== null && f.target_amount !== undefined && f.target_amount > 0;
+                  const targetAmount = hasTarget ? f.target_amount / 100 : null;
                   const currentAmount = f.current_amount / 100;
-                  const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
+                  const progress = hasTarget && targetAmount ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
                   
                   return (
                     <Link 
@@ -270,18 +271,25 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                         transition: 'all 0.2s'
                       }}
                     >
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fundraiser Goal</span>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
+                        {hasTarget ? 'Fundraiser Goal' : 'Ongoing Fundraiser'}
+                      </span>
                       <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 12px 0', color: 'var(--v2-primary)' }}>{f.title}</h3>
                       <div style={{ marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: hasTarget ? '8px' : '0px', fontSize: '14px', fontWeight: 600 }}>
                           <span style={{ color: 'var(--v2-primary)' }}>₦{currentAmount.toLocaleString()} <span style={{ color: 'var(--v2-text-variant)', fontWeight: 400 }}>raised</span></span>
+                          {hasTarget && targetAmount !== null && (
+                            <span style={{ color: 'var(--v2-text-variant)', fontWeight: 400, fontSize: '12px' }}>of ₦{targetAmount.toLocaleString()}</span>
+                          )}
                         </div>
-                        <div style={{ height: '8px', background: 'var(--v2-surface-container)', borderRadius: '999px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)' }}></div>
-                        </div>
+                        {hasTarget && (
+                          <div style={{ height: '8px', background: 'var(--v2-surface-container)', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)' }}></div>
+                          </div>
+                        )}
                       </div>
                       <div style={{ color: 'var(--v2-green)', fontSize: '14px', fontWeight: 600, marginTop: '16px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        View Goal <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
+                        {hasTarget ? 'View Goal' : 'Support Cause'} <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_forward</span>
                       </div>
                     </Link>
                   );
@@ -345,7 +353,6 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
                           <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
                             <SubscribeButton 
                               tierId={tier.id} 
-                              planCode={tier.paystack_plan_code} 
                               isSubscribed={maxFanTierAmount >= tier.amount}
                             />
                           </div>

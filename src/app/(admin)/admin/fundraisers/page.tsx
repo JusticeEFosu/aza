@@ -58,8 +58,10 @@ export default async function AdminFundraisersPage() {
                 const creatorName = creatorDisplayName || profile?.full_name || 'Creator';
                 
                 const raised = campaign.current_amount;
-                const goal = campaign.target_amount;
-                const percent = Math.min(100, Math.round((raised / goal) * 100)) || 0;
+                const hasTarget = campaign.target_amount !== null && campaign.target_amount !== undefined && campaign.target_amount > 0;
+                const goal = hasTarget ? campaign.target_amount : null;
+                const percent = hasTarget && goal ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
+                const isGoalReached = hasTarget && campaign.auto_close_on_goal && raised >= campaign.target_amount;
                 
                 return (
                   <div key={campaign.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1.5fr 1fr 1fr', padding: '16px 24px', borderBottom: '1px solid #E2E8F0', alignItems: 'center' }}>
@@ -91,13 +93,26 @@ export default async function AdminFundraisersPage() {
 
                     {/* Progress */}
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '4px' }}>
-                        <span style={{ fontWeight: 600, color: '#059669' }}>₦{(raised / 100).toLocaleString()}</span>
-                        <span style={{ color: '#6f7a72' }}>of ₦{(goal / 100).toLocaleString()}</span>
-                      </div>
-                      <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
-                        <div style={{ width: `${percent}%`, height: '100%', background: '#059669', borderRadius: '999px' }} />
-                      </div>
+                      {hasTarget && goal !== null ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 600, color: '#059669' }}>₦{(raised / 100).toLocaleString()}</span>
+                            <span style={{ color: '#6f7a72' }}>of ₦{(goal / 100).toLocaleString()}</span>
+                          </div>
+                          <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div style={{ width: `${percent}%`, height: '100%', background: '#059669', borderRadius: '999px' }} />
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#059669', fontSize: '12px', fontFamily: 'var(--font-body, Inter, sans-serif)', marginBottom: '2px' }}>
+                            ₦{(raised / 100).toLocaleString()} raised
+                          </div>
+                          <span style={{ fontSize: '11px', color: '#6f7a72', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                            Uncapped (Ongoing)
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Status */}
@@ -109,11 +124,11 @@ export default async function AdminFundraisersPage() {
                         padding: '4px 8px', 
                         borderRadius: '12px', 
                         textTransform: 'uppercase',
-                        background: campaign.is_suspended ? '#fef2f2' : campaign.is_active ? '#ecfdf5' : '#eff4ff',
-                        color: campaign.is_suspended ? '#dc2626' : campaign.is_active ? '#059669' : '#2563eb',
-                        border: `1px solid ${campaign.is_suspended ? '#fecaca' : campaign.is_active ? '#059669' : '#bfdbfe'}`
+                        background: campaign.is_suspended ? '#fef2f2' : isGoalReached ? '#ecfdf5' : campaign.is_active ? '#ecfdf5' : '#eff4ff',
+                        color: campaign.is_suspended ? '#dc2626' : isGoalReached ? '#059669' : campaign.is_active ? '#059669' : '#2563eb',
+                        border: `1px solid ${campaign.is_suspended ? '#fecaca' : isGoalReached ? '#059669' : campaign.is_active ? '#059669' : '#bfdbfe'}`
                       }}>
-                        {campaign.is_suspended ? 'suspended' : campaign.is_active ? 'active' : 'completed'}
+                        {campaign.is_suspended ? 'suspended' : isGoalReached ? 'goal reached' : campaign.is_active ? 'active' : 'completed'}
                       </span>
                     </div>
 

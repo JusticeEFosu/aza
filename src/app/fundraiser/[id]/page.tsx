@@ -43,10 +43,13 @@ export default async function FundraiserPage({ params }: { params: Promise<{ id:
 
   const displayName = creatorProfile.display_name || 'Creator';
   const avatarUrl = (fundraiser.profiles as any)?.avatar_url;
-  const targetAmount = fundraiser.target_amount / 100;
+  const targetAmount = fundraiser.target_amount && fundraiser.target_amount > 0 ? fundraiser.target_amount / 100 : null;
+  const hasTarget = targetAmount !== null;
   const currentAmount = fundraiser.current_amount / 100;
-  const isOverFunded = currentAmount >= targetAmount && targetAmount > 0;
-  const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
+  const isOverFunded = targetAmount !== null && currentAmount >= targetAmount;
+  const progress = targetAmount !== null && targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
+  const isHardCappedAndMet = hasTarget && fundraiser.auto_close_on_goal && targetAmount !== null && currentAmount >= targetAmount;
+  const isClosed = !fundraiser.is_active || isHardCappedAndMet;
 
   return (
     <div className="v2-profile-page" style={{ minHeight: '100vh' }}>
@@ -78,20 +81,51 @@ export default async function FundraiserPage({ params }: { params: Promise<{ id:
           <p style={{ fontSize: '15px', color: 'var(--v2-text-variant)', lineHeight: 1.6, margin: '0 0 24px 0' }}>{fundraiser.description}</p>
         )}
 
-        {/* Progress */}
-        <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-          <span><strong>₦{currentAmount.toLocaleString()}</strong> raised</span>
-          <span style={{ color: 'var(--v2-text-variant)' }}>₦{targetAmount.toLocaleString()} goal</span>
-        </div>
-        <div style={{ height: '8px', background: 'var(--v2-surface-low)', borderRadius: '4px', overflow: 'hidden', marginBottom: isOverFunded ? '8px' : '24px' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
-        </div>
-        {isOverFunded && (
-          <p style={{ fontSize: '12px', color: 'var(--v2-green)', fontWeight: 600, margin: '0 0 24px 0' }}>✦ Goal surpassed</p>
+        {/* Progress or Ongoing Metric */}
+        {hasTarget && targetAmount !== null ? (
+          <>
+            <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+              <span><strong>₦{currentAmount.toLocaleString()}</strong> raised</span>
+              <span style={{ color: 'var(--v2-text-variant)' }}>₦{targetAmount.toLocaleString()} goal</span>
+            </div>
+            <div style={{ height: '8px', background: 'var(--v2-surface-low)', borderRadius: '4px', overflow: 'hidden', marginBottom: isOverFunded ? '8px' : '24px' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: 'var(--v2-green)', borderRadius: '4px', transition: 'width 1s ease' }}></div>
+            </div>
+            {isOverFunded && !isClosed && (
+              <p style={{ fontSize: '12px', color: 'var(--v2-green)', fontWeight: 600, margin: '0 0 24px 0' }}>✦ Goal surpassed (Stretch mode)</p>
+            )}
+          </>
+        ) : (
+          <div style={{ marginBottom: '24px', background: 'var(--v2-surface-low)', padding: '16px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <span style={{ fontSize: '12px', color: 'var(--v2-text-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', fontWeight: 600 }}>Total Raised</span>
+              <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--v2-green)' }}>₦{currentAmount.toLocaleString()}</span>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--v2-green)', background: 'var(--v2-surface-container)', padding: '6px 12px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>all_inclusive</span>
+              Ongoing Cause
+            </span>
+          </div>
         )}
 
-        {/* Donate form */}
-        <InlineDonationForm creatorId={creatorProfile.id} fundraiserId={fundraiser.id} />
+        {/* Donate form or Closed Notice */}
+        {isClosed ? (
+          <div style={{ padding: '24px', borderRadius: '12px', background: 'var(--v2-surface-low)', border: '1px solid var(--v2-border)', textAlign: 'center', marginBottom: '24px' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '36px', color: isHardCappedAndMet ? 'var(--v2-green)' : 'var(--v2-text-variant)', marginBottom: '8px', display: 'block' }}>
+              {isHardCappedAndMet ? 'celebration' : 'lock'}
+            </span>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 700 }}>
+              {isHardCappedAndMet ? 'Goal Fully Funded!' : 'Fundraiser Closed'}
+            </h3>
+            <p style={{ margin: 0, fontSize: '14px', color: 'var(--v2-text-variant)' }}>
+              {isHardCappedAndMet
+                ? 'This fundraiser reached its target and has stopped accepting new donations. Thank you to everyone who contributed!'
+                : 'This fundraiser is currently closed and no longer accepting donations.'}
+            </p>
+          </div>
+        ) : (
+          <InlineDonationForm creatorId={creatorProfile.id} fundraiserId={fundraiser.id} />
+        )}
 
         {/* Supporters */}
         {fundraiser.show_leaderboard && topDonations && topDonations.length > 0 && (

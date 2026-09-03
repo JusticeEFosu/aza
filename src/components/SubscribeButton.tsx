@@ -4,18 +4,15 @@ import { useState } from 'react';
 
 export default function SubscribeButton({ 
   tierId, 
-  planCode,
   isSubscribed = false
 }: { 
   tierId: string; 
-  planCode: string | null;
   isSubscribed?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubscribe = async () => {
-    if (!planCode) return;
     setLoading(true);
     setError('');
 
@@ -47,13 +44,6 @@ export default function SubscribeButton({
     }
   };
 
-  if (!planCode) {
-    return (
-      <button className="v2-sub-btn v2-sub-btn-secondary" style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }} disabled>
-        Unavailable
-      </button>
-    );
-  }
 
   if (isSubscribed) {
     return (

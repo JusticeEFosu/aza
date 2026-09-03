@@ -10,16 +10,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { title, description, targetAmount, isActive, showLeaderboard } = body;
+    const { title, description, targetAmount, isActive, showLeaderboard, autoCloseOnGoal } = body;
+
+    const parsedTargetAmount = targetAmount !== null && targetAmount !== undefined && targetAmount !== ''
+      ? Math.floor(Number(targetAmount))
+      : null;
 
     const { data, error } = await supabase
       .from('fundraisers')
       .update({
-        title,
-        description,
-        target_amount: targetAmount,
+        title: title?.trim(),
+        description: description !== undefined ? (description?.trim() || null) : undefined,
+        target_amount: parsedTargetAmount,
         is_active: isActive,
-        show_leaderboard: showLeaderboard
+        show_leaderboard: showLeaderboard,
+        auto_close_on_goal: parsedTargetAmount ? (autoCloseOnGoal ?? false) : false
       })
       .eq('id', id)
       .eq('creator_id', user.id)

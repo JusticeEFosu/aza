@@ -59,6 +59,11 @@ export default function CreatorSettings() {
   const [tiersList, setTiersList] = useState<any[]>([]);
   const [tierName, setTierName] = useState('');
   const [tierAmountNaira, setTierAmountNaira] = useState('');
+  const [tierAmountUsd, setTierAmountUsd] = useState('');
+  const [tierAmountEur, setTierAmountEur] = useState('');
+  const [tierAmountGbp, setTierAmountGbp] = useState('');
+  const [platformSettings, setPlatformSettings] = useState<any>(null);
+  
   const [tierDescription, setTierDescription] = useState('');
   const [tierPerksText, setTierPerksText] = useState('');
   const [tierSaving, setTierSaving] = useState(false);
@@ -89,10 +94,19 @@ export default function CreatorSettings() {
     if (data.data) setTiersList(data.data);
   }
 
+  async function fetchPlatformSettings() {
+    const res = await fetch('/api/platform-settings');
+    const data = await res.json();
+    if (data.data) setPlatformSettings(data.data);
+  }
+
   const openEditModal = (tier: any) => {
     setEditingTierId(tier.id);
     setTierName(tier.name);
     setTierAmountNaira((tier.amount / 100).toString());
+    setTierAmountUsd('');
+    setTierAmountEur('');
+    setTierAmountGbp('');
     setTierDescription(tier.description || '');
     setTierPerksText(tier.perks ? tier.perks.join('\n') : '');
     setTierMsg({ text: '', type: '' });
@@ -104,6 +118,9 @@ export default function CreatorSettings() {
     setEditingTierId(null);
     setTierName('');
     setTierAmountNaira('');
+    setTierAmountUsd('');
+    setTierAmountEur('');
+    setTierAmountGbp('');
     setTierDescription('');
     setTierPerksText('');
     setTierMsg({ text: '', type: '' });
@@ -124,7 +141,15 @@ export default function CreatorSettings() {
       const res = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: tierName, amount: amountKobo, description: tierDescription, perks: perksArray })
+        body: JSON.stringify({ 
+          name: tierName, 
+          amount: amountKobo, 
+          amount_usd: tierAmountUsd ? parseFloat(tierAmountUsd) : undefined,
+          amount_eur: tierAmountEur ? parseFloat(tierAmountEur) : undefined,
+          amount_gbp: tierAmountGbp ? parseFloat(tierAmountGbp) : undefined,
+          description: tierDescription, 
+          perks: perksArray 
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -221,6 +246,7 @@ export default function CreatorSettings() {
     }
     loadInitialData();
     fetchTiers();
+    fetchPlatformSettings();
   }, [supabase]);
 
   useEffect(() => {
@@ -1032,7 +1058,30 @@ export default function CreatorSettings() {
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Monthly Price (₦)</label>
-                        <input type="number" placeholder="1000" min="100" step="100" value={tierAmountNaira} onChange={e => setTierAmountNaira(e.target.value)} required style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }} />
+                        <input 
+                          type="number" 
+                          placeholder="1000" 
+                          min="100" 
+                          step="100" 
+                          value={tierAmountNaira} 
+                          onChange={e => {
+                            const val = e.target.value;
+                            setTierAmountNaira(val);
+                            
+                            // Auto-suggest foreign currencies if not editing
+                            if (!editingTierId && val && platformSettings) {
+                              const amount = parseFloat(val);
+                              const usd = Math.max(1, Math.ceil(amount / (platformSettings.suggested_rate_usd || 1260)));
+                              const eur = Math.max(1, Math.ceil(amount / (platformSettings.suggested_rate_eur || 1475)));
+                              const gbp = Math.max(1, Math.ceil(amount / (platformSettings.suggested_rate_gbp || 1740)));
+                              setTierAmountUsd(usd.toString());
+                              setTierAmountEur(eur.toString());
+                              setTierAmountGbp(gbp.toString());
+                            }
+                          }} 
+                          required 
+                          style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }} 
+                        />
                         
                         <div style={{ marginTop: '12px', padding: '12px', borderRadius: '8px', fontSize: '13px', lineHeight: 1.5, background: (tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'rgba(52, 211, 153, 0.1)' : 'var(--v2-surface-low)', color: (tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'var(--v2-green)' : 'var(--v2-text-variant)', border: `1px solid ${(tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? 'var(--v2-green)' : 'var(--v2-outline)'}` }}>
                           {(tierAmountNaira && parseInt(tierAmountNaira) >= 2500) ? (
@@ -1049,6 +1098,29 @@ export default function CreatorSettings() {
                         </div>
                       </div>
                     </div>
+
+                    <div style={{ padding: '16px', background: 'var(--v2-surface-low)', borderRadius: '8px', border: '1px solid var(--v2-outline)', opacity: 0.65 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>Foreign Pricing</h4>
+                        <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: 'var(--v2-surface-highest, #e2e8f0)', color: 'var(--v2-text-variant)' }}>Unavailable</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--v2-text-variant)' }}>USD ($)</label>
+                          <input type="number" placeholder="—" disabled value={tierAmountUsd} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', fontSize: '14px', cursor: 'not-allowed' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--v2-text-variant)' }}>EUR (€)</label>
+                          <input type="number" placeholder="—" disabled value={tierAmountEur} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', fontSize: '14px', cursor: 'not-allowed' }} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px', color: 'var(--v2-text-variant)' }}>GBP (£)</label>
+                          <input type="number" placeholder="—" disabled value={tierAmountGbp} style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface-lowest)', fontSize: '14px', cursor: 'not-allowed' }} />
+                        </div>
+                      </div>
+                      <p style={{ fontSize: '12px', color: 'var(--v2-text-variant)', marginTop: '8px', marginBottom: 0 }}>Foreign pricing is currently unavailable.</p>
+                    </div>
+
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '6px' }}>Description</label>
                       <textarea rows={2} placeholder="Short description for your fans" value={tierDescription} onChange={e => setTierDescription(e.target.value)} style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--v2-outline)', background: 'var(--v2-surface)', fontSize: '16px' }} />

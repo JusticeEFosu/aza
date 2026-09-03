@@ -328,6 +328,7 @@ export type Database = {
       }
       fundraisers: {
         Row: {
+          auto_close_on_goal: boolean
           created_at: string
           creator_id: string
           current_amount: number
@@ -336,11 +337,12 @@ export type Database = {
           is_active: boolean
           is_suspended: boolean
           show_leaderboard: boolean
-          target_amount: number
+          target_amount: number | null
           title: string
           updated_at: string
         }
         Insert: {
+          auto_close_on_goal?: boolean
           created_at?: string
           creator_id: string
           current_amount?: number
@@ -349,11 +351,12 @@ export type Database = {
           is_active?: boolean
           is_suspended?: boolean
           show_leaderboard?: boolean
-          target_amount: number
+          target_amount?: number | null
           title: string
           updated_at?: string
         }
         Update: {
+          auto_close_on_goal?: boolean
           created_at?: string
           creator_id?: string
           current_amount?: number
@@ -362,7 +365,7 @@ export type Database = {
           is_active?: boolean
           is_suspended?: boolean
           show_leaderboard?: boolean
-          target_amount?: number
+          target_amount?: number | null
           title?: string
           updated_at?: string
         }
@@ -446,6 +449,30 @@ export type Database = {
           id?: string
           is_active?: boolean
           message?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          id: string
+          suggested_rate_eur: number
+          suggested_rate_gbp: number
+          suggested_rate_usd: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          suggested_rate_eur?: number
+          suggested_rate_gbp?: number
+          suggested_rate_usd?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          suggested_rate_eur?: number
+          suggested_rate_gbp?: number
+          suggested_rate_usd?: number
           updated_at?: string
         }
         Relationships: []
@@ -915,6 +942,7 @@ export type Database = {
           is_active: boolean
           name: string
           paystack_plan_code: string | null
+          paystack_plan_codes: Json | null
           perks: Json | null
           sort_order: number
         }
@@ -927,6 +955,7 @@ export type Database = {
           is_active?: boolean
           name: string
           paystack_plan_code?: string | null
+          paystack_plan_codes?: Json | null
           perks?: Json | null
           sort_order?: number
         }
@@ -939,6 +968,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           paystack_plan_code?: string | null
+          paystack_plan_codes?: Json | null
           perks?: Json | null
           sort_order?: number
         }

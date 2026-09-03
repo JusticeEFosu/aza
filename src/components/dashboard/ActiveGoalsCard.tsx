@@ -6,7 +6,7 @@ import Link from 'next/link';
 type Fundraiser = {
   id: string;
   title: string;
-  target_amount: number;
+  target_amount: number | null;
   current_amount: number;
 };
 
@@ -18,10 +18,11 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
   }
 
   const currentGoal = fundraisers[currentIndex] || fundraisers[0];
-  const goalTarget = currentGoal.target_amount / 100;
+  const goalTarget = currentGoal.target_amount && currentGoal.target_amount > 0 ? currentGoal.target_amount / 100 : null;
+  const hasTarget = goalTarget !== null;
   const goalCurrent = currentGoal.current_amount / 100;
-  const goalProgress = goalTarget > 0 ? Math.min(100, Math.round((goalCurrent / goalTarget) * 100)) : 0;
-  const isGoalOverFunded = goalCurrent >= goalTarget && goalTarget > 0;
+  const goalProgress = goalTarget !== null && goalTarget > 0 ? Math.min(100, Math.round((goalCurrent / goalTarget) * 100)) : 0;
+  const isGoalOverFunded = goalTarget !== null && goalCurrent >= goalTarget;
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % fundraisers.length);
@@ -103,22 +104,36 @@ export default function ActiveGoalsCard({ fundraisers }: { fundraisers: Fundrais
             {currentGoal.title}
           </h3>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px', fontSize: '13px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
-            <span style={{ fontWeight: 700, color: '#004e34' }}>₦ {goalCurrent.toLocaleString()}</span>
-            <span style={{ color: '#3f4943' }}>of ₦ {goalTarget.toLocaleString()} ({goalProgress}%)</span>
-          </div>
+          {hasTarget && goalTarget !== null ? (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px', fontSize: '13px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                <span style={{ fontWeight: 700, color: '#004e34' }}>₦ {goalCurrent.toLocaleString()}</span>
+                <span style={{ color: '#3f4943' }}>of ₦ {goalTarget.toLocaleString()} ({goalProgress}%)</span>
+              </div>
 
-          <div style={{ height: '8px', background: '#eff4ff', borderRadius: '999px', overflow: 'hidden' }}>
-            <div 
-              style={{
-                height: '100%',
-                width: `${goalProgress}%`,
-                borderRadius: '999px',
-                background: isGoalOverFunded ? 'linear-gradient(90deg, #004e34, #059669)' : '#004e34',
-                transition: 'width 0.5s ease',
-              }}
-            />
-          </div>
+              <div style={{ height: '8px', background: '#eff4ff', borderRadius: '999px', overflow: 'hidden' }}>
+                <div 
+                  style={{
+                    height: '100%',
+                    width: `${goalProgress}%`,
+                    borderRadius: '999px',
+                    background: isGoalOverFunded ? 'linear-gradient(90deg, #004e34, #059669)' : '#004e34',
+                    transition: 'width 0.5s ease',
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+              <div>
+                <span style={{ fontWeight: 700, color: '#004e34', fontSize: '15px' }}>₦ {goalCurrent.toLocaleString()}</span>
+                <span style={{ color: '#3f4943', fontSize: '12px', marginLeft: '4px' }}>raised</span>
+              </div>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#004e34', background: '#eff4ff', padding: '2px 8px', borderRadius: '999px' }}>
+                Ongoing Goal
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

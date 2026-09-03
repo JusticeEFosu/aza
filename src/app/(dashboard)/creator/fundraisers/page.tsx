@@ -21,7 +21,9 @@ export default function FundraisersPage() {
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [goalType, setGoalType] = useState<'target' | 'ongoing'>('target');
   const [targetAmount, setTargetAmount] = useState('');
+  const [autoCloseOnGoal, setAutoCloseOnGoal] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [isActive, setIsActive] = useState(true);
 
@@ -50,7 +52,9 @@ export default function FundraisersPage() {
   const resetForm = () => {
     setTitle('');
     setDescription('');
+    setGoalType('target');
     setTargetAmount('');
+    setAutoCloseOnGoal(false);
     setShowLeaderboard(true);
     setIsActive(true);
     setEditingId(null);
@@ -59,7 +63,14 @@ export default function FundraisersPage() {
   const openEdit = (f: any) => {
     setTitle(f.title);
     setDescription(f.description || '');
-    setTargetAmount((f.target_amount / 100).toString());
+    if (f.target_amount) {
+      setGoalType('target');
+      setTargetAmount((f.target_amount / 100).toString());
+    } else {
+      setGoalType('ongoing');
+      setTargetAmount('');
+    }
+    setAutoCloseOnGoal(!!f.auto_close_on_goal);
     setShowLeaderboard(f.show_leaderboard);
     setIsActive(f.is_active);
     setEditingId(f.id);
@@ -71,10 +82,12 @@ export default function FundraisersPage() {
     if (isSaving) return;
     setIsSaving(true);
     
+    const parsedTarget = goalType === 'target' && targetAmount ? Math.floor(parseFloat(targetAmount) * 100) : null;
     const payload = {
       title,
       description,
-      targetAmount: Math.floor(parseFloat(targetAmount) * 100), // convert to kobo
+      targetAmount: parsedTarget,
+      autoCloseOnGoal: goalType === 'target' ? autoCloseOnGoal : false,
       showLeaderboard,
       isActive
     };
@@ -158,14 +171,31 @@ export default function FundraisersPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {fundraisers.map(f => {
-            const progress = f.target_amount > 0 ? Math.min(100, Math.round((f.current_amount / f.target_amount) * 100)) : 0;
+            const isOngoing = !f.target_amount || f.target_amount <= 0;
+            const progress = !isOngoing ? Math.min(100, Math.round((f.current_amount / f.target_amount) * 100)) : 0;
+            const isGoalReached = !isOngoing && f.auto_close_on_goal && f.current_amount >= f.target_amount;
+
             return (
               <div key={f.id} style={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                   <div style={{ flex: '1 1 auto', minWidth: 0 }}>
                     <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 600, margin: '0 0 8px 0', color: '#0b1c30', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       {f.title}
-                      {!f.is_active && <span style={{ fontSize: '12px', padding: '2px 8px', background: '#eff4ff', color: '#3f4943', borderRadius: '12px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Closed</span>}
+                      {isOngoing && (
+                        <span style={{ fontSize: '12px', padding: '2px 8px', background: '#ecfdf5', color: '#004e34', borderRadius: '12px', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                          Ongoing
+                        </span>
+                      )}
+                      {isGoalReached && (
+                        <span style={{ fontSize: '12px', padding: '2px 8px', background: '#ecfdf5', color: '#059669', borderRadius: '12px', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                          Goal Reached
+                        </span>
+                      )}
+                      {!f.is_active && !isGoalReached && (
+                        <span style={{ fontSize: '12px', padding: '2px 8px', background: '#eff4ff', color: '#3f4943', borderRadius: '12px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                          Closed
+                        </span>
+                      )}
                     </h3>
                     <p style={{ margin: '0 0 16px 0', color: '#3f4943', fontSize: '14px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>{f.description}</p>
                   </div>
@@ -248,18 +278,34 @@ export default function FundraisersPage() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 500, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
-                    <span style={{ color: '#004e34', fontWeight: 700 }}>Raised: ₦{(f.current_amount / 100).toLocaleString()}</span>
-                    <span style={{ color: '#3f4943' }}>Goal: ₦{(f.target_amount / 100).toLocaleString()}</span>
+                {isOngoing ? (
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '12px 16px', borderRadius: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', color: '#64748b', display: 'block', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Raised</span>
+                      <span style={{ color: '#004e34', fontWeight: 700, fontSize: '18px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)' }}>
+                        ₦{(f.current_amount / 100).toLocaleString()}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#004e34', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#eff4ff', padding: '4px 10px', borderRadius: '999px' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>all_inclusive</span>
+                      Uncapped Goal
+                    </span>
                   </div>
-                  <div style={{ height: '10px', background: '#eff4ff', borderRadius: '999px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${progress}%`, background: '#004e34', transition: 'width 0.5s ease-out' }}></div>
+                ) : (
+                  <div style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', fontWeight: 500, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                      <span style={{ color: '#004e34', fontWeight: 700 }}>Raised: ₦{(f.current_amount / 100).toLocaleString()}</span>
+                      <span style={{ color: '#3f4943' }}>Goal: ₦{(f.target_amount / 100).toLocaleString()}</span>
+                    </div>
+                    <div style={{ height: '10px', background: '#eff4ff', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progress}%`, background: '#004e34', transition: 'width 0.5s ease-out' }}></div>
+                    </div>
+                    <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#3f4943', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                      <span>{f.auto_close_on_goal ? 'Hard cap (auto-close)' : 'Stretch goals enabled'}</span>
+                      <span>{progress}% Funded</span>
+                    </div>
                   </div>
-                  <div style={{ marginTop: '8px', textAlign: 'right', fontSize: '12px', color: '#3f4943', fontWeight: 600, fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
-                    {progress}% Funded
-                  </div>
-                </div>
+                )}
               </div>
             );
           })}
@@ -269,7 +315,7 @@ export default function FundraisersPage() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#ffffff', width: '100%', maxWidth: '500px', borderRadius: '16px', padding: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0' }}>
+          <div style={{ background: '#ffffff', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px', padding: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0' }}>
             <h2 style={{ margin: '0 0 24px 0', fontSize: '24px', fontFamily: 'var(--font-heading, Montserrat, sans-serif)', fontWeight: 700, color: '#0b1c30' }}>
               {editingId ? 'Edit Fundraiser' : 'Create Fundraiser'}
             </h2>
@@ -299,22 +345,97 @@ export default function FundraisersPage() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Target Amount (₦)</label>
-                <input 
-                  required
-                  type="number" 
-                  min="1000"
-                  value={targetAmount} 
-                  onChange={e => setTargetAmount(e.target.value)}
-                  className="az-input"
-                  placeholder="50000"
-                  style={{ width: '100%', fontSize: '16px' }}
-                />
-                <p style={{ marginTop: '6px', fontSize: '12px', color: '#3f4943', display: 'flex', alignItems: 'flex-start', gap: '4px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>info</span>
-                  Note: MyAzaa applies a 5% platform fee to help keep the lights on, in addition to standard Paystack processing fees.
-                </p>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Fundraiser Type</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setGoalType('target')}
+                    style={{
+                      padding: '14px',
+                      borderRadius: '8px',
+                      border: goalType === 'target' ? '2px solid #004e34' : '1px solid #E2E8F0',
+                      background: goalType === 'target' ? '#f0fdf4' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '14px', color: '#0b1c30' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#004e34' }}>flag</span>
+                      Target Goal
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>Specific financial target with progress bar</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setGoalType('ongoing')}
+                    style={{
+                      padding: '14px',
+                      borderRadius: '8px',
+                      border: goalType === 'ongoing' ? '2px solid #004e34' : '1px solid #E2E8F0',
+                      background: goalType === 'ongoing' ? '#f0fdf4' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '14px', color: '#0b1c30' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#004e34' }}>all_inclusive</span>
+                      Ongoing Support
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>Uncapped funding without a target amount</span>
+                  </button>
+                </div>
               </div>
+
+              {goalType === 'target' ? (
+                <div>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px', color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Target Amount (₦)</label>
+                  <input 
+                    required
+                    type="number" 
+                    min="1000"
+                    value={targetAmount} 
+                    onChange={e => setTargetAmount(e.target.value)}
+                    className="az-input"
+                    placeholder="50000"
+                    style={{ width: '100%', fontSize: '16px' }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginTop: '12px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                    <input 
+                      type="checkbox" 
+                      id="autoCloseOnGoal"
+                      checked={autoCloseOnGoal}
+                      onChange={e => setAutoCloseOnGoal(e.target.checked)}
+                      style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: '#004e34' }}
+                    />
+                    <div>
+                      <label htmlFor="autoCloseOnGoal" style={{ fontWeight: 600, fontSize: '13px', color: '#0b1c30', cursor: 'pointer', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                        Stop accepting donations when goal is met (Hard cap)
+                      </label>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                        When disabled, supporters can continue contributing even after 100% is reached (stretch goals).
+                      </p>
+                    </div>
+                  </div>
+                  <p style={{ marginTop: '8px', fontSize: '12px', color: '#3f4943', display: 'flex', alignItems: 'flex-start', gap: '4px', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>info</span>
+                    Note: MyAzaa applies a 5% platform fee to help keep the lights on, in addition to standard Paystack processing fees.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#eff4ff', padding: '14px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#004e34' }}>info</span>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#1e293b', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>
+                    Ongoing fundraisers display your total funds raised without a progress bar and remain open indefinitely.
+                  </p>
+                </div>
+              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#eff4ff', padding: '16px', borderRadius: '8px' }}>
                 <input 

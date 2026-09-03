@@ -89,8 +89,9 @@ export default function FundraisersEditorialGrid({ initialFundraisers }: { initi
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '32px' }}>
           {fundraisersList.map((fundraiser: any) => {
             const creatorName = fundraiser.profiles?.display_name || fundraiser.profiles?.full_name || 'Creator';
-            const progressPercent = fundraiser.target_amount > 0 ? Math.min(100, Math.round((fundraiser.current_amount / fundraiser.target_amount) * 100)) : 0;
-            const targetNaira = fundraiser.target_amount / 100;
+            const hasTarget = fundraiser.target_amount !== null && fundraiser.target_amount !== undefined && fundraiser.target_amount > 0;
+            const progressPercent = hasTarget ? Math.min(100, Math.round((fundraiser.current_amount / fundraiser.target_amount) * 100)) : 0;
+            const targetNaira = hasTarget ? fundraiser.target_amount / 100 : null;
             const currentNaira = fundraiser.current_amount / 100;
             
             // Extract a short excerpt from description
@@ -134,17 +135,35 @@ export default function FundraisersEditorialGrid({ initialFundraisers }: { initi
                 </p>
 
                 <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
-                      ₦{currentNaira.toLocaleString()}
-                    </span>
-                    <span style={{ fontSize: '13px', color: 'var(--az-text-muted)', fontWeight: 500 }}>
-                      of ₦{targetNaira.toLocaleString()}
-                    </span>
-                  </div>
-                  <div style={{ width: '100%', height: '6px', background: 'var(--az-surface-low)', borderRadius: '9999px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: progressPercent + '%', background: 'var(--az-primary)', borderRadius: '9999px', transition: 'width 0.5s ease' }}></div>
-                  </div>
+                  {hasTarget && targetNaira !== null ? (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
+                          ₦{currentNaira.toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: '13px', color: 'var(--az-text-muted)', fontWeight: 500 }}>
+                          of ₦{targetNaira.toLocaleString()}
+                        </span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: 'var(--az-surface-low)', borderRadius: '9999px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: progressPercent + '%', background: 'var(--az-primary)', borderRadius: '9999px', transition: 'width 0.5s ease' }}></div>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+                      <div>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
+                          ₦{currentNaira.toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: '13px', color: 'var(--az-text-muted)', fontWeight: 500, marginLeft: '4px' }}>
+                          raised
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--az-primary)', background: 'var(--az-surface-low)', padding: '2px 8px', borderRadius: '999px' }}>
+                        Ongoing
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginTop: '20px' }}>

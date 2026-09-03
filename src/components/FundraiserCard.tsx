@@ -14,41 +14,70 @@ export default function FundraiserCard({
 }) {
   const [showModal, setShowModal] = useState(false);
 
-  const targetAmount = fundraiser.target_amount / 100;
+  const hasTarget = fundraiser.target_amount !== null && fundraiser.target_amount !== undefined && fundraiser.target_amount > 0;
+  const targetAmount = hasTarget ? fundraiser.target_amount / 100 : null;
   const currentAmount = fundraiser.current_amount / 100;
-  const progress = targetAmount > 0 ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
+  const isHardCappedAndMet = hasTarget && fundraiser.auto_close_on_goal && targetAmount !== null && currentAmount >= targetAmount;
+  const isClosed = !fundraiser.is_active || isHardCappedAndMet;
+  const progress = hasTarget && targetAmount ? Math.min(100, Math.round((currentAmount / targetAmount) * 100)) : 0;
 
   return (
     <div id={fundraiser.id} className="az-card" style={{ padding: '32px', marginBottom: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap', marginBottom: '24px' }}>
         <div style={{ flex: 1, minWidth: '260px' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--az-primary)', letterSpacing: '0.05em', textTransform: 'uppercase', background: 'var(--az-surface-low)', padding: '4px 10px', borderRadius: '4px', display: 'inline-block', marginBottom: '12px' }}>
-            Fundraiser Goal
+            {hasTarget ? 'Fundraiser Goal' : 'Ongoing Fundraiser'}
           </span>
           <h2 className="az-h2" style={{ marginBottom: '8px', fontSize: '24px' }}>{fundraiser.title}</h2>
           <p className="az-body" style={{ color: 'var(--az-text-muted)', fontSize: '15px' }}>{fundraiser.description}</p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="az-btn-primary"
-          style={{ padding: '12px 32px', fontSize: '16px' }}
-        >
-          Contribute
-        </button>
+        {isClosed ? (
+          <button 
+            disabled
+            className="az-btn-secondary"
+            style={{ padding: '12px 32px', fontSize: '16px', opacity: 0.6, cursor: 'not-allowed' }}
+          >
+            {isHardCappedAndMet ? 'Goal Met' : 'Closed'}
+          </button>
+        ) : (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="az-btn-primary"
+            style={{ padding: '12px 32px', fontSize: '16px' }}
+          >
+            Contribute
+          </button>
+        )}
       </div>
 
       <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
-            ₦{currentAmount.toLocaleString()} <span style={{ color: 'var(--az-text-muted)', fontSize: '14px', fontWeight: 500 }}>raised</span>
-          </span>
-          <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--az-text-muted)' }}>
-            Goal: ₦{targetAmount.toLocaleString()}
-          </span>
-        </div>
-        <div style={{ height: '12px', background: 'var(--az-surface-low)', borderRadius: '9999px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: 'var(--az-primary)', borderRadius: '9999px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-        </div>
+        {hasTarget && targetAmount !== null ? (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '12px' }}>
+              <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--az-primary)' }}>
+                ₦{currentAmount.toLocaleString()} <span style={{ color: 'var(--az-text-muted)', fontSize: '14px', fontWeight: 500 }}>raised</span>
+              </span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--az-text-muted)' }}>
+                Goal: ₦{targetAmount.toLocaleString()}
+              </span>
+            </div>
+            <div style={{ height: '12px', background: 'var(--az-surface-low)', borderRadius: '9999px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress}%`, background: 'var(--az-primary)', borderRadius: '9999px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--az-surface-low)', padding: '14px 18px', borderRadius: '12px' }}>
+            <div>
+              <span style={{ fontSize: '12px', color: 'var(--az-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', fontWeight: 600 }}>Total Raised</span>
+              <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--az-primary)' }}>
+                ₦{currentAmount.toLocaleString()}
+              </span>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--az-primary)', background: '#ffffff', padding: '4px 12px', borderRadius: '9999px', border: '1px solid var(--az-border)' }}>
+              Open-Ended
+            </span>
+          </div>
+        )}
       </div>
 
       {fundraiser.show_leaderboard && donations && donations.length > 0 && (

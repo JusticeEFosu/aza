@@ -159,7 +159,7 @@ export default function ManageSubscription({
                   </div>
                 </div>
                 <div style={{ minWidth: '100px' }}>
-                  <SubscribeButton tierId={tier.id} planCode={tier.paystack_plan_code} />
+                  <SubscribeButton tierId={tier.id} />
                 </div>
               </div>
             ))}

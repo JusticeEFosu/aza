@@ -10,20 +10,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, description, targetAmount, showLeaderboard } = await request.json();
+    const { title, description, targetAmount, showLeaderboard, autoCloseOnGoal } = await request.json();
 
-    if (!title || !targetAmount) {
-      return NextResponse.json({ error: 'Title and Target Amount are required' }, { status: 400 });
+    if (!title || !title.trim()) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
+
+    if (targetAmount !== null && targetAmount !== undefined && targetAmount !== '' && Number(targetAmount) <= 0) {
+      return NextResponse.json({ error: 'Target Amount must be greater than 0' }, { status: 400 });
+    }
+
+    const parsedTargetAmount = targetAmount !== null && targetAmount !== undefined && targetAmount !== ''
+      ? Math.floor(Number(targetAmount))
+      : null;
 
     const { data, error } = await supabase
       .from('fundraisers')
       .insert({
         creator_id: user.id,
-        title,
-        description,
-        target_amount: targetAmount,
-        show_leaderboard: showLeaderboard ?? true
+        title: title.trim(),
+        description: description?.trim() || null,
+        target_amount: parsedTargetAmount,
+        show_leaderboard: showLeaderboard ?? true,
+        auto_close_on_goal: parsedTargetAmount ? (autoCloseOnGoal ?? false) : false
       })
       .select()
       .single();
