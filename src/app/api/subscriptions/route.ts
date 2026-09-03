@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         name: `${tier.name} (Creator Subscription - ${targetCurrency})`,
         amount: newPlanAmount,
         interval: 'monthly',
-        description: tier.description,
+        description: tier.description || undefined,
         currency: targetCurrency
       });
       
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     // 2. Initialize Transaction in Paystack
     const initResponse = await initializeTransaction({
       email: user.email!, 
-      amount: finalAmount || undefined, // undefined lets Paystack use the plan's exact amount!
+      amount: finalAmount || 0, // 0 or plan-based fallback
       plan: planCode || undefined,
       currency: targetCurrency === 'NGN' ? undefined : targetCurrency, // explicitly tell Paystack the currency
       subaccount: tier.creator_profiles.paystack_subaccount_code || undefined,
