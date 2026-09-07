@@ -142,7 +142,7 @@ export default function OnboardingClient({ userId, initialName, initialSlug }: O
 
       {/* Display Name */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label htmlFor="displayName" style={{ fontSize: '14px', fontWeight: 600, color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Creator / Display Name</label>
+        <label htmlFor="displayName" style={{ fontSize: '14px', fontWeight: 600, color: '#0b1c30', fontFamily: 'var(--font-body, Inter, sans-serif)' }}>Username</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <input
             id="displayName"

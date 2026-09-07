@@ -27,6 +27,7 @@ export default async function FanDiscoverPage() {
       display_name,
       profiles ( full_name, display_name, avatar_url )
     `)
+    .eq('is_published', true)
     .order('subscriber_count', { ascending: false });
 
   return (

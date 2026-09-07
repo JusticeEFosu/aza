@@ -28,6 +28,7 @@ export default async function HomePage() {
       profiles!inner ( full_name, display_name, avatar_url, is_suspended, admin_role ),
       subscription_tiers ( price )
     `)
+    .eq('is_published', true)
     .eq('profiles.is_suspended', false)
     .is('profiles.admin_role', null)
     .order('subscriber_count', { ascending: false })

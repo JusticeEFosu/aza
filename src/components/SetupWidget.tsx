@@ -122,8 +122,16 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
   if (isFinished) return null;
 
   const handlePublish = async () => {
+    if (!hasProfile) {
+      alert("Please complete your profile (add a profile picture) before publishing.");
+      return;
+    }
     if (!hasBank) {
-      alert("You must set up payouts before publishing.");
+      alert("You must set up payouts (link bank account) before publishing.");
+      return;
+    }
+    if (!hasTiers) {
+      alert("Please create at least one subscription tier before publishing.");
       return;
     }
     setLoading(true);
@@ -314,20 +322,22 @@ export default function SetupWidget({ userId, hasProfile, hasBank, hasTiers, isP
                           if (step.id === 'publish') handlePublish();
                           else setActiveModal(isActive ? null : step.id);
                         }}
+                        disabled={step.id === 'publish' && (!hasProfile || !hasBank || !hasTiers)}
+                        title={step.id === 'publish' && (!hasProfile || !hasBank || !hasTiers) ? 'Complete all previous steps to publish' : undefined}
                         style={{ 
-                          background: '#fed65b', 
-                          color: '#745c00', 
+                          background: step.id === 'publish' && (!hasProfile || !hasBank || !hasTiers) ? '#e2e8f0' : '#fed65b', 
+                          color: step.id === 'publish' && (!hasProfile || !hasBank || !hasTiers) ? '#64748b' : '#745c00', 
                           border: 'none', 
                           padding: '10px 24px', 
                           borderRadius: '999px', 
                           fontSize: '14px', 
                           fontFamily: 'var(--font-heading, Montserrat, sans-serif)',
                           fontWeight: 600, 
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
+                          cursor: step.id === 'publish' && (!hasProfile || !hasBank || !hasTiers) ? 'not-allowed' : 'pointer', 
+                          display: 'flex', 
+                          alignItems: 'center', 
                           gap: '8px',
-                          opacity: isNextPending ? 1 : 0.7
+                          opacity: (step.id === 'publish' && (!hasProfile || !hasBank || !hasTiers)) ? 0.6 : (isNextPending ? 1 : 0.7)
                         }}>
                         {step.id === 'publish' ? 'Publish' : (isActive ? 'Close' : 'Start')}
                         <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{isActive ? 'expand_less' : 'arrow_forward'}</span>

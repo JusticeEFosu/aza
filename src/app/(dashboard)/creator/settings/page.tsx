@@ -510,7 +510,7 @@ export default function CreatorSettings() {
               </div>
 
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Creator / Display Name</label>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>Username</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <input
                     type="text"
@@ -531,7 +531,7 @@ export default function CreatorSettings() {
                 </div>
                 
                 {displayName && (
-                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Fans will see this name instead of your legal name if provided.</span>
+                  <span style={{ display: 'block', marginTop: '8px', fontSize: '12px', color: 'var(--v2-text-variant)' }}>Fans will see this username instead of your legal name.</span>
                 )}
               </div>
 

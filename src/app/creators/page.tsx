@@ -27,6 +27,7 @@ export default async function CreatorsPage() {
       display_name,
       profiles!inner ( full_name, avatar_url, is_suspended, admin_role )
     `)
+    .eq('is_published', true)
     .eq('profiles.is_suspended', false)
     .is('profiles.admin_role', null)
     .order('created_at', { ascending: false })

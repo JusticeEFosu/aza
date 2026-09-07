@@ -133,6 +133,7 @@ export default async function FanFeed() {
         display_name,
         profiles ( full_name, display_name, avatar_url )
       `)
+      .eq('is_published', true)
       .order('subscriber_count', { ascending: false })
       .limit(3);
     featuredCreators = creators || [];

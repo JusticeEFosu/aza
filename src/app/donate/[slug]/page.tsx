@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import StreamDonationForm from '@/components/StreamDonationForm';
 import Link from 'next/link';
+import UnpublishedCreatorState from '@/components/UnpublishedCreatorState';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export default async function DonatePage({ params }: { params: Promise<{ slug: s
       slug,
       bio,
       display_name,
+      is_published,
       profiles (
         full_name,
         avatar_url
@@ -30,6 +32,10 @@ export default async function DonatePage({ params }: { params: Promise<{ slug: s
 
   const displayName = creator.display_name || (creator.profiles as any)?.full_name;
   const avatarUrl = (creator.profiles as any)?.avatar_url;
+
+  if (!creator.is_published) {
+    return <UnpublishedCreatorState displayName={displayName} avatarUrl={avatarUrl} />;
+  }
 
   return (
     <div className="v2-dashboard-layout" style={{ backgroundColor: '#f8f9ff', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

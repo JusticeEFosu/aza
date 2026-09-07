@@ -14,6 +14,7 @@ import InitiateMessageButton from '@/components/messages/InitiateMessageButton';
 import PostEngagementBar from '@/components/posts/PostEngagementBar';
 import PollBlock from '@/components/posts/PollBlock';
 import TipButton from '@/components/TipButton';
+import UnpublishedCreatorState from '@/components/UnpublishedCreatorState';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
       display_name,
       social_links,
       is_verified,
+      is_published,
       subscriber_count,
       profiles (
         full_name,
@@ -146,6 +148,14 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
   const displayName = creator.display_name || (creator.profiles as any)?.full_name;
   const avatarUrl = (creator.profiles as any)?.avatar_url;
 
+  // If page is not published:
+  // - If visitor is NOT the creator owner, show the "still setting up" screen
+  // - If visitor IS the creator owner, show private preview banner
+  const isOwner = user && user.id === creator.id;
+  if (!creator.is_published && !isOwner) {
+    return <UnpublishedCreatorState displayName={displayName} avatarUrl={avatarUrl} />;
+  }
+
   // 6. Fetch Active Fundraisers and their top 10 donations
   const { data: fundraisers } = await supabase
     .from('fundraisers')
@@ -161,6 +171,40 @@ export default async function CreatorPublicProfile({ params }: { params: Promise
 
   const content = (
     <div className={`v2-profile-page ${isAppView ? 'v2-profile-app-view' : ''}`}>
+      {/* Unpublished Preview Warning Banner for Creator */}
+      {!creator.is_published && isOwner && (
+        <div style={{
+          background: '#fef3c7',
+          borderBottom: '1px solid #fde68a',
+          color: '#92400e',
+          padding: '12px 24px',
+          fontSize: '14px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          textAlign: 'center'
+        }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>visibility_off</span>
+          <span>Private Preview: Your page is not published yet. Fans see a &quot;setting up&quot; screen until you publish.</span>
+          <Link 
+            href="/creator" 
+            style={{ 
+              color: '#78350f', 
+              textDecoration: 'underline', 
+              marginLeft: '8px', 
+              fontWeight: 700 
+            }}
+          >
+            Go to Setup
+          </Link>
+        </div>
+      )}
+
       {/* TopNavBar */}
       {!isAppView && (
         <nav className="v2-profile-nav">
