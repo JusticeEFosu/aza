@@ -182,6 +182,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           dms_enabled: boolean
+          fee_bearer: 'creator' | 'fan' | 'voluntary'
           id: string
           is_published: boolean
           is_verified: boolean
@@ -201,6 +202,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           dms_enabled?: boolean
+          fee_bearer?: 'creator' | 'fan' | 'voluntary'
           id: string
           is_published?: boolean
           is_verified?: boolean
@@ -220,6 +222,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           dms_enabled?: boolean
+          fee_bearer?: 'creator' | 'fan' | 'voluntary'
           id?: string
           is_published?: boolean
           is_verified?: boolean
@@ -259,10 +262,12 @@ export type Database = {
           donor_note: string | null
           email: string
           fan_id: string | null
+          fee_bearer: string
           fundraiser_id: string | null
           id: string
           paystack_reference: string | null
           platform_fee: number
+          processing_fee: number
           status: string
           updated_at: string
         }
@@ -277,10 +282,12 @@ export type Database = {
           donor_note?: string | null
           email: string
           fan_id?: string | null
+          fee_bearer?: string
           fundraiser_id?: string | null
           id?: string
           paystack_reference?: string | null
           platform_fee?: number
+          processing_fee?: number
           status?: string
           updated_at?: string
         }
@@ -295,10 +302,12 @@ export type Database = {
           donor_note?: string | null
           email?: string
           fan_id?: string | null
+          fee_bearer?: string
           fundraiser_id?: string | null
           id?: string
           paystack_reference?: string | null
           platform_fee?: number
+          processing_fee?: number
           status?: string
           updated_at?: string
         }

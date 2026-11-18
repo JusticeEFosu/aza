@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { bankCode, accountNumber, bio, displayName, slug, socialLinks, minTierIdForDm, dmsEnabled } = body;
+    const { bankCode, accountNumber, bio, displayName, slug, socialLinks, minTierIdForDm, dmsEnabled, feeBearer } = body;
 
     // We only create a subaccount if bank details are provided
     let paystackSubaccountCode = null;
@@ -68,6 +68,9 @@ export async function POST(request: Request) {
     if (socialLinks !== undefined) updateData.social_links = socialLinks;
     if (minTierIdForDm !== undefined) updateData.min_tier_id_for_dm = minTierIdForDm;
     if (dmsEnabled !== undefined) updateData.dms_enabled = dmsEnabled;
+    if (feeBearer && ['creator', 'fan', 'voluntary'].includes(feeBearer)) {
+      updateData.fee_bearer = feeBearer;
+    }
 
     // Update display name
     if (displayName) {
